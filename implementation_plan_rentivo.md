@@ -1,0 +1,253 @@
+# Rentivo MVP v2.0 — Implementation Plan
+
+## Overview
+
+**Rentivo** is an AI-Assisted Omnichannel CRM for Indonesian rental businesses (B2B SaaS, multi-tenant).  
+This plan covers the **full MVP** as described in the PRD, built on a serverless Next.js App Router architecture.
+
+---
+
+## Decisions Locked In
+
+| Dimension | Decision |
+|---|---|
+| **Framework** | Next.js 16 App Router (JavaScript, no TypeScript) |
+| **Database** | Supabase (hosted Postgres + PgBouncer + RLS + Storage) |
+| **ORM** | Drizzle ORM |
+| **Auth** | Supabase Auth (JWT, `auth.uid()` used in RLS policies) |
+| **Background Jobs** | Inngest (durable event-driven functions for AI + async tasks) |
+| **WhatsApp** | Baileys as a **separate Node.js microservice**; communicates with Next.js via internal webhooks |
+| **Real-time** | Supabase Realtime (CDC) — inbox & booking pushed to clients instantly |
+| **AI** | Google Gemini 2.0 Flash — intent detection + entity extraction + booking draft (JSON) |
+| **AI Governance** | All AI output is a **draft** — admin must approve before any DB write |
+| **Styling** | Tailwind CSS v4 (already installed) |
+| **UI Design** | **Stitch MCP design-first** — all screens designed and reviewed before code |
+| **Language** | Indonesian (Bahasa Indonesia) for all UI labels and copy |
+| **Currency** | IDR (Rp) with Indonesian locale formatting |
+| **Pricing Model** | Flexible per-product pricing tiers: hourly / daily / weekly |
+| **Deposit** | Manual flat-amount deposit per product; tracked separately, released on return |
+| **Payment Proof** | Customer sends WA photo → Baileys saves to Supabase Storage → admin reviews in invoice panel |
+| **Loyalty** | Deferred entirely post-MVP — orders just marked **Completed** |
+| **Roles** | 4 roles: **SuperAdmin Rentivo**, Owner, Admin, Staff |
+| **SuperAdmin** | Platform-level (multi-tenant management, impersonate, suspend tenants) |
+| **Tenant Onboarding** | Self-registration page → auto-provision workspace → SuperAdmin can review/suspend |
+| **Partial Return** | ❌ Cancelled — MVP is Full Return only |
+| **Payment Gateway** | ❌ Deferred Phase 2 — manual bank transfer + image proof |
+| **Membership Tiers** | ❌ Deferred — no Silver/Gold/Platinum |
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Baileys microservice** will be a **separate Node.js process** (not part of the Next.js app). It needs to run alongside Next.js in development (e.g., via `concurrently`) and as a separate deployment unit in production (e.g., Railway/Fly.io). This is architecturally different from the Next.js app on Vercel. Confirm you are comfortable running two separate services.
+
+> [!WARNING]
+> **Supabase credentials** (URL, anon key, service_role key) and **Gemini API key** and **Inngest signing key** will be needed as environment variables. The plan assumes you will provide these before the backend phase begins.
+
+> [!CAUTION]
+> **RLS policies** are security-critical. Drizzle ORM queries will always include `tenant_id` filters AND RLS enforces this at the DB level as a second line of defense. Any query that bypasses the Supabase RLS client (e.g., uses the service_role key) must be used only in trusted server contexts (Inngest workers, SuperAdmin operations).
+
+---
+
+## 4-Role RBAC Model
+
+| Role | Scope | Key Permissions |
+|---|---|---|
+| **SuperAdmin** | Platform (all tenants) | Create/suspend tenants, impersonate owner, platform analytics; stored outside tenant RLS |
+| **Owner** | Tenant workspace | Full access + settings + team management + reports + all Admin permissions |
+| **Admin** | Tenant workspace | Inbox, booking management, inventory, invoices, payment verification, return processing |
+| **Staff** | Tenant workspace | View assigned deliveries, input return condition & damage fee only |
+
+---
+
+## Database Schema (Drizzle ORM)
+
+### Platform-level tables (outside tenant RLS)
+- `superadmins` — Rentivo staff accounts
+- `tenants` — workspace registry (id, slug, name, status: active/suspended)
+
+### Tenant-scoped tables (all include `tenant_id`, protected by RLS)
+- `users` — tenant members with role (owner/admin/cs/staff)
+- `customers` — rental business customers; auto-created from WA profile
+- `products` — rental product types with pricing tiers (hourly/daily/weekly)
+- `inventory_units` — individual physical units per product (status: available/rented/checking/maintenance)
+- `bookings` — rental orders (status: draft → confirmed → active → returning → completed | cancelled)
+- `booking_items` — individual units per booking
+- `invoices` — one per booking; tracks rental fee + deposit separately
+- `invoice_payments` — payment attempts with proof image URL
+- `returns` — full return record (return date, condition notes, damage fee if any)
+- `conversations` — WA conversation threads per customer
+- `messages` — individual WA messages (inbound/outbound) + AI analysis results
+- `ai_drafts` — pending booking drafts generated by Gemini (approved → booking, rejected → discarded)
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  Next.js App (Vercel)                    │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐  │
+│  │ /inbox   │  │/bookings │  │/inventory│  │/invoice│  │
+│  └──────────┘  └──────────┘  └──────────┘  └────────┘  │
+│         │              │            │            │       │
+│         └──────────────┴────────────┴────────────┘       │
+│                        │ Route Handlers (API)             │
+│                        │                                  │
+│          ┌─────────────▼──────────────┐                  │
+│          │       Inngest Workers       │                  │
+│          │  • chat.received handler    │                  │
+│          │  • gemini.analyze handler   │                  │
+│          │  • booking.approved handler │                  │
+│          └─────────────────────────────┘                  │
+└─────────────────────────────────────────────────────────┘
+           │                             │
+    ┌──────▼──────┐              ┌───────▼──────┐
+    │  Supabase   │              │ Gemini 2.0   │
+    │  Postgres   │              │  Flash API   │
+    │  + RLS      │              └──────────────┘
+    │  + Realtime │
+    │  + Storage  │
+    └──────┬──────┘
+           │ CDC (Realtime)
+    ┌──────▼──────────────────┐
+    │  Baileys Microservice   │  ← Separate Node.js process
+    │  (Railway/Fly.io)       │
+    │  WA WebSocket ↔ HTTP    │
+    └─────────────────────────┘
+```
+
+---
+
+## Phased Delivery Plan
+
+### Phase 0 — Design ✅ DONE (Stitch MCP)
+
+All screens have been designed in the **"Rentivo B2B Rental Management"** Stitch project (`projects/2368000879430014449`). The design system uses a **Functional Minimalism** style: Teal primary (`#0F766E`), Inter font, 8pt grid, light mode with tonal layering.
+
+**Design system token highlights:**
+- Primary: `#005c55` / Primary container: `#0f766e`
+- Background: `#f7faf8` / Surface: `#ffffff`
+- Font: Inter (all weights), JetBrains Mono for IDs
+- Border radius: 4px standard, 6px cards
+- Spacing: 8pt grid (xs=4, sm=8, md=16, lg=24, xl=32)
+
+**Screen Inventory → Route Mapping:**
+
+| Screen Title | Stitch Screen ID | Next.js Route | Roles |
+|---|---|---|---|
+| B2B Setup Wizard (step 1) | `46bbdadcc0a94e159f387b8c1c0ca7b2` | `/register` | Public |
+| B2B Setup Wizard (step 2) | `bb0c75b882784268a07574f402e2652f` | `/register/setup` | Owner |
+| Operational Dashboard (v1) | `7b70d890461d424295875205c0e32f2e` | `/dashboard` | Owner, Admin |
+| Operational Dashboard (v2) | `327334436fc84573b4d4eaae33d6e9c6` | `/dashboard` | Owner, Admin |
+| Admin Command Center | `50655b80507a4731a6858c8a504e2acb` | `/superadmin` | SuperAdmin |
+| Omnichannel Inbox (v1) | `5a148efd50744233bbd9c374f5354f04` | `/inbox` | Admin |
+| Omnichannel Inbox (v2) | `ad3938fafb35409ca020d883a933fa2b` | `/inbox/[conversationId]` | Admin |
+| Booking Calendar (v1) | `d20c61d7478b41798f3841157bddd85e` | `/bookings` | Owner, Admin |
+| Booking Calendar (v2) | `ea91570d43224a15ace3b93d142e78f6` | `/bookings/[id]` | Owner, Admin |
+| Inventory Management (v1) | `bcc27939707c405cbad16c0d31eb489d` | `/inventory` | Owner, Admin |
+| Inventory Management (v2) | `29e003b417a94624acc569cea7a934c0` | `/inventory/[productId]` | Owner, Admin |
+| Payment Verification (v1) | `7151b54386ca4ae08be390b75c774c5b` | `/invoices` | Owner, Admin |
+| Payment Verification (v2) | `d5bd63294750474fa81135263f346c9f` | `/invoices/[id]` | Owner, Admin |
+| Return Management (v1) | `25d214c6b3da428abbaabd497dec677a` | `/returns` | Owner, Admin, Staff |
+| Return Management (v2) | `0af7efba89984e7c9a7668d852cac02d` | `/returns/[id]` | Owner, Admin, Staff |
+| Customer CRM (v1) | `677caec78d104873aee29879d5bf2b85` | `/customers` | Owner, Admin |
+| Customer CRM (v2) | `0b1b6db289ce4f199a9a563570cd9158` | `/customers/[id]` | Owner, Admin |
+| Settings & Teams (v1) | `e55e2bf4e20c484ebca275fb3b9af33f` | `/settings` | Owner |
+| Settings & Teams (v2) | `a1f2b11308564fbab966df3b33ab355b` | `/settings/team` | Owner |
+
+> [!TIP]
+> Each screen has a downloadable HTML export from Stitch. These will be fetched per-screen using `get_screen` MCP tool and converted into Next.js components during Phase 2–6.
+
+---
+
+### Phase 1 — Foundation
+- [ ] Install & configure dependencies: Drizzle ORM, Supabase JS client, Inngest SDK
+- [ ] Configure Supabase project (enable RLS, Storage bucket `payment-proofs`)
+- [ ] Write Drizzle schema for all tables
+- [ ] Generate and run migrations via Drizzle Kit
+- [ ] Write Supabase RLS policies for all tenant-scoped tables
+- [ ] Supabase Auth setup: email/password login, JWT custom claims for role + tenant_id
+- [ ] Next.js middleware: parse JWT, inject tenant context, route guards per role
+
+---
+
+### Phase 2 — Auth & Tenant Onboarding
+- [ ] `/register` page — tenant self-registration form
+- [ ] `/login` page
+- [ ] Tenant provisioning logic (create tenant row + owner user on register)
+- [ ] SuperAdmin panel at `/superadmin` — tenant CRUD, suspend/reactivate
+
+---
+
+### Phase 3 — Inbox & AI Copilot
+- [ ] Inngest setup: `/api/inngest` route + event handlers
+- [ ] Baileys microservice scaffold (separate repo/folder, webhooks to Next.js)
+- [ ] `chat.received` Inngest event: customer matching, message persistence
+- [ ] `gemini.analyze` Inngest event: Gemini API call → ai_drafts record
+- [ ] Unified Inbox UI: conversation list + message thread + AI draft panel
+- [ ] Supabase Realtime subscription for new messages + draft updates
+
+---
+
+### Phase 4 — Inventory
+- [ ] Product management UI (CRUD)
+- [ ] Inventory unit management UI (add units, set status)
+- [ ] Availability calendar view
+- [ ] Pessimistic locking implementation: `SELECT ... FOR UPDATE` in Drizzle transactions
+
+---
+
+### Phase 5 — Booking & Invoice
+- [ ] Booking creation from AI draft approval (admin clicks "Setujui")
+- [ ] Booking list, detail, and status management UI
+- [ ] Invoice auto-generation on booking confirm
+- [ ] Payment proof upload (Supabase Storage) + admin verification UI
+- [ ] Booking status machine: draft → confirmed → active → returning → completed
+
+---
+
+### Phase 6 — Return Processing
+- [ ] Return form for Staff: condition notes, damage fee input
+- [ ] Inventory unit status update: rented → checking → available
+- [ ] Booking status update to completed after full return confirmed
+
+---
+
+### Phase 7 — Owner Dashboard & Reports
+- [ ] Revenue summary (daily/monthly)
+- [ ] Booking statistics
+- [ ] Inventory utilization overview
+- [ ] Team management (invite team member, assign role)
+
+---
+
+## Verification Plan
+
+### Automated
+- Drizzle schema type checks (`drizzle-kit check`)
+- Next.js build (`next build`) for zero compile errors
+- RLS policy tests via Supabase SQL editor (simulate different `auth.uid()` values)
+
+### Manual
+- User reviews all Stitch MCP screen designs before Phase 1 begins
+- End-to-end flow test: simulate WA message → AI draft → admin approval → booking → invoice → payment → return → completed
+- Multi-tenant isolation test: confirm tenant A cannot read tenant B's data
+- Role access test: confirm CS cannot access inventory or invoice pages
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **Do you want the Baileys microservice inside the same monorepo** (e.g., `apps/baileys/`) using a monorepo tool like Turborepo, or as a completely separate repository?
+
+> [!IMPORTANT]
+> **Deployment target**: Vercel for Next.js (assumed). Where should the Baileys microservice be deployed — Railway, Fly.io, Render, or a VPS you already manage?
+
+> [!IMPORTANT]
+> **WhatsApp number**: Will one tenant = one WA number, or can a tenant have multiple WA numbers (e.g., multiple agents)?
+
+> [!NOTE]
+> **Admin's reply via WhatsApp**: When admin composes a reply in the inbox, should it be sent back through Baileys (outbound WA message), or is outbound messaging out of scope for MVP?
