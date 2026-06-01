@@ -1,7 +1,9 @@
+import Link from 'next/link'
+import SectionPage from '@/components/SectionPage'
 import { requireTenantAuth } from '@/lib/session'
 import { db } from '@/lib/db'
-import { bookings, invoices, inventoryUnits } from '@/lib/db/schema'
-import { eq, sql, and, gte } from 'drizzle-orm'
+import { aiDrafts, bookings, invoices, inventoryUnits } from '@/lib/db/schema'
+import { eq, sql, and } from 'drizzle-orm'
 
 export const metadata = {
   title: 'Dashboard | Rentivo',
@@ -18,192 +20,203 @@ function formatRupiah(value) {
   }).format(value)
 }
 
-export default async function DashboardPage() {
-  const { user, tenantId, role } = await requireTenantAuth()
+async function countRows(table, tenantId, condition) {
+  const query = db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(table)
+    .where(condition ? and(eq(table.tenantId, tenantId), condition) : eq(table.tenantId, tenantId))
 
-  // --- Real Queries ---
-  // 1. Revenue (Paid Invoices)
-  const revenueResult = await db.select({
-    totalRevenue: sql`sum(${invoices.paidAmount})`.mapWith(Number),
-  }).from(invoices)
-  .where(and(eq(invoices.tenantId, tenantId), eq(invoices.status, 'paid')))
-  
-  const totalRevenue = revenueResult[0]?.totalRevenue || 0
+  const result = await query
+  return result[0]?.count || 0
+}
 
-  // 2. Booking Stats (Active vs Completed vs Draft)
-  const activeBookings = await db.select({ count: sql`count(*)`.mapWith(Number) })
-    .from(bookings)
-    .where(and(eq(bookings.tenantId, tenantId), eq(bookings.status, 'active')))
-  
-  const activeBookingsCount = activeBookings[0]?.count || 0
-
-  // 3. Inventory Stats
-  const totalInventory = await db.select({ count: sql`count(*)`.mapWith(Number) })
-    .from(inventoryUnits)
-    .where(eq(inventoryUnits.tenantId, tenantId))
-  
-  const availableInventory = await db.select({ count: sql`count(*)`.mapWith(Number) })
-    .from(inventoryUnits)
-    .where(and(eq(inventoryUnits.tenantId, tenantId), eq(inventoryUnits.status, 'available')))
-
-  const totalInvCount = totalInventory[0]?.count || 0
-  const availInvCount = availableInventory[0]?.count || 0
-  const utilizedInvCount = totalInvCount - availInvCount
-  const utilizationRate = totalInvCount > 0 ? Math.round((utilizedInvCount / totalInvCount) * 100) : 0
+function StatCard({ label, value, hint, tone = 'default' }) {
+  const toneClass =
+    tone === 'primary'
+      ? 'border-l-primary bg-primary-fixed/35'
+      : tone === 'tertiary'
+        ? 'border-l-tertiary bg-tertiary-container/20'
+        : tone === 'error'
+          ? 'border-l-error bg-error-container/35'
+          : 'border-l-secondary bg-surface-container-low'
 
   return (
-    <div className="flex-1 overflow-y-auto p-lg bg-background">
-      <div className="flex justify-between items-end mb-lg">
+    <div className={`rounded-2xl border border-outline-variant border-l-4 p-lg shadow-[var(--shadow-sm)] ${toneClass}`}>
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-display-lg text-display-lg text-on-background">Dashboard Overview</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">Real-time operations and performance metrics.</p>
+          <p className="font-label-caps text-label-caps text-on-surface-variant">{label}</p>
+          <div className="mt-2 font-display-lg text-display-lg text-on-background">{value}</div>
         </div>
-        <div className="flex gap-2">
-          <select className="bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm rounded px-3 py-1.5 focus:border-primary focus:ring-0">
+        <div className="rounded-full bg-surface-container-lowest px-3 py-1 font-label-caps text-label-caps text-on-surface-variant">
+          Live
+        </div>
+      </div>
+      <p className="mt-3 font-body-sm text-body-sm text-on-surface-variant">{hint}</p>
+    </div>
+  )
+}
+
+function WorkflowCard({ icon, title, description, meta, accentClass, href }) {
+  return (
+    <Link href={href} className="group block rounded-2xl border border-outline-variant bg-surface-container-lowest p-lg shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">
+      <div className="flex items-start gap-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClass}`}>
+          <span className="material-symbols-outlined text-[24px]">{icon}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-title-sm text-title-sm text-on-background">{title}</h3>
+          <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">{description}</p>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-surface-container px-4 py-3">
+        <span className="font-body-sm text-body-sm text-on-surface-variant">{meta}</span>
+        <span className="font-label-caps text-label-caps text-primary group-hover:underline">Buka</span>
+      </div>
+    </Link>
+  )
+}
+
+export default async function DashboardPage() {
+  const { tenantId, role } = await requireTenantAuth()
+
+  const [revenueResult, activeBookingsCount, draftBookingsCount, returningBookingsCount, unpaidInvoicesCount, pendingDraftsCount, totalInvCount, availInvCount] = await Promise.all([
+    db.select({
+      totalRevenue: sql`sum(${invoices.paidAmount})`.mapWith(Number),
+    }).from(invoices).where(and(eq(invoices.tenantId, tenantId), eq(invoices.status, 'paid'))),
+    countRows(bookings, tenantId, eq(bookings.status, 'active')),
+    countRows(bookings, tenantId, eq(bookings.status, 'draft')),
+    countRows(bookings, tenantId, eq(bookings.status, 'returning')),
+    countRows(invoices, tenantId, eq(invoices.status, 'unpaid')),
+    countRows(aiDrafts, tenantId, eq(aiDrafts.status, 'pending')),
+    countRows(inventoryUnits, tenantId),
+    countRows(inventoryUnits, tenantId, eq(inventoryUnits.status, 'available')),
+  ])
+
+  const totalRevenue = revenueResult[0]?.totalRevenue || 0
+  const utilizedInvCount = totalInvCount - availInvCount
+  const utilizationRate = totalInvCount > 0 ? Math.round((utilizedInvCount / totalInvCount) * 100) : 0
+  const roleLabel = role === 'owner' ? 'Pemilik' : role === 'admin' ? 'Admin' : 'Staff'
+
+  const monthBars = [32, 54, 47, 78, 100, 68]
+
+  return (
+    <SectionPage
+      title="Dashboard"
+      description="Ringkasan operasional yang tetap mendukung input manual, WhatsApp, dan otomatisasi AI. AI membantu menyusun data, tetapi kontrol proses tetap di tangan admin."
+      actions={(
+        <>
+          <select className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2 font-body-sm text-body-sm text-on-surface focus:border-primary focus:outline-none">
             <option>All Time</option>
             <option>Last 30 Days</option>
             <option>This Quarter</option>
             <option>Year to Date</option>
           </select>
-        </div>
-      </div>
-
-      {/* Admin View Focus: Actionable Alerts */}
-      <section className="mb-xl">
-        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-sm uppercase tracking-wider">Admin Operations Queue</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-          {/* Task 1 */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex flex-col justify-between hover:bg-surface transition-colors cursor-pointer border-l-2 border-l-primary">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded bg-secondary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-secondary-container">receipt_long</span>
-              </div>
-              <span className="font-title-sm text-title-sm text-on-background bg-surface-container px-2 py-0.5 rounded">0</span>
-            </div>
-            <div>
-              <h4 className="font-title-sm text-title-sm text-on-background mb-1">Menunggu Verifikasi Pembayaran</h4>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">Payments awaiting manual check.</p>
-            </div>
-          </div>
-
-          {/* Task 2 */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex flex-col justify-between hover:bg-surface transition-colors cursor-pointer border-l-2 border-l-tertiary">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded bg-tertiary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-tertiary-container">local_shipping</span>
-              </div>
-              <span className="font-title-sm text-title-sm text-on-background bg-surface-container px-2 py-0.5 rounded">0</span>
-            </div>
-            <div>
-              <h4 className="font-title-sm text-title-sm text-on-background mb-1">Pengembalian Hari Ini</h4>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">Scheduled inventory returns.</p>
-            </div>
-          </div>
-
-          {/* Task 3 */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex flex-col justify-between hover:bg-surface transition-colors cursor-pointer border-l-2 border-l-error">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded bg-error-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-error-container">warning</span>
-              </div>
-              <span className="font-title-sm text-title-sm text-error bg-error-container/50 px-2 py-0.5 rounded">0</span>
-            </div>
-            <div>
-              <h4 className="font-title-sm text-title-sm text-on-background mb-1">Invoice Jatuh Tempo</h4>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">Overdue client invoices.</p>
-            </div>
-          </div>
-        </div>
+          <Link href="/bookings" className="btn btn-primary">
+            Booking Manual
+          </Link>
+        </>
+      )}
+    >
+      <section className="grid gap-md md:grid-cols-2 xl:grid-cols-5">
+        <StatCard label="Pendapatan" value={formatRupiah(totalRevenue)} hint="Total pembayaran yang sudah lunas." tone="primary" />
+        <StatCard label="Booking Aktif" value={activeBookingsCount} hint="Unit yang sedang disewa pelanggan." />
+        <StatCard label="Draft AI / Manual" value={draftBookingsCount + pendingDraftsCount} hint="Antrian booking yang belum final." tone="tertiary" />
+        <StatCard label="Invoice Belum Lunas" value={unpaidInvoicesCount} hint="Perlu follow-up atau verifikasi pembayaran." tone="error" />
+        <StatCard label="Utilisasi Inventory" value={`${utilizationRate}%`} hint={`Tersedia ${availInvCount} dari ${totalInvCount} unit.`} />
       </section>
 
-      {/* Owner View Focus: Analytics & Performance */}
-      <section>
-        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-sm uppercase tracking-wider">Business Performance</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
-          {/* Revenue Chart (Spans 2 columns) */}
-          <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+      <section className="grid gap-md lg:grid-cols-3">
+        <WorkflowCard
+          href="/bookings"
+          icon="edit_calendar"
+          title="Input Manual"
+          description="Booking, pelanggan, inventaris, invoice, dan retur bisa dikelola manual kapan saja."
+          meta="Jalur utama operasional tetap ada tanpa AI."
+          accentClass="bg-primary-fixed text-primary"
+        />
+        <WorkflowCard
+          href="/inbox"
+          icon="sms"
+          title="WhatsApp Inbox"
+          description="Pesan masuk menjadi sumber data awal, lalu dibuat draft untuk ditinjau admin."
+          meta="Kanal otomatisasi, bukan satu-satunya sumber data."
+          accentClass="bg-secondary-container text-on-surface"
+        />
+        <WorkflowCard
+          href="/settings"
+          icon="smart_toy"
+          title="AI Assist"
+          description="AI membantu ekstraksi intent, item, dan tanggal agar input lebih cepat dan konsisten."
+          meta="Admin tetap menyetujui sebelum booking dibuat."
+          accentClass="bg-tertiary-container text-on-tertiary"
+        />
+      </section>
+
+      <section className="grid gap-md lg:grid-cols-[1.6fr_1fr]">
+        <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-lg shadow-[var(--shadow-sm)]">
+          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h2 className="font-title-sm text-title-sm text-on-background">Booking lifecycle</h2>
+              <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">Alur kerja dibuat agar tetap bisa manual, lalu AI hanya mempercepat tahap intake.</p>
+            </div>
+            <div className="rounded-full bg-surface-container px-3 py-1 font-label-caps text-label-caps text-on-surface-variant">
+              {roleLabel}
+            </div>
+          </div>
+
+          <div className="mt-lg grid gap-3 sm:grid-cols-2">
+            {[
+              { label: 'Draft', value: draftBookingsCount, tone: 'bg-primary-fixed text-primary' },
+              { label: 'Active', value: activeBookingsCount, tone: 'bg-secondary-container text-on-surface' },
+              { label: 'Returning', value: returningBookingsCount, tone: 'bg-tertiary-container text-on-tertiary' },
+              { label: 'Paid invoices', value: totalRevenue ? 'OK' : '0', tone: 'bg-surface-container text-on-surface' },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-outline-variant bg-surface-container-low p-md">
+                <div className={`inline-flex rounded-full px-3 py-1 font-label-caps text-label-caps ${item.tone}`}>{item.label}</div>
+                <div className="mt-3 font-headline-md text-headline-md text-on-background">{item.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-lg shadow-[var(--shadow-sm)]">
+          <h2 className="font-title-sm text-title-sm text-on-background">Queue operasional</h2>
+          <div className="mt-4 space-y-3">
+            {[
+              { label: 'Review draft AI', value: pendingDraftsCount, note: 'Butuh persetujuan admin sebelum jadi booking.' },
+              { label: 'Invoice belum lunas', value: unpaidInvoicesCount, note: 'Bisa tetap ditagih manual jika diperlukan.' },
+              { label: 'Pengembalian aktif', value: returningBookingsCount, note: 'Perlu check-in dan evaluasi kondisi barang.' },
+            ].map((item) => (
+              <div key={item.label} className="rounded-xl border border-outline-variant bg-surface-container p-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="font-title-sm text-title-sm text-on-background">{item.label}</div>
+                    <div className="mt-1 font-body-sm text-body-sm text-on-surface-variant">{item.note}</div>
+                  </div>
+                  <div className="rounded-full bg-surface-container-lowest px-3 py-1 font-display-lg text-title-sm text-on-background">{item.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-lg rounded-2xl border border-outline-variant bg-surface-container-low p-md">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <h4 className="font-title-sm text-title-sm text-on-background">Total Revenue (All Time)</h4>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">Gross volume across all time</p>
+                <p className="font-label-caps text-label-caps text-on-surface-variant">Revenue trend</p>
+                <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">Ilustrasi cepat untuk membaca performa bulanan.</p>
               </div>
               <div className="font-headline-md text-headline-md text-primary">{formatRupiah(totalRevenue)}</div>
             </div>
-
-            {/* Pure CSS Flat Bar Chart */}
-            <div className="flex-1 flex items-end gap-2 h-48 mt-auto border-b border-outline-variant pb-2 relative">
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                <div className="border-t border-surface-variant w-full h-0"></div>
-                <div className="border-t border-surface-variant w-full h-0"></div>
-                <div className="border-t border-surface-variant w-full h-0"></div>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-end group z-10">
-                <div className="w-full bg-primary/20 chart-bar rounded-t-sm" style={{ height: '40%' }}></div>
-                <div className="text-center font-label-caps text-label-caps text-outline mt-2">Jan</div>
-              </div>
-              <div className="flex-1 flex flex-col justify-end group z-10">
-                <div className="w-full bg-primary/40 chart-bar rounded-t-sm" style={{ height: '65%' }}></div>
-                <div className="text-center font-label-caps text-label-caps text-outline mt-2">Feb</div>
-              </div>
-              <div className="flex-1 flex flex-col justify-end group z-10">
-                <div className="w-full bg-primary/60 chart-bar rounded-t-sm" style={{ height: '50%' }}></div>
-                <div className="text-center font-label-caps text-label-caps text-outline mt-2">Mar</div>
-              </div>
-              <div className="flex-1 flex flex-col justify-end group z-10">
-                <div className="w-full bg-primary/80 chart-bar rounded-t-sm" style={{ height: '85%' }}></div>
-                <div className="text-center font-label-caps text-label-caps text-outline mt-2">Apr</div>
-              </div>
-              <div className="flex-1 flex flex-col justify-end group z-10">
-                <div className="w-full bg-primary chart-bar rounded-t-sm" style={{ height: '100%' }}></div>
-                <div className="text-center font-label-caps text-label-caps text-on-surface mt-2 font-bold">May</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column Metrics */}
-          <div className="flex flex-col gap-md">
-            {/* Active Bookings Rate */}
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex-1 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-outline">calendar_month</span>
-                <h4 className="font-title-sm text-title-sm text-on-background">Active Bookings</h4>
-              </div>
-              <div className="flex items-end gap-3 mb-4">
-                <span className="font-display-lg text-display-lg text-on-background">{activeBookingsCount}</span>
-                <span className="font-body-sm text-body-sm text-primary flex items-center pb-1"><span className="material-symbols-outlined text-[16px]">trending_up</span></span>
-              </div>
-              <div className="w-full h-8 bg-surface-container rounded overflow-hidden flex items-end">
-                <div className="h-2 bg-primary w-1/4"></div>
-                <div className="h-4 bg-primary w-1/4"></div>
-                <div className="h-3 bg-primary w-1/4"></div>
-                <div className="h-6 bg-primary w-1/4"></div>
-              </div>
-              <p className="font-label-caps text-label-caps text-outline mt-3">Bookings currently active</p>
-            </div>
-
-            {/* Inventory Utilization */}
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex-1 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-outline">category</span>
-                <h4 className="font-title-sm text-title-sm text-on-background">Inventory Utilization</h4>
-              </div>
-              <div className="flex items-end gap-3 mb-4">
-                <span className="font-display-lg text-display-lg text-on-background">{utilizationRate}%</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant pb-1">Utilized ({utilizedInvCount}/{totalInvCount})</span>
-              </div>
-              <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden mb-2">
-                <div className="h-full bg-tertiary" style={{ width: `${utilizationRate}%` }}></div>
-              </div>
-              <div className="flex justify-between font-label-caps text-label-caps text-outline">
-                <span>0%</span>
-                <span>Target: 75%</span>
-                <span>100%</span>
-              </div>
+            <div className="mt-4 flex h-36 items-end gap-2">
+              {monthBars.map((height, index) => (
+                <div key={String(height) + index} className="flex-1">
+                  <div className="mx-auto w-full max-w-12 rounded-t-2xl bg-primary/70" style={{ height: `${height}%` }} />
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
-    </div>
+    </SectionPage>
   )
 }
