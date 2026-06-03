@@ -45,53 +45,55 @@ export default function CustomerListClient({ customers }) {
       </div>
 
       {/* Table */}
-      <table className="table min-w-full divide-y divide-outline-variant">
-        <thead>
-          <tr>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nama</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kontak</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
-            <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
-          {filteredCustomers.length === 0 ? (
+      <div className="overflow-x-auto rounded-xl border border-outline-variant/60">
+        <table className="table min-w-full divide-y divide-outline-variant">
+          <thead>
             <tr>
-              <td colSpan={4} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
-                Tidak ada data pelanggan yang cocok.
-              </td>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nama</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kontak</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
+              <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
             </tr>
-          ) : (
-            filteredCustomers.map((c) => (
-              <tr 
-                key={c.id}
-                className="hover:bg-surface-container-low/40 transition-colors"
-              >
-                <td className="px-6 py-4 whitespace-nowrap text-body-md text-on-surface font-semibold">
-                  {c.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">
-                  <div>{c.phoneNumber}</div>
-                  {c.email ? <div className="text-xs text-on-surface-variant mt-0.5">{c.email}</div> : null}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusPill tone="primary">
-                    Manual Ready
-                  </StatusPill>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
-                  <button
-                    onClick={() => setSelectedCustomer(c)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Eye className="h-4 w-4" /> Profil
-                  </button>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
+            {filteredCustomers.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
+                  Tidak ada data pelanggan yang cocok.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              filteredCustomers.map((c) => (
+                <tr 
+                  key={c.id}
+                  className="hover:bg-surface-container-low/40 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-body-md text-on-surface font-semibold">
+                    {c.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">
+                    <div>{c.phoneNumber}</div>
+                    {c.email ? <div className="text-xs text-on-surface-variant mt-0.5">{c.email}</div> : null}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusPill tone="primary">
+                      Manual Ready
+                    </StatusPill>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
+                    <button
+                      onClick={() => setSelectedCustomer(c)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" /> Profil
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Profile Detail Modal */}
       <Modal
@@ -109,68 +111,80 @@ export default function CustomerListClient({ customers }) {
         }
       >
         {selectedCustomer && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Header info */}
-            <div className="flex items-center gap-4 border-b border-outline-variant pb-4">
+            <div className="flex items-center gap-4 border-b border-outline-variant pb-4 bg-surface-container-low/20 -mx-6 -mt-6 px-6 py-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50 text-teal-800 text-lg font-bold border border-teal-200/50">
                 {selectedCustomer.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-body-lg font-bold text-on-background">{selectedCustomer.name}</h3>
-                <span className="text-xs text-on-surface-variant">{selectedCustomer.phoneNumber}</span>
+                <h3 className="text-base font-bold text-on-background tracking-tight">{selectedCustomer.name}</h3>
+                <span className="text-xs text-on-surface-variant font-mono">{selectedCustomer.phoneNumber}</span>
               </div>
             </div>
 
             {/* Profile fields */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex gap-2">
-                <Phone className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 border border-teal-200/50">
+                  <Phone className="h-5 w-5" />
+                </div>
                 <div>
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Telepon</span>
-                  <span className="text-body-sm text-on-surface font-medium">{selectedCustomer.phoneNumber}</span>
+                  <span className="mt-1 block text-body-sm text-on-surface font-semibold">{selectedCustomer.phoneNumber}</span>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Mail className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 border border-sky-200/50">
+                  <Mail className="h-5 w-5" />
+                </div>
                 <div>
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email</span>
-                  <span className="text-body-sm text-on-surface font-medium">{selectedCustomer.email || '-'}</span>
+                  <span className="mt-1 block text-body-sm text-on-surface font-semibold truncate max-w-[200px]">{selectedCustomer.email || '-'}</span>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <ShoppingBag className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/50">
+                  <ShoppingBag className="h-5 w-5" />
+                </div>
                 <div>
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Total Transaksi</span>
-                  <span className="text-body-sm text-on-surface font-semibold">{selectedCustomer.totalBookings || 0} order</span>
+                  <span className="mt-1 block text-body-sm text-on-surface font-semibold">{selectedCustomer.totalBookings || 0} order</span>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <DollarSign className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/50">
+                  <DollarSign className="h-5 w-5" />
+                </div>
                 <div>
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Total Belanja</span>
-                  <span className="text-body-sm text-primary font-bold">{formatRupiah(selectedCustomer.totalSpent)}</span>
+                  <span className="mt-1 block text-body-sm text-primary font-bold">{formatRupiah(selectedCustomer.totalSpent)}</span>
                 </div>
               </div>
 
-              <div className="flex gap-2 sm:col-span-2">
-                <MapPin className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+              <div className="flex gap-3 sm:col-span-2 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
+                  <MapPin className="h-5 w-5" />
+                </div>
                 <div>
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Alamat</span>
-                  <span className="text-body-sm text-on-surface leading-relaxed">{selectedCustomer.address || 'Alamat belum diisi.'}</span>
+                  <span className="mt-1 block text-body-sm text-on-surface leading-relaxed">{selectedCustomer.address || 'Alamat belum diisi.'}</span>
                 </div>
               </div>
             </div>
 
             {/* Note details */}
-            <div className="border-t border-outline-variant pt-4">
-              <div className="flex gap-2">
-                <FileText className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
+                  <FileText className="h-5 w-5" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Catatan Internal CRM</span>
-                  <p className="text-body-sm text-on-surface-variant mt-1.5 bg-surface-container-low p-3 rounded-xl border border-outline-variant/60 leading-relaxed break-words whitespace-pre-wrap">
+                  <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed break-words whitespace-pre-wrap">
                     {selectedCustomer.notes || 'Tidak ada catatan internal untuk pelanggan ini.'}
                   </p>
                 </div>

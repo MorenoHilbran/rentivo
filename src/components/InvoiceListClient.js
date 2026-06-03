@@ -93,57 +93,59 @@ export default function InvoiceListClient({ invoices }) {
       </div>
 
       {/* Table */}
-      <table className="table min-w-full divide-y divide-outline-variant">
-        <thead>
-          <tr>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nomor Invoice</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Terbayar / Total</th>
-            <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
-          {filteredInvoices.length === 0 ? (
+      <div className="overflow-x-auto rounded-xl border border-outline-variant/60">
+        <table className="table min-w-full divide-y divide-outline-variant">
+          <thead>
             <tr>
-              <td colSpan={5} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
-                Tidak ada data invoice yang cocok.
-              </td>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nomor Invoice</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Terbayar / Total</th>
+              <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
             </tr>
-          ) : (
-            filteredInvoices.map((inv) => (
-              <tr 
-                key={inv.id}
-                className="hover:bg-surface-container-low/40 transition-colors"
-              >
-                <td className="px-6 py-4 whitespace-nowrap font-semibold text-body-md text-on-surface">
-                  {inv.invoiceNumber}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-body-md font-mono text-on-surface">
-                  {inv.bookingNumber ?? '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusPill tone={getStatusTone(inv.status)}>
-                    {inv.status}
-                  </StatusPill>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-body-sm text-on-surface">
-                  <span className="font-semibold text-primary">{formatRupiah(inv.paidAmount)}</span>
-                  <span className="text-on-surface-variant"> / {formatRupiah(inv.totalAmount)}</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
-                  <button
-                    onClick={() => setSelectedInvoice(inv)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Info className="h-4 w-4" /> Rincian
-                  </button>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
+            {filteredInvoices.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
+                  Tidak ada data invoice yang cocok.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              filteredInvoices.map((inv) => (
+                <tr 
+                  key={inv.id}
+                  className="hover:bg-surface-container-low/40 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap font-semibold text-body-md text-on-surface">
+                    {inv.invoiceNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-body-md font-mono text-on-surface">
+                    {inv.bookingNumber ?? '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusPill tone={getStatusTone(inv.status)}>
+                      {inv.status}
+                    </StatusPill>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap font-mono text-body-sm text-on-surface">
+                    <span className="font-semibold text-primary">{formatRupiah(inv.paidAmount)}</span>
+                    <span className="text-on-surface-variant"> / {formatRupiah(inv.totalAmount)}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
+                    <button
+                      onClick={() => setSelectedInvoice(inv)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
+                    >
+                      <Info className="h-4 w-4" /> Rincian
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Invoice Detail Modal */}
       <Modal
@@ -161,12 +163,12 @@ export default function InvoiceListClient({ invoices }) {
         }
       >
         {selectedInvoice && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Header info */}
-            <div className="flex items-center justify-between border-b border-outline-variant pb-4">
+            <div className="flex items-center justify-between border-b border-outline-variant pb-4 bg-surface-container-low/20 -mx-6 -mt-6 px-6 py-4">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Nomor Invoice</span>
-                <h3 className="font-mono text-lg font-bold text-on-background">{selectedInvoice.invoiceNumber}</h3>
+                <h3 className="font-mono text-xl font-bold text-on-background tracking-tight">{selectedInvoice.invoiceNumber}</h3>
               </div>
               <StatusPill tone={getStatusTone(selectedInvoice.status)}>
                 {getStatusLabel(selectedInvoice.status)}
@@ -175,47 +177,49 @@ export default function InvoiceListClient({ invoices }) {
 
             {/* Details */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex gap-2">
-                <FileText className="h-5 w-5 text-on-surface-variant shrink-0 mt-0.5" />
+              <div className="flex gap-3 sm:col-span-2 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 border border-teal-200/50">
+                  <FileText className="h-5 w-5" />
+                </div>
                 <div>
                   <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Nomor Booking</span>
-                  <span className="text-body-md text-on-surface font-mono font-semibold">{selectedInvoice.bookingNumber || '-'}</span>
+                  <span className="mt-1 block text-body-md text-on-surface font-mono font-semibold">{selectedInvoice.bookingNumber || '-'}</span>
                 </div>
               </div>
             </div>
 
             {/* Fees Breakdowns */}
-            <div className="border-t border-b border-outline-variant py-4 my-2 space-y-2">
-              <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Rincian Pembayaran</span>
+            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-5 space-y-3">
+              <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-2">Rincian Tagihan & Pembayaran</span>
               
               <div className="flex justify-between text-body-sm text-on-surface-variant">
                 <span>Biaya Sewa (Rental Fee)</span>
-                <span className="font-mono">{formatRupiah(selectedInvoice.rentalAmount)}</span>
+                <span className="font-mono font-semibold">{formatRupiah(selectedInvoice.rentalAmount)}</span>
               </div>
               <div className="flex justify-between text-body-sm text-on-surface-variant">
                 <span>Uang Jaminan (Deposit)</span>
-                <span className="font-mono">{formatRupiah(selectedInvoice.depositAmount)}</span>
+                <span className="font-mono font-semibold">{formatRupiah(selectedInvoice.depositAmount)}</span>
               </div>
               {Number(selectedInvoice.damageFee) > 0 && (
                 <div className="flex justify-between text-body-sm text-rose-600 font-medium">
                   <span>Denda Kerusakan (Damage Fee)</span>
-                  <span className="font-mono">{formatRupiah(selectedInvoice.damageFee)}</span>
+                  <span className="font-mono font-bold">{formatRupiah(selectedInvoice.damageFee)}</span>
                 </div>
               )}
               
-              <div className="flex justify-between border-t border-outline-variant/60 pt-2 text-body-md font-bold text-on-background">
+              <div className="flex justify-between border-t border-outline-variant/60 pt-3 text-body-md font-bold text-on-background">
                 <span>Total Tagihan</span>
-                <span className="font-mono text-primary">{formatRupiah(selectedInvoice.totalAmount)}</span>
+                <span className="font-mono text-primary text-base">{formatRupiah(selectedInvoice.totalAmount)}</span>
               </div>
 
               <div className="flex justify-between text-body-sm font-semibold text-emerald-700 pt-1">
                 <span>Jumlah Terbayar</span>
-                <span className="font-mono">{formatRupiah(selectedInvoice.paidAmount)}</span>
+                <span className="font-mono font-bold">{formatRupiah(selectedInvoice.paidAmount)}</span>
               </div>
 
-              <div className="flex justify-between text-body-sm font-bold text-rose-700 pt-1 border-t border-dashed border-outline-variant/40">
+              <div className="flex justify-between text-body-sm font-bold text-rose-700 pt-2 border-t border-dashed border-outline-variant/40">
                 <span>Sisa Tagihan</span>
-                <span className="font-mono">
+                <span className="font-mono text-base">
                   {formatRupiah(Math.max(0, Number(selectedInvoice.totalAmount) - Number(selectedInvoice.paidAmount)))}
                 </span>
               </div>
@@ -223,11 +227,18 @@ export default function InvoiceListClient({ invoices }) {
 
             {/* Note details */}
             {selectedInvoice.notes && (
-              <div>
-                <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Catatan Tambahan</span>
-                <p className="text-body-sm text-on-surface-variant mt-1.5 bg-surface-container-low p-3 rounded-xl border border-outline-variant/60 leading-relaxed break-words whitespace-pre-wrap">
-                  {selectedInvoice.notes}
-                </p>
+              <div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Catatan Tambahan</span>
+                    <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed break-words whitespace-pre-wrap">
+                      {selectedInvoice.notes}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

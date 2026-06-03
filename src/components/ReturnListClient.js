@@ -105,63 +105,65 @@ export default function ReturnListClient({ returns }) {
       </div>
 
       {/* Table */}
-      <table className="table min-w-full divide-y divide-outline-variant">
-        <thead>
-          <tr>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Waktu Pengembalian</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kondisi</th>
-            <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Denda</th>
-            <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
-          {filteredReturns.length === 0 ? (
+      <div className="overflow-x-auto rounded-xl border border-outline-variant/60">
+        <table className="table min-w-full divide-y divide-outline-variant">
+          <thead>
             <tr>
-              <td colSpan={5} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
-                Tidak ada data pengembalian yang cocok.
-              </td>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Waktu Pengembalian</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kondisi</th>
+              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Denda</th>
+              <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
             </tr>
-          ) : (
-            filteredReturns.map((item) => (
-              <tr 
-                key={item.id}
-                className="hover:bg-surface-container-low/40 transition-colors"
-              >
-                <td className="px-6 py-4 whitespace-nowrap font-mono font-semibold text-body-md text-on-surface">
-                  {item.bookingNumber ?? '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">
-                  {formatDate(item.returnedAt)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusPill tone={getConditionTone(item.condition)}>
-                    {item.condition}
-                  </StatusPill>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-body-sm text-rose-600 font-semibold">
-                  {formatRupiah(item.damageFee)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
-                  <button
-                    onClick={() => setSelectedReturn(item)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Info className="h-4 w-4" /> Detail
-                  </button>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
+            {filteredReturns.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
+                  Tidak ada data pengembalian yang cocok.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              filteredReturns.map((item) => (
+                <tr 
+                  key={item.id}
+                  className="hover:bg-surface-container-low/40 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap font-mono font-semibold text-body-md text-on-surface">
+                    {item.bookingNumber ?? '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">
+                    {formatDate(item.returnedAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusPill tone={getConditionTone(item.condition)}>
+                      {item.condition}
+                    </StatusPill>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap font-mono text-body-sm text-rose-600 font-semibold">
+                    {formatRupiah(item.damageFee)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
+                    <button
+                      onClick={() => setSelectedReturn(item)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
+                    >
+                      <Info className="h-4 w-4" /> Detail
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Detail Return Modal */}
       <Modal
         isOpen={selectedReturn !== null}
         onClose={() => setSelectedReturn(null)}
         title="Detail Pengembalian"
-        size="sm"
+        size="md"
         footer={
           <button
             onClick={() => setSelectedReturn(null)}
@@ -172,42 +174,54 @@ export default function ReturnListClient({ returns }) {
         }
       >
         {selectedReturn && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</span>
-              <h3 className="font-mono text-base font-bold text-on-background">{selectedReturn.bookingNumber || '-'}</h3>
-            </div>
-            
-            <div className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4 text-on-surface-variant shrink-0" />
+          <div className="space-y-6">
+            {/* Header info */}
+            <div className="flex items-center justify-between border-b border-outline-variant pb-4 bg-surface-container-low/20 -mx-6 -mt-6 px-6 py-4">
               <div>
-                <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Waktu Kembali</span>
-                <span className="text-body-sm text-on-surface font-medium">{formatDate(selectedReturn.returnedAt)}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</span>
+                <h3 className="font-mono text-xl font-bold text-on-background tracking-tight">{selectedReturn.bookingNumber || '-'}</h3>
+              </div>
+              <StatusPill tone={getConditionTone(selectedReturn.condition)}>
+                {getConditionLabel(selectedReturn.condition)}
+              </StatusPill>
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 border border-sky-200/50">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Waktu Kembali</span>
+                  <span className="mt-1 block text-body-sm text-on-surface font-semibold">{formatDate(selectedReturn.returnedAt)}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700 border border-rose-200/50">
+                  <DollarSign className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Biaya Kerusakan (Denda)</span>
+                  <span className="mt-1 block text-body-sm text-rose-600 font-bold">{formatRupiah(selectedReturn.damageFee)}</span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Kondisi Unit Saat Kembali</span>
-              <div className="mt-1">
-                <StatusPill tone={getConditionTone(selectedReturn.condition)}>
-                  {getConditionLabel(selectedReturn.condition)}
-                </StatusPill>
+            {/* Condition Notes */}
+            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
+                  <Info className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Catatan Kondisi</span>
+                  <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed break-words whitespace-pre-wrap">
+                    {selectedReturn.conditionNotes || 'Tidak ada catatan kondisi khusus yang dilaporkan.'}
+                  </p>
+                </div>
               </div>
-            </div>
-
-            <div className="flex gap-2 items-center">
-              <DollarSign className="h-4 w-4 text-rose-600 shrink-0" />
-              <div>
-                <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Biaya Kerusakan (Denda)</span>
-                <span className="text-body-md text-rose-600 font-bold">{formatRupiah(selectedReturn.damageFee)}</span>
-              </div>
-            </div>
-
-            <div className="border-t border-outline-variant pt-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Catatan Kondisi</span>
-              <p className="text-body-sm text-on-surface-variant mt-1.5 bg-surface-container-low p-3 rounded-xl border border-outline-variant/60 leading-relaxed break-words whitespace-pre-wrap">
-                {selectedReturn.conditionNotes || 'Tidak ada catatan kondisi khusus yang dilaporkan.'}
-              </p>
             </div>
           </div>
         )}

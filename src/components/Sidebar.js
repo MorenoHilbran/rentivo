@@ -231,6 +231,7 @@ export default function Sidebar({ user, role, tenantName }) {
         {/* ── Settings Section ── */}
         {SETTINGS_ITEMS.some((item) => canSee(item.roles)) && (
           <>
+            <div className="sidebar-section-separator" />
             <div className="sidebar-section-label">Pengaturan</div>
             {SETTINGS_ITEMS.filter((item) => canSee(item.roles)).map((item) => {
               const Icon = item.icon
@@ -256,27 +257,45 @@ export default function Sidebar({ user, role, tenantName }) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 'var(--space-sm)',
-            marginBottom: 'var(--space-sm)',
+            gap: 10,
+            marginBottom: 8,
           }}
         >
           <div className="avatar">{initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: 'var(--text-body-sm)',
+                fontSize: 13,
                 fontWeight: 600,
                 color: 'var(--color-on-surface)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                lineHeight: 1.3,
               }}
             >
               {user?.name ?? user?.email}
             </div>
-            <span className="badge badge-primary" style={{ marginTop: 2 }}>
-              {role === 'owner' ? 'Pemilik' : role === 'admin' ? 'Admin' : 'Staff'}
-            </span>
+            {user?.name && user?.email && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'var(--color-on-surface-variant)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  marginTop: 1,
+                  lineHeight: 1.3,
+                }}
+              >
+                {user.email}
+              </div>
+            )}
+            <div style={{ marginTop: 4 }}>
+              <span className="badge badge-primary">
+                {role === 'owner' ? 'Pemilik' : role === 'admin' ? 'Admin' : 'Staff'}
+              </span>
+            </div>
           </div>
         </div>
         <button
