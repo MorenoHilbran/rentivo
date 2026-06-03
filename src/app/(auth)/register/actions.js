@@ -4,6 +4,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { tenants, tenantMembers } from '@/lib/db/schema'
 import { redirect } from 'next/navigation'
+import { eq } from 'drizzle-orm'
 
 function slugify(text) {
   return text
@@ -114,4 +115,28 @@ export async function registerAction(formData) {
   }
 
   redirect('/register/setup')
+}
+
+export async function saveSetupAction(formData) {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect('/login')
+  }
+
+  const tenantId = session.user.user_metadata?.tenant_id
+  if (!tenantId) {
+    redirect('/dashboard')
+  }
+
+  const phone = String(formData.get('phone') ?? '').trim()
+  if (phone) {
+    await db.update(tenants).set({
+      phoneNumber: phone,
+      updatedAt: new Date()
+    }).where(eq(tenants.id, tenantId))
+  }
+
+  redirect('/dashboard')
 }

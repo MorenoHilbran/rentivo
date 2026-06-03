@@ -1,14 +1,15 @@
 import SectionPage from '@/components/SectionPage'
-import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, StatusPill, Notice } from '@/components/ManagementUI'
+import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, Notice } from '@/components/ManagementUI'
 import { recordReturnAction } from '../actions'
 import { db } from '@/lib/db'
 import { bookings, customers, returns } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
+import ReturnListClient from '@/components/ReturnListClient'
 
 export const metadata = { title: 'Pengembalian | Rentivo' }
 
-export default async function ReturnsPage({ searchParams }) {
+export default async function ReturnsPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth()
 
   const bookingRows = await db
@@ -17,16 +18,24 @@ export default async function ReturnsPage({ searchParams }) {
     .leftJoin(customers, eq(bookings.customerId, customers.id))
     .where(eq(bookings.tenantId, tenantId))
     .orderBy(desc(bookings.createdAt))
-    .limit(20)
+    .limit(30) // increased booking rows for dropdown selection to 30
 
   const returnRows = await db
-    .select({ id: returns.id, returnedAt: returns.returnedAt, condition: returns.condition, damageFee: returns.damageFee, bookingNumber: bookings.bookingNumber })
+    .select({ 
+      id: returns.id, 
+      returnedAt: returns.returnedAt, 
+      condition: returns.condition, 
+      conditionNotes: returns.conditionNotes, // added conditionNotes field
+      damageFee: returns.damageFee, 
+      bookingNumber: bookings.bookingNumber 
+    })
     .from(returns)
     .leftJoin(bookings, eq(returns.bookingId, bookings.id))
     .where(eq(returns.tenantId, tenantId))
     .orderBy(desc(returns.createdAt))
-    .limit(10)
+    .limit(30) // increased list limit to 30 for richer data display
 
+  const searchParams = await searchParamsPromise
   const feedbackKey = searchParams?.error ? 'error' : searchParams?.success ? 'success' : null
   const feedbackMessage = searchParams?.error ?? searchParams?.success ?? null
 
@@ -43,12 +52,17 @@ export default async function ReturnsPage({ searchParams }) {
       {feedbackMessage ? (
         <Notice tone={feedbackKey === 'error' ? 'error' : 'success'} title={feedbackKey === 'error' ? 'Gagal menyimpan' : 'Berhasil'} message={feedbackMessage} />
       ) : null}
+      
       <FormCard title="Catat pengembalian" description="Proses check-in dan kondisi barang disimpan di sini.">
         <form action={recordReturnAction} className="space-y-4">
           <GridForm>
             <SelectField label="Booking" name="bookingId">
               <option value="">Pilih booking</option>
-              {bookingRows.map((booking) => <option key={booking.id} value={booking.id}>{booking.bookingNumber} - {booking.customerName ?? '-'}</option>)}
+              {bookingRows.map((booking) => (
+                <option key={booking.id} value={booking.id}>
+                  {booking.bookingNumber} - {booking.customerName ?? '-'}
+                </option>
+              ))}
             </SelectField>
             <Field label="Waktu kembali" name="returnedAt" type="datetime-local" />
             <SelectField label="Kondisi" name="condition" defaultValue="good">
@@ -64,27 +78,8 @@ export default async function ReturnsPage({ searchParams }) {
         </form>
       </FormCard>
 
-      <TableCard title="Pengembalian terbaru" description="Data return yang sudah dicatat.">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Booking</th>
-              <th>Waktu</th>
-              <th>Kondisi</th>
-              <th>Biaya</th>
-            </tr>
-          </thead>
-          <tbody>
-            {returnRows.map((item) => (
-              <tr key={item.id}>
-                <td>{item.bookingNumber ?? '-'}</td>
-                <td>{item.returnedAt ? new Date(item.returnedAt).toLocaleString('id-ID') : '-'}</td>
-                <td><StatusPill tone={item.condition === 'good' ? 'success' : item.condition === 'minor_damage' ? 'warning' : 'error'}>{item.condition}</StatusPill></td>
-                <td>{`Rp ${Number(item.damageFee ?? 0).toLocaleString('id-ID')}`}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <TableCard title="Daftar Pengembalian Unit" description="Klik 'Detail' untuk melihat jam pengembalian, kondisi lengkap, dan biaya denda kerusakan.">
+        <ReturnListClient returns={returnRows} />
       </TableCard>
     </SectionPage>
   )

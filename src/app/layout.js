@@ -1,5 +1,6 @@
 import './globals.css'
 import Script from 'next/script'
+import { ToastProvider } from '@/components/ToastProvider'
 
 export const metadata = {
   title: {
@@ -12,7 +13,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -39,7 +40,9 @@ export default function RootLayout({ children }) {
         </Script>
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )

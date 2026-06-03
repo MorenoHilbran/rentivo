@@ -1,41 +1,46 @@
 import SectionPage from '@/components/SectionPage'
-import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, StatusPill, Notice } from '@/components/ManagementUI'
+import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, Notice } from '@/components/ManagementUI'
 import { createManualBookingAction } from '../actions'
 import { db } from '@/lib/db'
-import { bookings, customers, invoices, inventoryUnits, products } from '@/lib/db/schema'
+import { bookings, customers, invoices, products } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
+import BookingKanbanClient from '@/components/BookingKanbanClient'
 
 export const metadata = { title: 'Pemesanan | Rentivo' }
 
-export default async function BookingsPage({ searchParams }) {
+export default async function BookingsPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth()
 
   const customerRows = await db.select().from(customers).where(eq(customers.tenantId, tenantId)).orderBy(desc(customers.createdAt)).limit(20)
   const productRows = await db.select().from(products).where(eq(products.tenantId, tenantId)).orderBy(desc(products.createdAt)).limit(20)
-  const unitRows = await db
-    .select({ id: inventoryUnits.id, unitCode: inventoryUnits.unitCode, productId: inventoryUnits.productId, productName: products.name, status: inventoryUnits.status })
-    .from(inventoryUnits)
-    .leftJoin(products, eq(inventoryUnits.productId, products.id))
-    .where(eq(inventoryUnits.tenantId, tenantId))
-    .orderBy(desc(inventoryUnits.createdAt))
-    .limit(30)
+  
   const recentBookings = await db
-    .select({ id: bookings.id, bookingNumber: bookings.bookingNumber, status: bookings.status, customerName: customers.name, totalAmount: invoices.totalAmount, startDate: bookings.startDate })
+    .select({ 
+      id: bookings.id, 
+      bookingNumber: bookings.bookingNumber, 
+      status: bookings.status, 
+      customerName: customers.name, 
+      totalAmount: invoices.totalAmount, 
+      startDate: bookings.startDate,
+      endDate: bookings.endDate,
+      notes: bookings.notes,
+    })
     .from(bookings)
     .leftJoin(customers, eq(bookings.customerId, customers.id))
     .leftJoin(invoices, eq(invoices.bookingId, bookings.id))
     .where(eq(bookings.tenantId, tenantId))
     .orderBy(desc(bookings.createdAt))
-    .limit(8)
+    .limit(50) // increased list limit to 50 for fuller Kanban board display
 
+  const searchParams = await searchParamsPromise
   const feedbackKey = searchParams?.error ? 'error' : searchParams?.success ? 'success' : null
   const feedbackMessage = searchParams?.error ?? searchParams?.success ?? null
 
   return (
     <SectionPage
       title="Pemesanan"
-      description="Pantau booking aktif, draft, dan riwayat pemesanan. Booking bisa dibuat manual atau diturunkan dari draft AI."
+      description="Pantau booking aktif, draft, dan riwayat pemesanan. Gunakan Kanban Board untuk memantau siklus rental secara visual."
       highlights={[
         { kicker: 'Manual', title: 'Buat booking langsung', description: 'Input booking dari admin tetap jadi jalur utama saat data sudah lengkap.', badge: 'Utama' },
         { kicker: 'WhatsApp', title: 'Draft dari percakapan', description: 'Pesan masuk dapat diubah menjadi draft agar admin hanya perlu review.', badge: 'Opsional' },
@@ -45,16 +50,25 @@ export default async function BookingsPage({ searchParams }) {
       {feedbackMessage ? (
         <Notice tone={feedbackKey === 'error' ? 'error' : 'success'} title={feedbackKey === 'error' ? 'Gagal menyimpan' : 'Berhasil'} message={feedbackMessage} />
       ) : null}
+      
       <FormCard title="Buat booking manual" description="Booking, invoice, dan alokasi unit dibuat sekaligus dari form ini.">
         <form action={createManualBookingAction} className="space-y-4">
           <GridForm>
             <SelectField label="Pelanggan" name="customerId">
               <option value="">Pilih pelanggan</option>
-              {customerRows.map((customer) => <option key={customer.id} value={customer.id}>{customer.name} - {customer.phoneNumber}</option>)}
+              {customerRows.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name} - {customer.phoneNumber}
+                </option>
+              ))}
             </SelectField>
             <SelectField label="Produk" name="productId">
               <option value="">Pilih produk</option>
-              {productRows.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
+              {productRows.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
             </SelectField>
             <Field label="Jumlah unit" name="quantity" type="number" min="1" defaultValue="1" />
             <SelectField label="Pricing unit" name="pricingUnit" defaultValue="daily">
@@ -70,30 +84,8 @@ export default async function BookingsPage({ searchParams }) {
         </form>
       </FormCard>
 
-      <TableCard title="Booking terbaru" description="Status booking dan nilai tagihannya.">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Booking</th>
-              <th>Pelanggan</th>
-              <th>Status</th>
-              <th>Nilai</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentBookings.map((booking) => (
-              <tr key={booking.id}>
-                <td>
-                  <div>{booking.bookingNumber}</div>
-                  <div className="text-muted">{booking.startDate ? new Date(booking.startDate).toLocaleDateString('id-ID') : '-'}</div>
-                </td>
-                <td>{booking.customerName ?? '-'}</td>
-                <td><StatusPill tone={booking.status === 'confirmed' ? 'primary' : booking.status === 'active' ? 'success' : 'neutral'}>{booking.status}</StatusPill></td>
-                <td>{booking.totalAmount ? `Rp ${Number(booking.totalAmount).toLocaleString('id-ID')}` : '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <TableCard title="Jadwal & Antrian Pemesanan (Kanban)" description="Klik toggle 'Tabel' atau 'Kanban' di sebelah kanan untuk mengubah format tampilan list.">
+        <BookingKanbanClient bookings={recentBookings} />
       </TableCard>
     </SectionPage>
   )

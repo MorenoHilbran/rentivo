@@ -2,84 +2,79 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { saveSetupAction } from '../actions'
+import { Phone, Check, Link } from 'lucide-react'
 
 export default function SetupForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    // Simulate saving webhook data
-    await new Promise(resolve => setTimeout(resolve, 800))
-    router.push('/dashboard')
-  }
 
   function handleSkip() {
     router.push('/dashboard')
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-lg">
-      {/* Provider Selection (Read Only) */}
-      <div>
-        <label className="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Provider Koneksi</label>
-        <div className="flex items-center gap-sm p-sm border border-outline-variant rounded bg-surface">
-          <svg className="w-5 h-5 text-primary ml-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-          <span className="font-body-md text-body-md text-on-surface">Meta Cloud API (Resmi)</span>
-        </div>
-      </div>
-
-      {/* Webhook URL Input */}
-      <div>
-        <label className="block font-label-caps text-label-caps text-on-surface mb-xs" htmlFor="webhook_url">
-          Webhook Callback URL
-        </label>
-        <input 
-          id="webhook_url" 
-          type="url" 
-          className="w-full bg-surface-container-lowest text-on-surface border border-outline-variant rounded p-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors font-code text-code placeholder:text-outline" 
-          placeholder="https://api.rentivo.com/v1/webhooks/wa/..." 
-        />
-      </div>
-
-      {/* Bearer Token Input */}
-      <div>
-        <label className="block font-label-caps text-label-caps text-on-surface mb-xs" htmlFor="bearer_token">
-          Verify Token / Bearer Token
+    <form 
+      action={async (formData) => {
+        setLoading(true)
+        await saveSetupAction(formData)
+      }}
+      className="flex flex-col gap-5"
+    >
+      {/* Phone Number Input */}
+      <div className="flex flex-col gap-2">
+        <label className="font-label-caps text-label-caps font-bold text-on-surface-variant tracking-wider uppercase" htmlFor="phone">
+          Nomor WhatsApp Bisnis <span className="text-rose-500">*</span>
         </label>
         <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Phone className="h-4 w-4 text-on-surface-variant" />
+          </span>
           <input 
-            id="bearer_token" 
-            type="password" 
-            className="w-full bg-surface-container-lowest text-on-surface border border-outline-variant rounded p-sm pr-10 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors font-code text-code placeholder:text-outline" 
-            placeholder="Masukkan token verifikasi..." 
+            id="phone" 
+            name="phone"
+            type="tel" 
+            required
+            className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest pl-10 pr-4 py-2.5 font-body-md text-body-md text-on-surface outline-none transition duration-150 focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-outline" 
+            placeholder="Cth: +6281234567890" 
           />
         </div>
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Pastikan token ini sama dengan yang Anda atur di dashboard Meta App.</p>
+        <p className="text-xs text-on-surface-variant leading-relaxed">AI akan memproses pesan masuk dan mengintegrasikannya ke nomor WhatsApp yang didaftarkan di sini.</p>
       </div>
 
-      {/* Connection Status Panel (Informational) */}
-      <div className="bg-surface-bright border border-secondary-container rounded p-md flex gap-md items-start mt-sm">
-        <svg className="w-5 h-5 text-primary-container mt-[2px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        <div>
-          <h4 className="font-title-sm text-title-sm text-on-surface mb-xs">Petunjuk Integrasi</h4>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Setelah menyimpan, sistem akan mengirimkan payload percobaan (ping) ke URL yang Anda tentukan untuk memverifikasi handshake. Pastikan endpoint Anda merespons dengan HTTP 200.</p>
+      {/* Provider Selection (Read Only) */}
+      <div className="flex flex-col gap-2">
+        <label className="font-label-caps text-label-caps font-bold text-on-surface-variant tracking-wider uppercase">Provider Koneksi</label>
+        <div className="flex items-center gap-2.5 px-4 py-3 border border-outline-variant rounded-xl bg-surface-container-low/40">
+          <Link className="w-5 h-5 text-primary shrink-0" />
+          <span className="font-body-md text-body-md text-on-surface font-medium">Meta Cloud API (Resmi) & Baileys Client</span>
         </div>
       </div>
 
-      <div className="pt-lg border-t border-outline-variant mt-lg flex justify-between items-center">
+      {/* Webhook Info Panel */}
+      <div className="bg-sky-50/50 border border-sky-500/20 rounded-2xl p-4 flex gap-3 items-start mt-2">
+        <Check className="w-5 h-5 text-sky-600 mt-[2px] shrink-0" />
+        <div>
+          <h4 className="font-title-sm text-body-sm font-semibold text-sky-900 leading-5">Integrasi Instan</h4>
+          <p className="text-xs text-sky-850 mt-1 leading-relaxed">
+            WhatsApp yang didaftarkan akan secara otomatis diarahkan ke webhook AI Rentivo. Saat penyewa menyapa pertama kali, AI akan membalas dengan template booking.
+          </p>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="pt-5 border-t border-outline-variant mt-3 flex justify-between items-center">
         <button 
           type="button" 
           onClick={handleSkip}
-          className="px-md py-sm border border-outline-variant text-secondary rounded font-title-sm text-title-sm hover:bg-surface-container transition-colors flex items-center gap-xs"
+          className="btn btn-secondary btn-sm"
         >
           Lewati
         </button>
         <button 
           type="submit" 
           disabled={loading}
-          className="px-lg py-sm bg-primary text-on-primary rounded font-title-sm text-title-sm hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-xs shadow-sm disabled:opacity-70"
+          className="btn btn-primary"
         >
           {loading ? 'Menyimpan...' : 'Simpan & Lanjutkan'}
         </button>

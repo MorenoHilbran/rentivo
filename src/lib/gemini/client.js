@@ -8,30 +8,74 @@
 import fetch from 'node-fetch'
 
 function mockExtract(text) {
-  // Very small heuristic extractor for dev: finds numbers and date-like tokens.
-  const items = []
-  const qtyMatches = text.match(/(\d+)\s*(unit|buah|pcs|item|unit)/i)
-  if (qtyMatches) {
-    items.push({ productName: 'Unknown Item', quantity: Number(qtyMatches[1]), unit: 'unit' })
+  // Regex parser for our standard template format
+  const nameMatch = text.match(/Nama Penyewa:\s*([^\n\r]+)/i)
+  const productMatch = text.match(/Produk:\s*([^\n\r]+)/i)
+  const qtyMatch = text.match(/Jumlah Unit:\s*(\d+)/i)
+  const durationMatch = text.match(/Waktu Sewa:\s*([^\n\r]+)/i)
+  const dateMatch = text.match(/Tanggal Mulai:\s*([\d\-\/]+)/i)
+  const notesMatch = text.match(/Catatan:\s*([^\n\r]+)/i)
+
+  const tenantName = nameMatch ? nameMatch[1].trim() : 'Penyewa Demo'
+  let productName = productMatch ? productMatch[1].trim() : 'Sony A7 III Body'
+  
+  // Clean up productName matching to match our seeded product names
+  if (productName.toLowerCase().includes('sony') || productName.toLowerCase().includes('a7')) {
+    productName = 'Sony A7 III Body'
+  } else if (productName.toLowerCase().includes('dji') || productName.toLowerCase().includes('mini')) {
+    productName = 'DJI Mini 3 Pro'
+  } else if (productName.toLowerCase().includes('light') || productName.toLowerCase().includes('lighting')) {
+    productName = 'Lighting Kit Pro'
+  } else if (productName.toLowerCase().includes('tripod')) {
+    productName = 'Tripod Carbon'
   }
 
-  // naive date match (YYYY-MM-DD or dd/mm/yyyy or dd-mm-yyyy)
-  const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})|(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/)
+  const quantity = qtyMatch ? Number(qtyMatch[1]) : 1
+  const notes = notesMatch ? notesMatch[1].trim() : 'Booking via WhatsApp AI'
+
+  let startDateStr = dateMatch ? dateMatch[1].trim() : null
   let startDate = null
   let endDate = null
-  if (dateMatch) {
-    startDate = dateMatch[0]
-    endDate = dateMatch[0]
+
+  if (startDateStr) {
+    // Normalise slash to dash
+    startDateStr = startDateStr.replace(/\//g, '-')
+    const d = new Date(startDateStr)
+    if (!isNaN(d.getTime())) {
+      startDate = d.toISOString().split('T')[0]
+      
+      // Calculate duration in days
+      let days = 1
+      if (durationMatch) {
+        const daysParsed = parseInt(durationMatch[1])
+        if (!isNaN(daysParsed)) days = daysParsed
+      }
+      const endD = new Date(d.getTime() + days * 24 * 3600 * 1000)
+      endDate = endD.toISOString().split('T')[0]
+    }
+  }
+
+  if (!startDate) {
+    const today = new Date()
+    startDate = today.toISOString().split('T')[0]
+    endDate = new Date(today.getTime() + 24 * 3600 * 1000).toISOString().split('T')[0]
   }
 
   return {
     intent: 'booking_inquiry',
-    items,
+    customerName: tenantName,
+    items: [
+      {
+        productName,
+        quantity,
+        unit: 'daily',
+      }
+    ],
     startDate,
     endDate,
-    notes: text.slice(0, 800),
-    raw: { mocked: true },
-    confidence: 0.55,
+    notes,
+    raw: { mocked: true, parsedFromTemplate: true },
+    confidence: 0.95, // High confidence since it follows standard structure
   }
 }
 

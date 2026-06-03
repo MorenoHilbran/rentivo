@@ -1,14 +1,15 @@
 import SectionPage from '@/components/SectionPage'
-import { FormCard, Field, TextareaField, GridForm, TableCard, StatusPill, Notice } from '@/components/ManagementUI'
+import { FormCard, Field, TextareaField, GridForm, TableCard, Notice } from '@/components/ManagementUI'
 import { upsertCustomerAction } from '../actions'
 import { db } from '@/lib/db'
 import { customers } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
+import CustomerListClient from '@/components/CustomerListClient'
 
 export const metadata = { title: 'Pelanggan | Rentivo' }
 
-export default async function CustomersPage({ searchParams }) {
+export default async function CustomersPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth()
 
   const recentCustomers = await db
@@ -16,8 +17,9 @@ export default async function CustomersPage({ searchParams }) {
     .from(customers)
     .where(eq(customers.tenantId, tenantId))
     .orderBy(desc(customers.createdAt))
-    .limit(6)
+    .limit(50) // increased list limit from 6 to 50 for a richer user experience
 
+  const searchParams = await searchParamsPromise
   const feedbackKey = searchParams?.error ? 'error' : searchParams?.success ? 'success' : null
   const feedbackMessage = searchParams?.error ?? searchParams?.success ?? null
 
@@ -34,6 +36,7 @@ export default async function CustomersPage({ searchParams }) {
       {feedbackMessage ? (
         <Notice tone={feedbackKey === 'error' ? 'error' : 'success'} title={feedbackKey === 'error' ? 'Gagal menyimpan' : 'Berhasil'} message={feedbackMessage} />
       ) : null}
+      
       <FormCard
         title="Tambah / Perbarui pelanggan"
         description="Isi data pelanggan secara manual. Jika nomor telepon sama sudah ada, data akan diperbarui."
@@ -50,28 +53,8 @@ export default async function CustomersPage({ searchParams }) {
         </form>
       </FormCard>
 
-      <TableCard title="Pelanggan terbaru" description="Data yang baru ditambahkan atau diperbarui.">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Nama</th>
-              <th>Kontak</th>
-              <th>State</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentCustomers.map((customer) => (
-              <tr key={customer.id}>
-                <td>{customer.name}</td>
-                <td>
-                  <div>{customer.phoneNumber}</div>
-                  {customer.email ? <div className="text-muted">{customer.email}</div> : null}
-                </td>
-                <td><StatusPill tone="primary">Manual ready</StatusPill></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <TableCard title="Daftar Pelanggan (CRM)" description="Daftar lengkap pelanggan bisnis rental Anda. Klik 'Profil' untuk melihat catatan khusus dan total spending.">
+        <CustomerListClient customers={recentCustomers} />
       </TableCard>
     </SectionPage>
   )

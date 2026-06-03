@@ -1,14 +1,15 @@
 import SectionPage from '@/components/SectionPage'
-import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, StatusPill, Notice } from '@/components/ManagementUI'
+import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, Notice } from '@/components/ManagementUI'
 import { createInventoryUnitAction, createProductAction } from '../actions'
 import { db } from '@/lib/db'
 import { inventoryUnits, products } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
+import InventoryListClient from '@/components/InventoryListClient'
 
 export const metadata = { title: 'Inventaris | Rentivo' }
 
-export default async function InventoryPage({ searchParams }) {
+export default async function InventoryPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth()
 
   const productRows = await db
@@ -16,7 +17,7 @@ export default async function InventoryPage({ searchParams }) {
     .from(products)
     .where(eq(products.tenantId, tenantId))
     .orderBy(desc(products.createdAt))
-    .limit(20)
+    .limit(40) // increased product row limits for select dropdowns
 
   const unitRows = await db
     .select({
@@ -31,8 +32,9 @@ export default async function InventoryPage({ searchParams }) {
     .leftJoin(products, eq(inventoryUnits.productId, products.id))
     .where(eq(inventoryUnits.tenantId, tenantId))
     .orderBy(desc(inventoryUnits.createdAt))
-    .limit(8)
+    .limit(50) // increased unit limit to 50 for a richer list view
 
+  const searchParams = await searchParamsPromise
   const feedbackKey = searchParams?.error ? 'error' : searchParams?.success ? 'success' : null
   const feedbackMessage = searchParams?.error ?? searchParams?.success ?? null
 
@@ -49,6 +51,7 @@ export default async function InventoryPage({ searchParams }) {
       {feedbackMessage ? (
         <Notice tone={feedbackKey === 'error' ? 'error' : 'success'} title={feedbackKey === 'error' ? 'Gagal menyimpan' : 'Berhasil'} message={feedbackMessage} />
       ) : null}
+      
       <div className="grid gap-lg xl:grid-cols-2">
         <FormCard title="Tambah produk" description="Daftarkan jenis barang yang akan disewakan.">
           <form action={createProductAction} className="space-y-4">
@@ -56,9 +59,9 @@ export default async function InventoryPage({ searchParams }) {
               <Field label="Nama produk" name="name" placeholder="Contoh: Sony A7 III" />
               <Field label="Kategori" name="category" placeholder="Contoh: Kamera" required={false} />
               <Field label="Deposit" name="depositAmount" type="number" min="0" step="1000" placeholder="0" />
-              <label className="block space-y-2">
-                <span className="font-label-caps text-label-caps text-on-surface-variant">Aktif</span>
-                <input type="checkbox" name="isActive" defaultChecked className="h-5 w-5 rounded border-outline-variant" />
+              <label className="flex items-center gap-2 cursor-pointer pt-3">
+                <input type="checkbox" name="isActive" defaultChecked className="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer" />
+                <span className="font-label-caps text-label-caps text-on-surface-variant font-bold uppercase tracking-wider select-none">Aktif</span>
               </label>
             </GridForm>
             <TextareaField label="Deskripsi" name="description" placeholder="Deskripsi singkat produk" required={false} />
@@ -88,30 +91,8 @@ export default async function InventoryPage({ searchParams }) {
         </FormCard>
       </div>
 
-      <TableCard title="Unit terbaru" description="Unit yang baru ditambahkan atau diperbarui.">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Unit</th>
-              <th>Produk</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {unitRows.map((unit) => (
-              <tr key={unit.id}>
-                <td>
-                  <div>{unit.unitCode}</div>
-                  {unit.serialNumber ? <div className="text-muted">{unit.serialNumber}</div> : null}
-                </td>
-                <td>{unit.productName ?? '-'}</td>
-                <td>
-                  <StatusPill tone={unit.status === 'available' ? 'success' : unit.status === 'rented' ? 'warning' : 'info'}>{unit.status}</StatusPill>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <TableCard title="Daftar Unit Fisik" description="Filter unit berdasarkan status ketersediaan atau gunakan bar pencarian.">
+        <InventoryListClient units={unitRows} />
       </TableCard>
     </SectionPage>
   )

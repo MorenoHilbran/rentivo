@@ -13,6 +13,8 @@ import {
   products,
   returns,
   tenantMembers,
+  tenants,
+  aiDrafts,
 } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
@@ -344,4 +346,120 @@ export async function recordReturnAction(formData) {
 
   refreshPaths()
   redirect('/returns')
+}
+
+export async function updateTenantSettingsAction(formData) {
+  const { tenantId } = await requireTenantAuth()
+
+  const name = String(formData.get('name') ?? '').trim()
+  const phoneNumber = String(formData.get('phoneNumber') ?? '').trim()
+  const address = String(formData.get('address') ?? '').trim() || null
+  const city = String(formData.get('city') ?? '').trim() || null
+
+  if (!name) {
+    redirectWith('/settings', 'error', 'Nama bisnis wajib diisi')
+  }
+
+  await db.update(tenants).set({
+    name,
+    phoneNumber,
+    address,
+    city,
+    updatedAt: new Date()
+  }).where(eq(tenants.id, tenantId))
+
+  revalidatePath('/settings')
+  revalidatePath('/dashboard')
+  redirect('/settings?success=' + encodeURIComponent('Pengaturan berhasil disimpan'))
+}
+
+export async function approveDraftFromInboxAction(draftId) {
+  const { tenantId } = await requireTenantAuth()
+
+  const draft = await db.query.aiDrafts.findFirst({
+    where: (d, { eq, and }) => and(eq(d.tenantId, tenantId), eq(d.id, draftId)),
+  })
+
+  if (!draft) {
+    throw new Error('Draft tidak ditemukan')
+  }
+
+  const { createBookingFromDraft } = await import('@/lib/booking/createFromDraft')
+  const result = await createBookingFromDraft(draft)
+
+  refreshPaths()
+  revalidatePath('/inbox')
+  return { ok: true, bookingId: result.booking.id }
+}
+
+export async function rejectDraftFromInboxAction(draftId, reason = 'Ditolak oleh admin') {
+  const { tenantId } = await requireTenantAuth()
+
+  await db.update(aiDrafts).set({
+    status: 'rejected',
+    rejectReason: reason,
+    updatedAt: new Date()
+  }).where(and(eq(aiDrafts.tenantId, tenantId), eq(aiDrafts.id, draftId)))
+
+  refreshPaths()
+  revalidatePath('/inbox')
+  return { ok: true }
+}
+
+export async function sendManualChatAction(formData) {
+  const { tenantId } = await requireTenantAuth()
+
+  const conversationId = String(formData.get('conversationId') ?? '').trim()
+  const content = String(formData.get('content') ?? '').trim()
+
+  if (!conversationId || !content) {
+    redirectWith('/inbox', 'error', 'Pesan tidak boleh kosong')
+  }
+
+  const conv = await db.query.conversations.findFirst({
+    where: (c, { eq, and }) => and(eq(c.tenantId, tenantId), eq(c.id, conversationId)),
+  })
+
+  if (!conv) {
+    redirectWith('/inbox', 'error', 'Percakapan tidak ditemukan')
+  }
+
+  // Insert outbound message
+  await db.insert(schema.messages).values({
+    tenantId,
+    conversationId,
+    direction: 'outbound',
+    content,
+    sentAt: new Date(),
+  })
+
+  // Update conversation lastMessage preview
+  await db.update(conversations).set({
+    lastMessageAt: new Date(),
+    lastMessagePreview: content.substring(0, 200),
+  }).where(eq(conversations.id, conversationId))
+
+  revalidatePath('/inbox')
+  redirect(`/inbox?conversationId=${conversationId}`)
+}
+
+export async function updateBookingStatusAction(bookingId, nextStatus) {
+  const { tenantId } = await requireTenantAuth()
+
+  const booking = await db.query.bookings.findFirst({
+    where: (b, { eq, and }) => and(eq(b.tenantId, tenantId), eq(b.id, bookingId))
+  })
+
+  if (!booking) {
+    throw new Error('Booking tidak ditemukan')
+  }
+
+  await db.update(bookings).set({
+    status: nextStatus,
+    updatedAt: new Date()
+  }).where(eq(bookings.id, bookingId))
+
+  refreshPaths()
+  revalidatePath('/bookings')
+  return { ok: true }
 }

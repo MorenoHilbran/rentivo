@@ -1,0 +1,57 @@
+/** @type {import('tailwindcss').Config} */
+const config = {
+  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  theme: {
+    extend: {
+      spacing: {
+        xs: '4px',
+        sm: '8px',
+        md: '16px',
+        lg: '24px',
+        xl: '32px',
+        '2xl': '48px',
+      },
+      colors: {
+        primary: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
+        'primary-container': 'rgb(var(--color-primary-container-rgb) / <alpha-value>)',
+        'primary-fixed': 'rgb(var(--color-primary-fixed-rgb) / <alpha-value>)',
+        'on-primary': 'var(--color-on-primary)',
+        'on-primary-container': 'var(--color-on-primary-container)',
+        'on-primary-fixed-variant': 'rgb(var(--color-on-primary-fixed-variant-rgb) / <alpha-value>)',
+        secondary: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
+        'secondary-container': 'rgb(var(--color-secondary-container-rgb) / <alpha-value>)',
+        'on-secondary': 'var(--color-on-secondary)',
+        'on-secondary-container': 'var(--color-on-secondary-container)',
+        tertiary: 'rgb(var(--color-tertiary-rgb) / <alpha-value>)',
+        'tertiary-container': 'rgb(var(--color-tertiary-container-rgb) / <alpha-value>)',
+        'on-tertiary': 'var(--color-on-tertiary)',
+        surface: 'rgb(var(--color-surface-rgb) / <alpha-value>)',
+        'surface-variant': 'rgb(var(--color-surface-variant-rgb) / <alpha-value>)',
+        'surface-container-lowest': 'rgb(var(--color-surface-container-lowest-rgb) / <alpha-value>)',
+        'surface-container-low': 'rgb(var(--color-surface-container-low-rgb) / <alpha-value>)',
+        'surface-container': 'rgb(var(--color-surface-container-rgb) / <alpha-value>)',
+        'surface-container-high': 'rgb(var(--color-surface-container-high-rgb) / <alpha-value>)',
+        'on-surface': 'var(--color-on-surface)',
+        'on-surface-variant': 'var(--color-on-surface-variant)',
+        background: 'var(--color-background)',
+        'on-background': 'var(--color-on-background)',
+        outline: 'rgb(var(--color-outline-rgb) / <alpha-value>)',
+        'outline-variant': 'rgb(var(--color-outline-variant-rgb) / <alpha-value>)',
+        success: 'rgb(var(--color-success-rgb) / <alpha-value>)',
+        'success-container': 'rgb(var(--color-success-container-rgb) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning-rgb) / <alpha-value>)',
+        'warning-container': 'rgb(var(--color-warning-container-rgb) / <alpha-value>)',
+        info: 'rgb(var(--color-info-rgb) / <alpha-value>)',
+        'info-container': 'rgb(var(--color-info-container-rgb) / <alpha-value>)',
+        error: 'rgb(var(--color-error-rgb) / <alpha-value>)',
+        'error-container': 'rgb(var(--color-error-container-rgb) / <alpha-value>)',
+      },
+      borderRadius: {
+        '3xl': '1.5rem',
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config

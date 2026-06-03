@@ -1,14 +1,15 @@
 import SectionPage from '@/components/SectionPage'
-import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, StatusPill, Notice } from '@/components/ManagementUI'
+import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, Notice } from '@/components/ManagementUI'
 import { recordInvoicePaymentAction } from '../actions'
 import { db } from '@/lib/db'
 import { bookings, invoices } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
+import InvoiceListClient from '@/components/InvoiceListClient'
 
 export const metadata = { title: 'Invoice | Rentivo' }
 
-export default async function InvoicesPage({ searchParams }) {
+export default async function InvoicesPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth()
 
   const invoiceRows = await db
@@ -16,16 +17,21 @@ export default async function InvoicesPage({ searchParams }) {
       id: invoices.id,
       invoiceNumber: invoices.invoiceNumber,
       status: invoices.status,
+      rentalAmount: invoices.rentalAmount,
+      depositAmount: invoices.depositAmount,
+      damageFee: invoices.damageFee,
       totalAmount: invoices.totalAmount,
       paidAmount: invoices.paidAmount,
+      notes: invoices.notes,
       bookingNumber: bookings.bookingNumber,
     })
     .from(invoices)
     .leftJoin(bookings, eq(invoices.bookingId, bookings.id))
     .where(eq(invoices.tenantId, tenantId))
     .orderBy(desc(invoices.createdAt))
-    .limit(12)
+    .limit(30) // increased invoice limit from 12 to 30 for better usability
 
+  const searchParams = await searchParamsPromise
   const feedbackKey = searchParams?.error ? 'error' : searchParams?.success ? 'success' : null
   const feedbackMessage = searchParams?.error ?? searchParams?.success ?? null
 
@@ -42,19 +48,24 @@ export default async function InvoicesPage({ searchParams }) {
       {feedbackMessage ? (
         <Notice tone={feedbackKey === 'error' ? 'error' : 'success'} title={feedbackKey === 'error' ? 'Gagal menyimpan' : 'Berhasil'} message={feedbackMessage} />
       ) : null}
+      
       <FormCard title="Catat pembayaran invoice" description="Gunakan ini untuk menambah pembayaran masuk dan memperbarui status invoice.">
         <form action={recordInvoicePaymentAction} className="space-y-4">
           <GridForm>
             <SelectField label="Invoice" name="invoiceId">
               <option value="">Pilih invoice</option>
-              {invoiceRows.map((invoice) => <option key={invoice.id} value={invoice.id}>{invoice.invoiceNumber} - {invoice.bookingNumber ?? '-'}</option>)}
+              {invoiceRows.map((invoice) => (
+                <option key={invoice.id} value={invoice.id}>
+                  {invoice.invoiceNumber} - {invoice.bookingNumber ?? '-'}
+                </option>
+              ))}
             </SelectField>
             <Field label="Nominal pembayaran" name="amount" type="number" min="0" step="1000" />
             <Field label="Nama bank" name="bankName" required={false} />
             <Field label="Nama akun" name="accountName" required={false} />
-            <label className="block space-y-2 md:col-span-2">
-              <span className="font-label-caps text-label-caps text-on-surface-variant">Verifikasi manual</span>
-              <input type="checkbox" name="isVerified" defaultChecked className="h-5 w-5 rounded border-outline-variant" />
+            <label className="flex items-center gap-2 cursor-pointer pt-3 md:col-span-2">
+              <input type="checkbox" name="isVerified" defaultChecked className="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer" />
+              <span className="font-label-caps text-label-caps text-on-surface-variant font-bold uppercase tracking-wider select-none">Verifikasi manual</span>
             </label>
           </GridForm>
           <TextareaField label="Catatan transfer" name="transferNote" required={false} placeholder="Contoh: pembayaran DP via transfer" />
@@ -62,27 +73,8 @@ export default async function InvoicesPage({ searchParams }) {
         </form>
       </FormCard>
 
-      <TableCard title="Invoice terbaru" description="Status tagihan dan nominal yang sudah masuk.">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Invoice</th>
-              <th>Booking</th>
-              <th>Status</th>
-              <th>Bayar / Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoiceRows.map((invoice) => (
-              <tr key={invoice.id}>
-                <td>{invoice.invoiceNumber}</td>
-                <td>{invoice.bookingNumber ?? '-'}</td>
-                <td><StatusPill tone={invoice.status === 'paid' ? 'success' : invoice.status === 'partial' ? 'warning' : 'neutral'}>{invoice.status}</StatusPill></td>
-                <td>{`Rp ${Number(invoice.paidAmount ?? 0).toLocaleString('id-ID')} / Rp ${Number(invoice.totalAmount ?? 0).toLocaleString('id-ID')}`}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <TableCard title="Daftar Invoice & Tagihan" description="Klik 'Rincian' untuk melihat detail lengkap tagihan, jaminan deposit, dan sisa pembayaran.">
+        <InvoiceListClient invoices={invoiceRows} />
       </TableCard>
     </SectionPage>
   )

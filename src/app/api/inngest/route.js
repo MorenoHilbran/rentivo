@@ -106,8 +106,40 @@ export async function POST(request) {
       unreadCount: conv.unreadCount + 1,
     }).where(eq(conversations.id, conv.id))
 
-    // 5) Create an AI draft placeholder (Gemini analysis will fill this later)
-    await db.insert(aiDrafts).values({
+    // Check if the message matches our booking template format
+    const hasTemplate = content.includes('Nama Penyewa:') || content.includes('Produk:')
+
+    if (!hasTemplate) {
+      // It's a greeting/other message. Reply with our booking template!
+      const templateText = `Halo! Selamat datang di Rentivo. Silakan isi format berikut untuk melakukan pemesanan:
+
+Nama Penyewa: [Nama Anda]
+Produk: [Nama Produk, cth: Sony A7 III Body]
+Jumlah Unit: [Jumlah, cth: 1]
+Waktu Sewa: [Hari/Jam, cth: 3 hari]
+Tanggal Mulai: [Format YYYY-MM-DD, cth: 2026-06-10]
+Catatan: [Catatan Anda]`
+
+      // Insert outbound auto-reply message
+      await db.insert(messages).values({
+        tenantId,
+        conversationId: conv.id,
+        direction: 'outbound',
+        content: templateText,
+        sentAt: new Date(sentAt.getTime() + 1000),
+      })
+
+      // Update conversation with auto-reply message
+      await db.update(conversations).set({
+        lastMessageAt: new Date(sentAt.getTime() + 1000),
+        lastMessagePreview: templateText.substring(0, 200),
+      }).where(eq(conversations.id, conv.id))
+
+      return NextResponse.json({ ok: true, repliedWithTemplate: true, customerId: customer.id, conversationId: conv.id })
+    }
+
+    // 5) Create an AI draft placeholder since the customer replied with template data
+    const [draft] = await db.insert(aiDrafts).values({
       tenantId,
       messageId: msg.id,
       conversationId: conv.id,
@@ -115,9 +147,13 @@ export async function POST(request) {
       status: 'pending',
       extractedData: {},
       confidence: null,
-    })
+    }).returning()
 
-    return NextResponse.json({ ok: true, customerId: customer.id, conversationId: conv.id, messageId: msg.id })
+    // Synchronously run the AI analysis so that draft information updates instantly for testing
+    const { analyzeDraftById } = await import('@/lib/inngest/geminiAnalyze')
+    await analyzeDraftById(draft.id)
+
+    return NextResponse.json({ ok: true, customerId: customer.id, conversationId: conv.id, messageId: msg.id, draftId: draft.id })
   } catch (err) {
     console.error('inngest webhook error:', err)
     return NextResponse.json({ ok: false, error: 'internal_error' }, { status: 500 })
