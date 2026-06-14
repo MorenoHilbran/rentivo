@@ -385,90 +385,95 @@ export async function updateTenantSettingsAction(formData) {
 }
 
 export async function approveDraftFromInboxAction(draftId) {
-  const { tenantId } = await requireTenantAuth()
-
-  const draft = await db.query.aiDrafts.findFirst({
-    where: (d, { eq, and }) => and(eq(d.tenantId, tenantId), eq(d.id, draftId)),
-  })
-
-  if (!draft) {
-    throw new Error('Draft tidak ditemukan')
-  }
-
-  const { createBookingFromDraft } = await import('@/lib/booking/createFromDraft')
-  const result = await createBookingFromDraft(draft)
-
-  // Send approval notification with bank details to the customer
   try {
-    const customer = await db.query.customers.findFirst({
-      where: (c, { eq }) => eq(c.id, draft.customerId),
+    const { tenantId } = await requireTenantAuth()
+
+    const draft = await db.query.aiDrafts.findFirst({
+      where: (d, { eq, and }) => and(eq(d.tenantId, tenantId), eq(d.id, draftId)),
     })
 
-    const tenant = await db.query.tenants.findFirst({
-      where: (t, { eq }) => eq(t.id, tenantId),
-    })
+    if (!draft) {
+      return { ok: false, error: 'Draft tidak ditemukan' }
+    }
 
-    if (customer && customer.phoneNumber) {
-      const totalFormatted = Number(result.invoice.totalAmount).toLocaleString('id-ID')
-      let bankText = ''
-      if (tenant?.bankName && tenant?.bankAccountNumber) {
-        bankText = `\nSilakan lakukan transfer ke rekening berikut:\nBank: ${tenant.bankName}\nNo. Rekening: ${tenant.bankAccountNumber}\nAtas Nama: ${tenant.bankAccountName || tenant.name}\n\nKirimkan bukti transfer (foto/screenshot) di sini setelah melakukan pembayaran.`
-      } else {
-        bankText = `\nSilakan hubungi kami untuk informasi detail rekening pembayaran.`
-      }
+    const { createBookingFromDraft } = await import('@/lib/booking/createFromDraft')
+    const result = await createBookingFromDraft(draft)
 
-      const approvalText = `Pesanan Anda sudah dibuat!\n\nTotal Pembayaran: Rp ${totalFormatted}\n${bankText}`
-
-      // Find the conversation for this customer
-      const conv = await db.query.conversations.findFirst({
-        where: (c, { eq, and }) => and(eq(c.tenantId, tenantId), eq(c.customerId, customer.id)),
+    // Send approval notification with bank details to the customer
+    try {
+      const customer = await db.query.customers.findFirst({
+        where: (c, { eq }) => eq(c.id, draft.customerId),
       })
 
-      if (conv) {
-        // 1) Save outbound message to database
-        await db.insert(messages).values({
-          tenantId,
-          conversationId: conv.id,
-          direction: 'outbound',
-          content: approvalText,
-          sentAt: new Date(),
+      const tenant = await db.query.tenants.findFirst({
+        where: (t, { eq }) => eq(t.id, tenantId),
+      })
+
+      if (customer && customer.phoneNumber) {
+        const totalFormatted = Number(result.invoice.totalAmount).toLocaleString('id-ID')
+        let bankText = ''
+        if (tenant?.bankName && tenant?.bankAccountNumber) {
+          bankText = `\nSilakan lakukan transfer ke rekening berikut:\nBank: ${tenant.bankName}\nNo. Rekening: ${tenant.bankAccountNumber}\nAtas Nama: ${tenant.bankAccountName || tenant.name}\n\nKirimkan bukti transfer (foto/screenshot) di sini setelah melakukan pembayaran.`
+        } else {
+          bankText = `\nSilakan hubungi kami untuk informasi detail rekening pembayaran.`
+        }
+
+        const approvalText = `Pesanan Anda sudah dibuat!\n\nTotal Pembayaran: Rp ${totalFormatted}\n${bankText}`
+
+        // Find the conversation for this customer
+        const conv = await db.query.conversations.findFirst({
+          where: (c, { eq, and }) => and(eq(c.tenantId, tenantId), eq(c.customerId, customer.id)),
         })
 
-        // 2) Update conversation meta
-        await db.update(conversations).set({
-          lastMessageAt: new Date(),
-          lastMessagePreview: approvalText.substring(0, 200),
-        }).where(eq(conversations.id, conv.id))
-
-        // 3) Call WhatsApp Bridge to send actual message
-        let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
-        if (baileysUrl) {
-          baileysUrl = baileysUrl.trim().replace(/\/$/, '')
-          if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
-            baileysUrl = `https://${baileysUrl}`
-          }
-          await fetch(`${baileysUrl}/api/send-message`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
-            },
-            body: JSON.stringify({
-              to: customer.phoneNumber,
-              text: approvalText,
-            }),
-            signal: AbortSignal.timeout(5000),
+        if (conv) {
+          // 1) Save outbound message to database
+          await db.insert(messages).values({
+            tenantId,
+            conversationId: conv.id,
+            direction: 'outbound',
+            content: approvalText,
+            sentAt: new Date(),
           })
+
+          // 2) Update conversation meta
+          await db.update(conversations).set({
+            lastMessageAt: new Date(),
+            lastMessagePreview: approvalText.substring(0, 200),
+          }).where(eq(conversations.id, conv.id))
+
+          // 3) Call WhatsApp Bridge to send actual message
+          let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
+          if (baileysUrl) {
+            baileysUrl = baileysUrl.trim().replace(/\/$/, '')
+            if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
+              baileysUrl = `https://${baileysUrl}`
+            }
+            await fetch(`${baileysUrl}/api/send-message`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
+              },
+              body: JSON.stringify({
+                to: customer.phoneNumber,
+                text: approvalText,
+              }),
+              signal: AbortSignal.timeout(5000),
+            })
+          }
         }
       }
+    } catch (notificationErr) {
+      console.error('[Approval Notification] Failed to send notification:', notificationErr.message)
     }
-  } catch (notificationErr) {
-    console.error('[Approval Notification] Failed to send notification:', notificationErr.message)
-  }
 
-  refreshPaths()
-  revalidatePath('/inbox')
-  return { ok: true, bookingId: result.booking.id }
+    refreshPaths()
+    revalidatePath('/inbox')
+    return { ok: true, bookingId: result.booking.id }
+  } catch (err) {
+    console.error('Error approving draft:', err)
+    return { ok: false, error: err.message || String(err) }
+  }
 }
 
 export async function rejectDraftFromInboxAction(draftId, reason = 'Ditolak oleh admin') {

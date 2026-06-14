@@ -331,6 +331,12 @@ Catatan: Butuh filter ND jika ada`
         })
         setPendingDraft(null)
         router.refresh()
+      } else {
+        addToast({
+          title: 'Gagal menyetujui',
+          message: res.error || 'Terjadi kesalahan saat membuat booking.',
+          tone: 'error',
+        })
       }
     } catch (err) {
       addToast({ title: 'Gagal menyetujui', message: String(err), tone: 'error' })
