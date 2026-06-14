@@ -23,7 +23,10 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
-import crypto from 'node:crypto'
+import * as crypto from 'node:crypto'
+if (typeof globalThis.crypto === 'undefined') {
+  globalThis.crypto = crypto.webcrypto || crypto
+}
 import dotenv from 'dotenv'
 import qrcode from 'qrcode'
 import pino from 'pino'
