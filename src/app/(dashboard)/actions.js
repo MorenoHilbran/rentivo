@@ -20,7 +20,7 @@ import {
 } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/server'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -536,6 +536,21 @@ export async function updateBookingStatusAction(bookingId, nextStatus) {
 
   if (!booking) {
     throw new Error('Booking tidak ditemukan')
+  }
+
+  if (nextStatus === 'cancelled') {
+    const bookingLines = await db
+      .select({ unitId: bookingItems.inventoryUnitId })
+      .from(bookingItems)
+      .where(and(eq(bookingItems.tenantId, tenantId), eq(bookingItems.bookingId, bookingId)))
+
+    const unitIds = bookingLines.map((line) => line.unitId).filter(Boolean)
+    if (unitIds.length > 0) {
+      await db.update(inventoryUnits).set({
+        status: 'available',
+        updatedAt: new Date()
+      }).where(and(eq(inventoryUnits.tenantId, tenantId), inArray(inventoryUnits.id, unitIds)))
+    }
   }
 
   await db.update(bookings).set({

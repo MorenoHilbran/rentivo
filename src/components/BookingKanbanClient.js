@@ -257,17 +257,34 @@ export default function BookingKanbanClient({ bookings }) {
                         </div>
 
                         {col.id === 'confirmed' && (
-                          <button onClick={() => transitionStatus(b.id, 'active', 'Aktif')} disabled={updatingId === b.id} style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 12px',
-                            fontSize: 11, fontWeight: 700, borderRadius: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
-                            border: '1px solid rgba(15,118,110,0.25)', background: 'rgba(15,118,110,0.08)', color: '#134e4a', cursor: 'pointer',
-                            opacity: updatingId === b.id ? 0.5 : 1, width: '100%', transition: 'all 150ms ease',
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,118,110,0.15)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,118,110,0.08)'}
-                          >
-                            Mulai Sewa <Truck size={13} strokeWidth={2.2} />
-                          </button>
+                          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                            <button onClick={() => transitionStatus(b.id, 'active', 'Aktif')} disabled={updatingId === b.id} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 12px',
+                              fontSize: 11, fontWeight: 700, borderRadius: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
+                              border: '1px solid rgba(15,118,110,0.25)', background: 'rgba(15,118,110,0.08)', color: '#134e4a', cursor: 'pointer',
+                              opacity: updatingId === b.id ? 0.5 : 1, flex: 1, transition: 'all 150ms ease',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,118,110,0.15)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,118,110,0.08)'}
+                            >
+                              Mulai Sewa
+                            </button>
+                            <button onClick={() => {
+                              if (confirm('Apakah Anda yakin ingin membatalkan penyewaan ini?')) {
+                                transitionStatus(b.id, 'cancelled', 'Dibatalkan')
+                              }
+                            }} disabled={updatingId === b.id} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 12px',
+                              fontSize: 11, fontWeight: 700, borderRadius: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
+                              border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#b91c1c', cursor: 'pointer',
+                              opacity: updatingId === b.id ? 0.5 : 1, flex: 1, transition: 'all 150ms ease',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                            >
+                              Batal
+                            </button>
+                          </div>
                         )}
                         {col.id === 'active' && (
                           <button onClick={() => transitionStatus(b.id, 'returning', 'Pengembalian')} disabled={updatingId === b.id} style={{
@@ -350,7 +367,26 @@ export default function BookingKanbanClient({ bookings }) {
         onClose={() => setSelectedBooking(null)}
         title="Detail Booking"
         size="md"
-        footer={<button onClick={() => setSelectedBooking(null)} className="btn btn-secondary btn-sm">Tutup</button>}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            {selectedBooking?.status === 'confirmed' ? (
+              <button
+                onClick={async () => {
+                  if (confirm('Apakah Anda yakin ingin membatalkan penyewaan ini?')) {
+                    const bId = selectedBooking.id
+                    setSelectedBooking(null)
+                    await transitionStatus(bId, 'cancelled', 'Dibatalkan')
+                  }
+                }}
+                disabled={updatingId === selectedBooking.id}
+                className="btn btn-error btn-sm"
+              >
+                Batal Sewa
+              </button>
+            ) : <div />}
+            <button onClick={() => setSelectedBooking(null)} className="btn btn-secondary btn-sm">Tutup</button>
+          </div>
+        }
       >
         {selectedBooking && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
