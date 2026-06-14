@@ -10,7 +10,7 @@ function normalizePhone(number) {
 }
 
 function verifySignature(rawBody, signature) {
-  const key = process.env.INNGEST_SIGNING_KEY
+  const key = process.env.BAILEYS_WEBHOOK_SECRET || process.env.INNGEST_SIGNING_KEY
   if (!key) return true // if no key configured, skip verification (dev)
   if (!signature) return false
 

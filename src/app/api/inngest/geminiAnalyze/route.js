@@ -3,7 +3,7 @@ import { analyzeDraftById } from '@/lib/inngest/geminiAnalyze'
 import crypto from 'crypto'
 
 function verifySignature(rawBody, signature) {
-  const key = process.env.INNGEST_SIGNING_KEY
+  const key = process.env.BAILEYS_WEBHOOK_SECRET || process.env.INNGEST_SIGNING_KEY
   if (!key) return true
   if (!signature) return false
   const h = crypto.createHmac('sha256', key).update(rawBody).digest('hex')
