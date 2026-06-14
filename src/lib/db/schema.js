@@ -173,6 +173,7 @@ export const customers = pgTable('customers', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
   phoneNumber: varchar('phone_number', { length: 30 }).notNull(),
+  whatsappJid: varchar('whatsapp_jid', { length: 100 }),
   email: varchar('email', { length: 255 }),
   address: text('address'),
   notes: text('notes'),

@@ -46,6 +46,11 @@ export default function CustomerListClient({ customers }) {
       (c.email && c.email.toLowerCase().includes(term))
   })
 
+  const formatDisplayPhone = (phone) => {
+    if (!phone) return '—'
+    return phone.split('@')[0]
+  }
+
   const formatRupiah = (val) => new Intl.NumberFormat('id-ID', {
     style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0,
   }).format(Number(val || 0))
@@ -111,7 +116,7 @@ export default function CustomerListClient({ customers }) {
                   </div>
                 </td>
                 <td>
-                  <div style={{ fontSize: 13.5 }}>{c.phoneNumber}</div>
+                  <div style={{ fontSize: 13.5 }}>{formatDisplayPhone(c.phoneNumber)}</div>
                   {c.email && <div style={{ fontSize: 12, color: 'var(--color-on-surface-variant)', marginTop: 3 }}>{c.email}</div>}
                 </td>
                 <td><StatusPill tone="primary">Aktif</StatusPill></td>
@@ -154,13 +159,13 @@ export default function CustomerListClient({ customers }) {
               </div>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-on-surface)', letterSpacing: '-0.01em' }}>{selectedCustomer.name}</div>
-                <div style={{ fontSize: 12.5, color: 'var(--color-on-surface-variant)', fontFamily: 'var(--font-mono)', marginTop: 3 }}>{selectedCustomer.phoneNumber}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--color-on-surface-variant)', fontFamily: 'var(--font-mono)', marginTop: 3 }}>{formatDisplayPhone(selectedCustomer.phoneNumber)}</div>
               </div>
             </div>
 
             {/* Detail grid */}
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
-              <DetailRow Icon={Phone}      label="Telepon"         value={selectedCustomer.phoneNumber || '—'}       bg="rgba(15,118,110,0.08)"  color="#0f766e" />
+              <DetailRow Icon={Phone}      label="Telepon"         value={formatDisplayPhone(selectedCustomer.phoneNumber)}       bg="rgba(15,118,110,0.08)"  color="#0f766e" />
               <DetailRow Icon={Mail}       label="Email"           value={selectedCustomer.email || '—'}             bg="rgba(2,132,199,0.08)"   color="#0284c7" />
               <DetailRow Icon={ShoppingBag} label="Total Transaksi" value={`${selectedCustomer.totalBookings || 0} order`} bg="rgba(217,119,6,0.08)" color="#d97706" />
               <DetailRow Icon={DollarSign} label="Total Belanja"   value={formatRupiah(selectedCustomer.totalSpent)} bg="rgba(5,150,105,0.08)"   color="#059669" mono accent />

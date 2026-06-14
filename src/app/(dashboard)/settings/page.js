@@ -136,7 +136,7 @@ Catatan: [Catatan Anda]`
                     label="Template Format Pemesanan WhatsApp" 
                     name="bookingTemplate" 
                     defaultValue={tenant?.bookingTemplate ?? ''} 
-                    placeholder={`Contoh:\nHalo! Selamat datang di Moreno Rental. Silakan lengkapi format ini:\n\nNama Penyewa:\nProduk:\nJumlah Unit:\nWaktu Sewa:\nTanggal Mulai:`} 
+                    placeholder={`Contoh:\nHalo! Selamat datang di Moreno Rental. Silakan lengkapi format ini:\n\nNama Penyewa: ...\nNo. HP / WhatsApp: ...\nProduk: ...\nJumlah Unit: ...\nWaktu Sewa: ...\nTanggal Mulai: ...`} 
                     required={false}
                     rows={6}
                     hint="Kosongkan untuk menggunakan template bawaan sistem."
@@ -237,6 +237,7 @@ Catatan: [Catatan Anda]`
                   {tenant?.bookingTemplate || `Halo! Selamat datang di ${tenant?.name || 'Rentivo'}. Silakan isi format berikut untuk melakukan pemesanan:
 
 Nama Penyewa: [Nama Anda]
+No. HP / WhatsApp: [Nomor HP Anda]
 Produk: [Nama Produk, cth: Sony A7 III Body]
 Jumlah Unit: [Jumlah, cth: 1]
 Waktu Sewa: [Hari/Jam, cth: 3 hari]

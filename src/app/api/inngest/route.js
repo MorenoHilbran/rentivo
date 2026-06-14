@@ -58,9 +58,12 @@ export async function POST(request) {
       return NextResponse.json({ ok: false, error: 'tenantId and from required' }, { status: 400 })
     }
 
-    // 1) Find or create customer by phone
+    // 1) Find or create customer by phone or JID (checks whatsappJid first, falls back to phoneNumber)
     let customer = await db.query.customers.findFirst({
-      where: (c, { eq }) => and(eq(c.tenantId, tenantId), eq(c.phoneNumber, from)),
+      where: (c, { eq, or }) => and(
+        eq(c.tenantId, tenantId),
+        or(eq(c.whatsappJid, from), eq(c.phoneNumber, from))
+      ),
     })
 
     if (!customer) {
@@ -68,8 +71,13 @@ export async function POST(request) {
         tenantId,
         name: payload.name ?? from,
         phoneNumber: from,
+        whatsappJid: from,
       }).returning()
       customer = newCustomer
+    } else if (!customer.whatsappJid) {
+      // Migrate existing customer by setting their whatsappJid JID
+      await db.update(customers).set({ whatsappJid: from }).where(eq(customers.id, customer.id))
+      customer.whatsappJid = from
     }
 
     // 2) Find or create conversation for this customer
@@ -103,6 +111,29 @@ export async function POST(request) {
       sentAt,
     }).returning()
 
+    // Try to extract real name and phone number from template if present
+    const hasTemplate = content.includes('Nama Penyewa:') || content.includes('Produk:')
+    if (hasTemplate) {
+      const extractedPhone = content.match(/(?:No\.\s*HP\s*\/\s*WhatsApp|WhatsApp|No\s*HP|Telepon|Phone):\s*([^\n\r]+)/i)?.[1]?.trim()
+      const extractedName = content.match(/(?:Nama\s*Penyewa):\s*([^\n\r]+)/i)?.[1]?.trim()
+      
+      const updateData = {}
+      if (extractedName && extractedName !== '[Nama Anda]' && !extractedName.includes('[') && !extractedName.includes(']')) {
+        updateData.name = extractedName
+      }
+      if (extractedPhone && !extractedPhone.includes('[') && !extractedPhone.includes(']')) {
+        const cleanPhone = extractedPhone.replace(/[^0-9+]/g, '')
+        if (cleanPhone.length >= 8) {
+          updateData.phoneNumber = cleanPhone
+        }
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await db.update(customers).set(updateData).where(eq(customers.id, customer.id))
+        customer = { ...customer, ...updateData }
+      }
+    }
+
     // 4) Update conversation meta
     await db.update(conversations).set({
       lastMessageAt: sentAt,
@@ -111,8 +142,6 @@ export async function POST(request) {
     }).where(eq(conversations.id, conv.id))
 
     // Check if the message matches our booking template format
-    const hasTemplate = content.includes('Nama Penyewa:') || content.includes('Produk:')
-
     if (!hasTemplate) {
       // ONLY trigger auto-reply template if keyword "sewa" or "rental" is detected (case-insensitive)
       const lowerContent = content.toLowerCase()
@@ -136,6 +165,7 @@ export async function POST(request) {
       const templateText = tenant?.bookingTemplate || `Halo! Selamat datang di ${shopName}. Silakan isi format berikut untuk melakukan pemesanan:
 
 Nama Penyewa: [Nama Anda]
+No. HP / WhatsApp: [Nomor HP Anda]
 Produk: [Nama Produk, cth: Sony A7 III Body]
 Jumlah Unit: [Jumlah, cth: 1]
 Waktu Sewa: [Hari/Jam, cth: 3 hari]

@@ -58,7 +58,7 @@ export default async function BookingsPage({ searchParams: searchParamsPromise }
               <option value="">Pilih pelanggan</option>
               {customerRows.map((customer) => (
                 <option key={customer.id} value={customer.id}>
-                  {customer.name} - {customer.phoneNumber}
+                  {customer.name} - {customer.phoneNumber?.split('@')[0]}
                 </option>
               ))}
             </SelectField>

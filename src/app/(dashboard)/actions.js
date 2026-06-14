@@ -455,7 +455,7 @@ export async function approveDraftFromInboxAction(draftId) {
                 'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
               },
               body: JSON.stringify({
-                to: customer.phoneNumber,
+                to: customer.whatsappJid || customer.phoneNumber,
                 text: approvalText,
               }),
               signal: AbortSignal.timeout(5000),

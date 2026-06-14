@@ -42,7 +42,7 @@ export async function POST(request) {
       const customer = await db.query.customers.findFirst({
         where: (c, { eq }) => eq(c.id, conv.customerId),
       })
-      customerPhone = customer?.phoneNumber ?? null
+      customerPhone = customer?.whatsappJid || customer?.phoneNumber ?? null
     }
 
     // Insert outbound message ke database

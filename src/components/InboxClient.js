@@ -568,7 +568,7 @@ Catatan: Butuh filter ND jika ada`
                     <h3 style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--color-on-surface)', letterSpacing: '-0.01em', margin: 0 }}>
                       {activeConv.customerName}
                     </h3>
-                    <span className="text-[11px] font-mono text-on-surface-variant" style={{ opacity: 0.85 }}>{activeConv.customerPhone}</span>
+                    <span className="text-[11px] font-mono text-on-surface-variant" style={{ opacity: 0.85 }}>{activeConv.customerPhone?.split('@')[0]}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
