@@ -1,16 +1,17 @@
 import SectionPage from '@/components/SectionPage'
 import { FormCard, Field, TextareaField, GridForm, Notice } from '@/components/ManagementUI'
-import { updateTenantSettingsAction } from '../actions'
+import { updateTenantSettingsAction, addTeamMemberAction } from '../actions'
 import { db } from '@/lib/db'
-import { tenants } from '@/lib/db/schema'
+import { tenants, tenantMembers } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { eq } from 'drizzle-orm'
-import { Settings, Phone, MessageSquare, ShieldAlert } from 'lucide-react'
+import { Settings, MessageCircle, Sparkles, ShieldAlert } from 'lucide-react'
+import TeamManagementClient from '@/components/TeamManagementClient'
 
 export const metadata = { title: 'Pengaturan | Rentivo' }
 
 export default async function SettingsPage({ searchParams: searchParamsPromise }) {
-  const { tenantId } = await requireTenantAuth()
+  const { user, tenantId, role } = await requireTenantAuth(['owner', 'admin'])
 
   // Fetch current tenant details
   let tenant = null
@@ -20,6 +21,17 @@ export default async function SettingsPage({ searchParams: searchParamsPromise }
     })
   } catch (e) {
     console.error('Settings page DB fetch error:', e)
+  }
+
+  // Fetch tenant members
+  let members = []
+  try {
+    members = await db.query.tenantMembers.findMany({
+      where: eq(tenantMembers.tenantId, tenantId),
+      orderBy: (m, { desc }) => desc(m.createdAt),
+    })
+  } catch (e) {
+    console.error('Settings page DB members fetch error:', e)
   }
 
   const searchParams = await searchParamsPromise
@@ -38,11 +50,12 @@ Catatan: [Catatan Anda]`
   return (
     <SectionPage
       title="Pengaturan"
-      description="Kelola profil workspace, integrasi nomor WhatsApp bisnis, dan preferensi template auto-reply AI Rentivo."
+      description="Kelola profil workspace, integrasi nomor WhatsApp bisnis, preferensi template auto-reply AI, dan anggota tim."
       highlights={[
         { kicker: 'Workspace', title: 'Konfigurasi dasar tenant', description: 'Profil bisnis, alamat, kota, dan nama workspace Anda.' },
         { kicker: 'WhatsApp', title: 'Setup Nomor WA', description: 'Koneksikan nomor telepon Anda agar AI Copilot dapat beroperasi.', badge: 'WhatsApp' },
         { kicker: 'AI Template', title: 'Format Otomatis', description: 'Template format booking yang dikirim saat penyewa melakukan chat.' },
+        { kicker: 'Team', title: 'Kelola Tim / Staff', description: 'Atur peran Owner, Admin, dan Staff operasional workspace Anda.' },
       ]}
     >
       {feedbackMessage ? (
@@ -94,52 +107,123 @@ Catatan: [Catatan Anda]`
         </div>
 
         {/* WhatsApp Template & Status Preview */}
-        <div className="space-y-md">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Connection Status Widget */}
-          <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-            <div className="flex gap-3 items-start">
-              <div className="rounded-xl p-2 bg-emerald-50 text-emerald-700">
-                <Phone className="h-5 w-5" />
+          <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <div className="rounded-xl p-3 flex items-center justify-center" style={{ background: tenant?.phoneNumber ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', color: tenant?.phoneNumber ? '#10b981' : '#ef4444' }}>
+                <MessageCircle className="h-5 w-5" />
               </div>
-              <div>
-                <h3 className="text-body-md font-semibold text-on-background">Status WhatsApp AI</h3>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  {tenant?.phoneNumber 
-                    ? `Aktif & Mengintegrasikan nomor ${tenant.phoneNumber}`
-                    : 'Belum terhubung. Masukkan nomor WhatsApp di form samping.'}
-                </p>
-                <div className="mt-3">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                    tenant?.phoneNumber ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
-                  }`}>
-                    {tenant?.phoneNumber ? 'ONLINE' : 'OFFLINE'}
+              <div style={{ flex: 1 }}>
+                <h3 className="text-body-md font-bold text-on-background" style={{ margin: 0, fontSize: '14px' }}>Status WhatsApp AI</h3>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase mt-1 border ${
+                  tenant?.phoneNumber 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}>
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${tenant?.phoneNumber ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${tenant?.phoneNumber ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                   </span>
-                </div>
+                  {tenant?.phoneNumber ? 'Connected' : 'Disconnected'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--color-outline-variant)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' }}>
+                <span style={{ color: 'var(--color-on-surface-variant)', opacity: 0.75 }}>Nomor Integrasi</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>{tenant?.phoneNumber || 'Belum diatur'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' }}>
+                <span style={{ color: 'var(--color-on-surface-variant)', opacity: 0.75 }}>Mode Auto-Reply</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>{tenant?.phoneNumber ? 'Aktif (AI Copilot)' : 'Nonaktif'}</span>
               </div>
             </div>
           </div>
 
           {/* AI Auto-Reply Template Preview */}
-          <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-            <div className="flex gap-3 items-start mb-4">
-              <div className="rounded-xl p-2 bg-teal-50 text-teal-700">
-                <MessageSquare className="h-5 w-5" />
+          <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div className="rounded-xl p-2 bg-teal-50 text-teal-700" style={{ display: 'flex', alignItems: 'center', justify: 'center' }}>
+                <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-body-md font-semibold text-on-background">Template Auto-Reply AI</h3>
-                <p className="text-xs text-on-surface-variant mt-0.5">Format pesan pembuka yang dikirimkan oleh AI Rentivo.</p>
+                <h3 className="text-body-md font-bold text-on-background" style={{ margin: 0, fontSize: '14px' }}>Preview Pesan Pembuka AI</h3>
+                <p className="text-xs text-on-surface-variant mt-0.5" style={{ margin: 0 }}>Pesan otomatis yang dikirimkan sistem ke WhatsApp penyewa.</p>
               </div>
             </div>
-            <div className="rounded-xl bg-surface-container-low p-4 border border-outline-variant/60 font-mono text-xs text-on-surface-variant leading-relaxed whitespace-pre-wrap">
-              {defaultTemplate}
+
+            {/* Mock WhatsApp Chat Screen */}
+            <div style={{
+              background: '#efeae2',
+              backgroundImage: 'radial-gradient(#dfdcd6 1.2px, transparent 0)',
+              backgroundSize: '12px 12px',
+              borderRadius: '16px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.05)',
+            }}>
+              {/* Chat Bubble */}
+              <div style={{
+                background: '#ffffff',
+                borderRadius: '10px',
+                borderTopLeftRadius: '0px',
+                padding: '12px',
+                maxWidth: '90%',
+                alignSelf: 'flex-start',
+                position: 'relative',
+                boxShadow: '0 1.5px 1px rgba(0,0,0,0.12)',
+                fontSize: '12px',
+                color: '#111b21',
+                lineHeight: '1.5',
+              }}>
+                {/* Message bubble tail */}
+                <div style={{
+                  position: 'absolute',
+                  left: '-8px',
+                  top: '0px',
+                  width: '0px',
+                  height: '0px',
+                  borderStyle: 'solid',
+                  borderWidth: '0 8px 10px 0',
+                  borderColor: 'transparent #ffffff transparent transparent',
+                }} />
+
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', whiteSpace: 'pre-wrap', color: '#111b21', letterSpacing: '-0.01em' }}>
+                  {defaultTemplate}
+                </div>
+
+                <div style={{
+                  fontSize: '9px',
+                  color: '#667781',
+                  textAlign: 'right',
+                  marginTop: '6px',
+                  fontFamily: 'sans-serif',
+                  fontWeight: 500
+                }}>
+                  {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
             </div>
-            <p className="text-[11px] text-on-surface-variant leading-relaxed mt-3 flex gap-1.5 items-start">
-              <ShieldAlert className="h-4 w-4 text-primary shrink-0" />
-              <span>Format di atas wajib diisi penyewa agar AI dapat mengekstrak data order secara instan ke dashboard.</span>
-            </p>
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: 'var(--color-surface-container-low)', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--color-outline-variant)' }}>
+              <ShieldAlert className="h-4 w-4 text-primary shrink-0" style={{ marginTop: '2.5px' }} />
+              <p style={{ fontSize: '11.5px', color: 'var(--color-on-surface-variant)', lineHeight: '1.5', margin: 0, opacity: 0.9 }}>
+                Penyewa wajib menyalin dan melengkapi format di atas agar asisten AI dapat mendeteksi, mengekstrak, dan membuat draft pemesanan secara otomatis.
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      <TeamManagementClient 
+        members={members} 
+        currentSupabaseUserId={user.id} 
+        isOwner={role === 'owner'} 
+        addTeamMemberAction={addTeamMemberAction}
+      />
     </SectionPage>
   )
 }

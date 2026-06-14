@@ -8,7 +8,7 @@ import InboxClient from '@/components/InboxClient'
 export const metadata = { title: 'Kotak Masuk | Rentivo' }
 
 export default async function InboxPage({ searchParams }) {
-  const { tenantId } = await requireTenantAuth()
+  const { tenantId } = await requireTenantAuth(['owner', 'admin'])
 
   // Fetch tenant details for the phone connection
   let tenant = null

@@ -3,24 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-
-function IconGlobe() {
-  return (
-    <svg className="nav-item-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="9" r="7"/>
-      <path d="M2.5 9h13M9 2c-2.5 0-4.5 3-4.5 7s2 7 4.5 7 4.5-3 4.5-7-2-7-4.5-7z"/>
-    </svg>
-  )
-}
-
-function IconLogout() {
-  return (
-    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15, flexShrink: 0 }}>
-      <path d="M7 3H3a1 1 0 00-1 1v10a1 1 0 001 1h4"/>
-      <path d="M12 13l4-4-4-4M16 9H7"/>
-    </svg>
-  )
-}
+import { Globe, LogOut, LifeBuoy, BarChart3 } from 'lucide-react'
 
 export default function SuperAdminSidebar({ user }) {
   const pathname = usePathname()
@@ -52,8 +35,22 @@ export default function SuperAdminSidebar({ user }) {
           href="/superadmin"
           className={`nav-item${pathname === '/superadmin' ? ' active' : ''}`}
         >
-          <IconGlobe />
+          <Globe size={18} strokeWidth={1.8} className="nav-item-icon" />
           <span>Semua Tenant</span>
+        </Link>
+        <Link
+          href="/superadmin/tickets"
+          className={`nav-item${pathname === '/superadmin/tickets' ? ' active' : ''}`}
+        >
+          <LifeBuoy size={18} strokeWidth={1.8} className="nav-item-icon" />
+          <span>Tiket Bantuan</span>
+        </Link>
+        <Link
+          href="/superadmin/master"
+          className={`nav-item${pathname === '/superadmin/master' ? ' active' : ''}`}
+        >
+          <BarChart3 size={18} strokeWidth={1.8} className="nav-item-icon" />
+          <span>Statistik & Master</span>
         </Link>
       </nav>
 
@@ -90,7 +87,7 @@ export default function SuperAdminSidebar({ user }) {
           onClick={handleLogout}
           style={{ justifyContent: 'flex-start', gap: 'var(--space-xs)' }}
         >
-          <IconLogout />
+          <LogOut size={14} strokeWidth={1.8} />
           Keluar
         </button>
       </div>

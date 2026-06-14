@@ -2,27 +2,29 @@
 
 import { useState } from 'react'
 
-export default function RevenueChart({ totalRevenue }) {
+export default function RevenueChart({ totalRevenue, monthlyData = [] }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
-  // Last 6 months data percentage (from monthBars in original dashboard: [32, 54, 47, 78, 100, 68])
-  const rawPercentages = [32, 54, 47, 78, 100, 68]
-  const months = ['Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei']
+  const hasRealData = monthlyData && monthlyData.length === 6
 
-  // Derive realistic amounts. The 100% item (Apr) represents a peak.
-  // We can calculate values relative to totalRevenue if provided, or fallback to mock millions.
-  const peakValue = totalRevenue > 0 ? (totalRevenue * 1.3) : 15000000
-  const chartData = rawPercentages.map((pct, idx) => {
-    // Pure deterministic factor based on index, yielding a value between 0.82 and 0.96
-    const factor = 0.8 + ((idx * 7 + 11) % 17) / 100
-    const value = Math.round((pct / 100) * peakValue * factor)
-    return {
-      month: months[idx],
-      value,
-      pct,
-    }
-  })
+  let chartData = []
+  if (hasRealData) {
+    chartData = monthlyData
+  } else {
+    // Last 6 months fallback data percentage
+    const rawPercentages = [32, 54, 47, 78, 100, 68]
+    const months = ['Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei']
+    const peakValue = totalRevenue > 0 ? (totalRevenue * 1.3) : 15000000
+    chartData = rawPercentages.map((pct, idx) => {
+      const factor = 0.8 + ((idx * 7 + 11) % 17) / 100
+      const value = Math.round((pct / 100) * peakValue * factor)
+      return {
+        month: months[idx],
+        value,
+      }
+    })
+  }
 
   // Format as Indonesian Rupiah
   const formatRupiah = (val) => {
@@ -84,6 +86,25 @@ export default function RevenueChart({ totalRevenue }) {
     setHoveredIdx(null)
   }
 
+  // Calculate percentage vs last month
+  let percentChangeStr = '0% vs bln lalu'
+  let isUp = true
+  if (chartData.length >= 2) {
+    const curVal = chartData[chartData.length - 1].value
+    const prevVal = chartData[chartData.length - 2].value
+    if (prevVal > 0) {
+      const diff = ((curVal - prevVal) / prevVal) * 100
+      isUp = diff >= 0
+      percentChangeStr = `${isUp ? '▲ +' : '▼ '}${Math.abs(diff).toFixed(1)}% vs bln lalu`
+    } else if (curVal > 0) {
+      isUp = true
+      percentChangeStr = `▲ +100% vs bln lalu`
+    } else {
+      isUp = true
+      percentChangeStr = `0% vs bln lalu`
+    }
+  }
+
   return (
     <div className="relative rounded-2xl border border-outline-variant bg-surface-container-low p-md transition-all duration-300 hover:shadow-[var(--shadow-md)]">
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -95,7 +116,9 @@ export default function RevenueChart({ totalRevenue }) {
           <span className="font-headline-md text-headline-md font-semibold text-primary">
             {formatRupiah(totalRevenue || chartData[chartData.length - 1].value)}
           </span>
-          <span className="block text-[11px] text-success font-medium">▲ +12.4% vs bln lalu</span>
+          <span className={`block text-[11px] font-medium ${isUp ? 'text-success' : 'text-error'}`}>
+            {percentChangeStr}
+          </span>
         </div>
       </div>
 

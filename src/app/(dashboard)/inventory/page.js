@@ -10,7 +10,7 @@ import InventoryListClient from '@/components/InventoryListClient'
 export const metadata = { title: 'Inventaris | Rentivo' }
 
 export default async function InventoryPage({ searchParams: searchParamsPromise }) {
-  const { tenantId } = await requireTenantAuth()
+  const { tenantId } = await requireTenantAuth(['owner', 'admin'])
 
   const productRows = await db
     .select()

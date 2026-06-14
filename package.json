@@ -12,7 +12,10 @@
     "db:push": "drizzle-kit push",
     "db:seed": "node ./scripts/seed-demo.js",
     "db:studio": "drizzle-kit studio",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "wa:install": "cd services/whatsapp-bridge && npm install",
+    "wa:bridge": "node services/whatsapp-bridge/server.js",
+    "wa:dev": "node --watch services/whatsapp-bridge/server.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

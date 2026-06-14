@@ -10,7 +10,7 @@ import BookingKanbanClient from '@/components/BookingKanbanClient'
 export const metadata = { title: 'Pemesanan | Rentivo' }
 
 export default async function BookingsPage({ searchParams: searchParamsPromise }) {
-  const { tenantId } = await requireTenantAuth()
+  const { tenantId } = await requireTenantAuth(['owner', 'admin'])
 
   const customerRows = await db.select().from(customers).where(eq(customers.tenantId, tenantId)).orderBy(desc(customers.createdAt)).limit(20)
   const productRows = await db.select().from(products).where(eq(products.tenantId, tenantId)).orderBy(desc(products.createdAt)).limit(20)

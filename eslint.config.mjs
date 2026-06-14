@@ -10,6 +10,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Baileys microservice — plain Node.js, not a React app
+    "services/**",
   ]),
 ]);
 

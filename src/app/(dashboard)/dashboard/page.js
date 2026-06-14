@@ -3,7 +3,7 @@ import SectionPage from '@/components/SectionPage'
 import { requireTenantAuth } from '@/lib/session'
 import { db } from '@/lib/db'
 import { aiDrafts, bookings, invoices, inventoryUnits } from '@/lib/db/schema'
-import { eq, sql, and } from 'drizzle-orm'
+import { eq, sql, and, gte } from 'drizzle-orm'
 import RevenueChart from '@/components/RevenueChart'
 import { 
   TrendingUp, 
@@ -16,7 +16,8 @@ import {
   Sparkles, 
   CheckCircle,
   Plus,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react'
 
 export const metadata = {
@@ -47,70 +48,162 @@ async function countRows(table, tenantId, condition) {
 function StatCard({ label, value, hint, tone = 'default', icon: Icon }) {
   const toneConfigs = {
     primary: {
-      border: 'border-t-teal-600 border-t-4',
-      bg: 'bg-gradient-to-br from-teal-50/40 to-white',
-      text: 'text-teal-900',
-      iconBg: 'bg-teal-50 text-teal-700',
+      accent: 'var(--color-primary)',
+      iconBg: 'rgba(0,92,85,0.08)',
+      iconColor: 'var(--color-primary)',
+    },
+    success: {
+      accent: '#059669',
+      iconBg: 'rgba(5,150,105,0.08)',
+      iconColor: '#059669',
     },
     tertiary: {
-      border: 'border-t-orange-600 border-t-4',
-      bg: 'bg-gradient-to-br from-orange-50/35 to-white',
-      text: 'text-orange-900',
-      iconBg: 'bg-orange-50 text-orange-700',
+      accent: '#f97316',
+      iconBg: 'rgba(249,115,22,0.08)',
+      iconColor: '#9a3412',
     },
     error: {
-      border: 'border-t-rose-600 border-t-4',
-      bg: 'bg-gradient-to-br from-rose-50/40 to-white',
-      text: 'text-rose-900',
-      iconBg: 'bg-rose-50 text-rose-700',
+      accent: 'var(--color-error)',
+      iconBg: 'var(--color-error-container)',
+      iconColor: 'var(--color-error)',
+    },
+    info: {
+      accent: '#0284c7',
+      iconBg: 'rgba(2,132,199,0.08)',
+      iconColor: '#0c4a6e',
     },
     default: {
-      border: 'border-t-slate-400 border-t-4',
-      bg: 'bg-gradient-to-br from-slate-50/40 to-white',
-      text: 'text-slate-900',
-      iconBg: 'bg-slate-100 text-slate-700',
+      accent: 'var(--color-outline)',
+      iconBg: 'var(--color-surface-container)',
+      iconColor: 'var(--color-on-surface-variant)',
     }
   }
 
   const current = toneConfigs[tone] || toneConfigs.default
 
   return (
-    <div className={`rounded-2xl border border-outline-variant p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 ${current.border} ${current.bg}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="font-label-caps text-label-caps text-on-surface-variant font-semibold tracking-wider">{label}</p>
-          <div className="mt-2 font-display-lg text-2xl font-bold text-on-background tracking-tight">{value}</div>
+    <div style={{
+      borderRadius: 16,
+      border: '1px solid var(--color-outline-variant)',
+      borderLeft: `4px solid ${current.accent}`,
+      background: 'var(--color-surface-container-lowest)',
+      padding: '20px 24px',
+      boxShadow: 'var(--shadow-sm)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      gap: 12,
+      transition: 'box-shadow 200ms ease, transform 200ms ease',
+    }}
+    className="hover:shadow-md hover:-translate-y-0.5"
+    >
+      <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>
+            {label}
+          </div>
+          <div style={{ marginTop: 6, fontSize: 22, fontWeight: 700, color: 'var(--color-on-surface)', trackingLetter: '-0.02em' }}>
+            {value}
+          </div>
         </div>
         {Icon && (
-          <div className={`rounded-xl p-2.5 ${current.iconBg} transition-transform duration-300 hover:rotate-6`}>
-            <Icon className="h-5 w-5 shrink-0" />
+          <div style={{
+            width: 38,
+            height: 38,
+            borderRadius: 9,
+            background: current.iconBg,
+            color: current.iconColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Icon size={18} strokeWidth={2} />
           </div>
         )}
       </div>
-      <p className="mt-3 font-body-sm text-xs text-on-surface-variant/90 leading-relaxed">{hint}</p>
+      <div style={{ fontSize: 11.5, color: 'var(--color-on-surface-variant)', opacity: 0.75, lineHeight: 1.5 }}>
+        {hint}
+      </div>
     </div>
   )
 }
 
-function WorkflowCard({ icon: Icon, title, description, meta, accentClass, href }) {
+function WorkflowCard({ icon: Icon, title, description, meta, accent, href }) {
+  const colorConfigs = {
+    teal: {
+      accent: 'var(--color-primary)',
+      bg: 'rgba(0,92,85,0.08)',
+      color: 'var(--color-primary)',
+    },
+    sky: {
+      accent: '#0284c7',
+      bg: 'rgba(2,132,199,0.08)',
+      color: '#0c4a6e',
+    },
+    orange: {
+      accent: '#f97316',
+      bg: 'rgba(249,115,22,0.08)',
+      color: '#9a3412',
+    }
+  }
+
+  const current = colorConfigs[accent] || colorConfigs.teal
+
   return (
     <Link 
       href={href} 
-      className="group block rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-primary/30"
+      style={{
+        borderRadius: 16,
+        border: '1px solid var(--color-outline-variant)',
+        background: 'var(--color-surface-container-lowest)',
+        padding: 24,
+        boxShadow: 'var(--shadow-sm)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        gap: 20,
+        transition: 'all 200ms ease',
+      }}
+      className="group hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5"
     >
-      <div className="flex items-start gap-4">
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${accentClass}`}>
-          <Icon className="h-6 w-6" />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+        <div style={{
+          width: 42,
+          height: 42,
+          borderRadius: 10,
+          background: current.bg,
+          color: current.color,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          border: '1px solid rgba(0,0,0,0.02)',
+        }}>
+          <Icon size={20} strokeWidth={2} />
         </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="font-title-sm text-title-sm font-semibold text-on-background group-hover:text-primary transition-colors">{title}</h3>
-          <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{description}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{ fontSize: 14.5, fontWeight: 750, color: 'var(--color-on-surface)' }} className="group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+          <p style={{ marginTop: 6, fontSize: 12.5, color: 'var(--color-on-surface-variant)', lineHeight: 1.6 }}>
+            {description}
+          </p>
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-surface-container px-4 py-3 border border-outline-variant/30">
-        <span className="font-body-sm text-xs text-on-surface-variant/80">{meta}</span>
-        <span className="inline-flex items-center gap-1 font-label-caps text-label-caps font-bold text-primary group-hover:underline">
-          Buka <ArrowRight className="h-3 w-3" />
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: 'var(--color-surface-container-low)',
+        borderRadius: 10,
+        padding: '10px 14px',
+        border: '1px solid var(--color-outline-variant)/40',
+      }}>
+        <span style={{ fontSize: 11.5, color: 'var(--color-on-surface-variant)' }}>{meta}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--color-primary)' }}>
+          Buka <ArrowRight size={12} strokeWidth={2.5} />
         </span>
       </div>
     </Link>
@@ -118,9 +211,14 @@ function WorkflowCard({ icon: Icon, title, description, meta, accentClass, href 
 }
 
 export default async function DashboardPage() {
-  const { tenantId, role } = await requireTenantAuth()
+  const { tenantId, role } = await requireTenantAuth(['owner', 'admin'])
 
-  const [revenueResult, activeBookingsCount, draftBookingsCount, returningBookingsCount, unpaidInvoicesCount, pendingDraftsCount, totalInvCount, availInvCount] = await Promise.all([
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+  sixMonthsAgo.setDate(1)
+  sixMonthsAgo.setHours(0, 0, 0, 0)
+
+  const [revenueResult, activeBookingsCount, draftBookingsCount, returningBookingsCount, unpaidInvoicesCount, pendingDraftsCount, totalInvCount, availInvCount, sixMonthsInvoices] = await Promise.all([
     db.select({
       totalRevenue: sql`sum(${invoices.paidAmount})`.mapWith(Number),
     }).from(invoices).where(and(eq(invoices.tenantId, tenantId), eq(invoices.status, 'paid'))),
@@ -131,11 +229,46 @@ export default async function DashboardPage() {
     countRows(aiDrafts, tenantId, eq(aiDrafts.status, 'pending')),
     countRows(inventoryUnits, tenantId),
     countRows(inventoryUnits, tenantId, eq(inventoryUnits.status, 'available')),
+    db.query.invoices.findMany({
+      where: and(
+        eq(invoices.tenantId, tenantId),
+        eq(invoices.status, 'paid'),
+        gte(invoices.createdAt, sixMonthsAgo)
+      )
+    })
   ])
 
   const totalRevenue = revenueResult[0]?.totalRevenue || 0
   const utilizedInvCount = totalInvCount - availInvCount
   const utilizationRate = totalInvCount > 0 ? Math.round((utilizedInvCount / totalInvCount) * 100) : 0
+
+  // Populate actual monthly data
+  const monthsData = []
+  const currentDate = new Date()
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
+    const monthLabel = d.toLocaleDateString('id-ID', { month: 'short' })
+    const monthYearKey = `${d.getFullYear()}-${d.getMonth()}`
+    monthsData.push({
+      month: monthLabel,
+      monthYearKey,
+      value: 0
+    })
+  }
+
+  sixMonthsInvoices.forEach(inv => {
+    const invDate = new Date(inv.createdAt)
+    const key = `${invDate.getFullYear()}-${invDate.getMonth()}`
+    const monthObj = monthsData.find(m => m.monthYearKey === key)
+    if (monthObj) {
+      monthObj.value += Number(inv.paidAmount ?? 0)
+    }
+  })
+
+  const monthlyData = monthsData.map(m => ({
+    month: m.month,
+    value: m.value
+  }))
   const roleLabel = role === 'owner' ? 'Pemilik' : role === 'admin' ? 'Admin' : 'Staff'
 
   return (
@@ -144,34 +277,39 @@ export default async function DashboardPage() {
       description="Ringkasan operasional yang tetap mendukung input manual, WhatsApp, dan otomatisasi AI. AI membantu menyusun data, tetapi kontrol proses tetap di tangan admin."
       actions={(
         <>
-          <select className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2 font-body-sm text-body-sm text-on-surface focus:border-primary focus:outline-none hover:border-outline transition-colors cursor-pointer">
-            <option>Semua Waktu</option>
-            <option>30 Hari Terakhir</option>
-            <option>Kuartal Ini</option>
-            <option>Tahun Ini</option>
-          </select>
+          <div className="relative inline-block">
+            <select className="rounded-xl border border-outline bg-surface-container-lowest pl-4 pr-9 py-1.5 font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none hover:border-primary transition duration-200 cursor-pointer appearance-none h-[36px] shadow-sm font-medium">
+              <option>Semua Waktu</option>
+              <option>30 Hari Terakhir</option>
+              <option>Kuartal Ini</option>
+              <option>Tahun Ini</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <ChevronDown size={14} className="text-on-surface-variant/70" />
+            </div>
+          </div>
           <Link href="/bookings" className="btn btn-primary gap-1">
             <Plus className="h-4 w-4" /> Booking Manual
           </Link>
         </>
       )}
     >
-      <section className="grid gap-md md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-lg md:grid-cols-2 xl:grid-cols-5">
         <StatCard label="Pendapatan" value={formatRupiah(totalRevenue)} hint="Total pembayaran yang sudah lunas." tone="primary" icon={TrendingUp} />
-        <StatCard label="Booking Aktif" value={activeBookingsCount} hint="Unit yang sedang disewa pelanggan." tone="default" icon={Calendar} />
+        <StatCard label="Booking Aktif" value={activeBookingsCount} hint="Unit yang sedang disewa pelanggan." tone="success" icon={Calendar} />
         <StatCard label="Draft AI / Manual" value={draftBookingsCount + pendingDraftsCount} hint="Antrian booking yang belum final." tone="tertiary" icon={Layers} />
         <StatCard label="Invoice Belum Lunas" value={unpaidInvoicesCount} hint="Perlu follow-up atau verifikasi pembayaran." tone="error" icon={AlertCircle} />
-        <StatCard label="Utilisasi Inventory" value={`${utilizationRate}%`} hint={`Tersedia ${availInvCount} dari ${totalInvCount} unit.`} tone="default" icon={Percent} />
+        <StatCard label="Utilisasi Inventory" value={`${utilizationRate}%`} hint={`Tersedia ${availInvCount} dari ${totalInvCount} unit.`} tone="info" icon={Percent} />
       </section>
 
-      <section className="grid gap-md lg:grid-cols-3">
+      <section className="grid gap-lg lg:grid-cols-3">
         <WorkflowCard
           href="/bookings"
           icon={Edit3}
           title="Input Manual"
           description="Booking, pelanggan, inventaris, invoice, dan retur bisa dikelola manual kapan saja."
           meta="Jalur utama operasional tetap ada tanpa AI."
-          accentClass="bg-teal-50 text-teal-700"
+          accent="teal"
         />
         <WorkflowCard
           href="/inbox"
@@ -179,7 +317,7 @@ export default async function DashboardPage() {
           title="WhatsApp Inbox"
           description="Pesan masuk menjadi sumber data awal, lalu dibuat draft untuk ditinjau admin."
           meta="Kanal otomatisasi, bukan satu-satunya sumber data."
-          accentClass="bg-sky-50 text-sky-700"
+          accent="sky"
         />
         <WorkflowCard
           href="/settings"
@@ -187,13 +325,13 @@ export default async function DashboardPage() {
           title="AI Assist"
           description="AI membantu ekstraksi intent, item, dan tanggal agar input lebih cepat dan konsisten."
           meta="Admin tetap menyetujui sebelum booking dibuat."
-          accentClass="bg-orange-50 text-orange-700"
+          accent="orange"
         />
       </section>
 
-      <section className="grid gap-md lg:grid-cols-[1.6fr_1fr]">
+      <section className="grid gap-lg lg:grid-cols-[1.6fr_1fr]">
         {/* Left column: Lifecycle & Revenue Chart */}
-        <div className="flex flex-col gap-md">
+        <div className="flex flex-col gap-lg">
           <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 hover:shadow-md">
             <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between mb-6">
               <div>
@@ -209,48 +347,103 @@ export default async function DashboardPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               {[
-                { label: 'Draft', value: draftBookingsCount, tone: 'bg-orange-50 text-orange-800 border-orange-200/50' },
-                { label: 'Aktif', value: activeBookingsCount, tone: 'bg-teal-50 text-teal-800 border-teal-200/50' },
-                { label: 'Kembali', value: returningBookingsCount, tone: 'bg-sky-50 text-sky-800 border-sky-200/50' },
-                { label: 'Lunas', value: totalRevenue ? 'OK' : '0', tone: 'bg-emerald-50 text-emerald-800 border-emerald-200/50' },
+                { label: 'Draft', value: draftBookingsCount, accent: '#f97316', bg: 'rgba(249,115,22,0.08)', text: '#9a3412' },
+                { label: 'Aktif', value: activeBookingsCount, accent: '#0284c7', bg: 'rgba(2,132,199,0.08)', text: '#0c4a6e' },
+                { label: 'Kembali', value: returningBookingsCount, accent: '#d97706', bg: 'rgba(217,119,6,0.08)', text: '#92400e' },
+                { label: 'Lunas', value: totalRevenue ? 'OK' : '0', accent: '#059669', bg: 'rgba(5,150,105,0.08)', text: '#064e3b' },
               ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-outline-variant bg-surface-container-low/60 p-4 transition-all duration-200 hover:bg-surface-container-low">
-                  <div className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${item.tone}`}>{item.label}</div>
-                  <div className="mt-3 font-headline-md text-2xl font-bold text-on-background tracking-tight">{item.value}</div>
+                <div key={item.label} style={{
+                  borderRadius: 14,
+                  border: '1px solid var(--color-outline-variant)',
+                  borderLeft: `4.5px solid ${item.accent}`,
+                  background: 'var(--color-surface-container-lowest)',
+                  padding: '16px 18px',
+                  boxShadow: 'var(--shadow-sm)',
+                }}>
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    borderRadius: 6,
+                    padding: '2px 8px',
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    background: item.bg,
+                    color: item.text,
+                  }}>
+                    {item.label}
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 20, fontWeight: 700, color: 'var(--color-on-surface)', fontFamily: 'var(--font-mono)' }}>
+                    {item.value}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Upgraded Interactive Revenue Chart */}
-          <RevenueChart totalRevenue={totalRevenue} />
+          <RevenueChart totalRevenue={totalRevenue} monthlyData={monthlyData} />
         </div>
 
         {/* Right column: Operational Queue */}
         <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 hover:shadow-md">
           <h2 className="font-title-sm text-title-sm font-semibold text-on-background mb-4">Antrian Operasional</h2>
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { label: 'Tinjau Draft AI', value: pendingDraftsCount, note: 'Butuh persetujuan admin sebelum menjadi booking resmi.', icon: Sparkles, color: 'text-orange-600' },
-              { label: 'Invoice Belum Lunas', value: unpaidInvoicesCount, note: 'Bisa tetap ditagih secara manual bila diperlukan.', icon: AlertCircle, color: 'text-rose-600' },
-              { label: 'Pengembalian Aktif', value: returningBookingsCount, note: 'Membutuhkan check-in dan evaluasi fisik unit.', icon: Calendar, color: 'text-sky-600' },
+              { label: 'Tinjau Draft AI', value: pendingDraftsCount, note: 'Butuh persetujuan admin sebelum menjadi booking resmi.', icon: Sparkles, accent: '#f97316', bg: 'rgba(249,115,22,0.08)', text: '#9a3412' },
+              { label: 'Invoice Belum Lunas', value: unpaidInvoicesCount, note: 'Bisa tetap ditagih secara manual bila diperlukan.', icon: AlertCircle, accent: 'var(--color-error)', bg: 'var(--color-error-container)', text: 'var(--color-error)' },
+              { label: 'Pengembalian Aktif', value: returningBookingsCount, note: 'Membutuhkan check-in dan evaluasi fisik unit.', icon: Calendar, accent: '#0284c7', bg: 'rgba(2,132,199,0.08)', text: '#0c4a6e' },
             ].map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.label} className="rounded-xl border border-outline-variant bg-surface-container-low/40 p-4 transition-all duration-200 hover:border-primary/20">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-3">
-                      <div className="mt-0.5 shrink-0">
-                        <Icon className={`h-5 w-5 ${item.color}`} />
+                <div key={item.label} style={{
+                  borderRadius: 14,
+                  border: '1px solid var(--color-outline-variant)',
+                  borderLeft: `4.5px solid ${item.accent}`,
+                  background: 'var(--color-surface-container-lowest)',
+                  padding: 16,
+                  boxShadow: 'var(--shadow-sm)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 16,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                    <div style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      background: item.bg,
+                      color: item.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <Icon size={16} strokeWidth={2} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        {item.label}
                       </div>
-                      <div className="min-w-0">
-                        <div className="font-title-sm text-body-md font-semibold text-on-background">{item.label}</div>
-                        <div className="mt-1 font-body-sm text-xs text-on-surface-variant leading-relaxed">{item.note}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--color-on-surface-variant)', opacity: 0.7, marginTop: 2, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        {item.note}
                       </div>
                     </div>
-                    <div className="rounded-xl bg-surface-container px-3 py-1.5 font-mono text-body-md font-bold text-on-background border border-outline-variant/60">
-                      {item.value}
-                    </div>
+                  </div>
+                  <div style={{
+                    borderRadius: 8,
+                    background: 'var(--color-surface-container-low)',
+                    padding: '4px 10px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'var(--color-on-surface)',
+                    border: '1px solid var(--color-outline-variant)',
+                    flexShrink: 0,
+                  }}>
+                    {item.value}
                   </div>
                 </div>
               )

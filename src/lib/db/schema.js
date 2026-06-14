@@ -125,6 +125,9 @@ export const tenants = pgTable('tenants', {
   phoneNumber: varchar('phone_number', { length: 20 }), // Nomor WA bisnis
   address: text('address'),
   city: varchar('city', { length: 100 }),
+  planType: varchar('plan_type', { length: 50 }).default('basic').notNull(), // 'basic', 'pro', 'enterprise'
+  subscriptionStatus: varchar('subscription_status', { length: 50 }).default('trial').notNull(), // 'trial', 'active', 'expired', 'unpaid'
+  subscriptionExpiresAt: timestamp('subscription_expires_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
@@ -418,4 +421,18 @@ export const aiDrafts = pgTable('ai_drafts', {
   index('idx_ai_drafts_tenant').on(t.tenantId),
   index('idx_ai_drafts_status').on(t.tenantId, t.status),
   index('idx_ai_drafts_conversation').on(t.conversationId),
+])
+
+export const supportTickets = pgTable('support_tickets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+  status: varchar('status', { length: 50 }).default('open').notNull(), // 'open', 'in_progress', 'resolved'
+  priority: varchar('priority', { length: 50 }).default('medium').notNull(), // 'low', 'medium', 'high'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('idx_support_tickets_tenant').on(t.tenantId),
+  index('idx_support_tickets_status').on(t.status),
 ])

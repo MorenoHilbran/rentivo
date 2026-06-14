@@ -3,191 +3,184 @@
 import { useState } from 'react'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { Search, Eye, Phone, Mail, MapPin, User, FileText, ShoppingBag, DollarSign } from 'lucide-react'
+import { Search, Eye, Phone, Mail, MapPin, FileText, ShoppingBag, DollarSign } from 'lucide-react'
+
+/* ─── Reusable detail row component ─── */
+function DetailRow({ Icon, label, value, bg, color, mono, accent, fullWidth }) {
+  return (
+    <div style={{
+      display: 'flex', gap: 12, borderRadius: 11,
+      border: '1px solid var(--color-outline-variant)',
+      background: 'var(--color-surface-container-low)',
+      padding: '14px 16px',
+      ...(fullWidth ? { gridColumn: '1 / -1' } : {}),
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: bg, color,
+      }}>
+        <Icon size={16} strokeWidth={1.8} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>{label}</div>
+        <div style={{
+          marginTop: 4, fontSize: 13.5, fontWeight: 600,
+          color: accent ? 'var(--color-primary)' : 'var(--color-on-surface)',
+          fontFamily: mono ? 'var(--font-mono)' : 'inherit',
+          wordBreak: 'break-word',
+        }}>{value}</div>
+      </div>
+    </div>
+  )
+}
 
 export default function CustomerListClient({ customers }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredCustomers = customers.filter((c) => {
+  const filtered = customers.filter((c) => {
     const term = searchQuery.toLowerCase()
-    return (
-      c.name.toLowerCase().includes(term) ||
+    return c.name.toLowerCase().includes(term) ||
       (c.phoneNumber && c.phoneNumber.includes(term)) ||
       (c.email && c.email.toLowerCase().includes(term))
-    );
   })
 
-  // Format currency
-  const formatRupiah = (val) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Number(val || 0))
-  }
+  const formatRupiah = (val) => new Intl.NumberFormat('id-ID', {
+    style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(Number(val || 0))
 
   return (
-    <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <Search className="h-4 w-4 text-on-surface-variant" />
-        </span>
-        <input
-          type="text"
-          placeholder="Cari nama, nomor telepon, atau email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest pl-10 pr-4 py-2 text-body-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-outline"
-        />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* ── Search ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', maxWidth: 380, flex: 1 }}>
+          <Search size={15} style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            pointerEvents: 'none', color: 'var(--color-on-surface-variant)', opacity: 0.5,
+          }} />
+          <input
+            type="text"
+            placeholder="Cari nama, telepon, atau email…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="form-input"
+            style={{ paddingLeft: 36, fontSize: 13 }}
+          />
+        </div>
+        {filtered.length > 0 && (
+          <span style={{ fontSize: 12.5, color: 'var(--color-on-surface-variant)', whiteSpace: 'nowrap' }}>
+            <strong>{filtered.length}</strong> pelanggan{searchQuery && ` untuk "${searchQuery}"`}
+          </span>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-outline-variant/60">
-        <table className="table min-w-full divide-y divide-outline-variant">
+      {/* ── Table ── */}
+      <div className="table-container">
+        <table className="table">
           <thead>
             <tr>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nama</th>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kontak</th>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
-              <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
+              <th>Nama Pelanggan</th>
+              <th>Kontak</th>
+              <th>Status</th>
+              <th style={{ textAlign: 'right' }}>Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
-            {filteredCustomers.length === 0 ? (
+          <tbody>
+            {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
-                  Tidak ada data pelanggan yang cocok.
+                <td colSpan={4} style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--color-on-surface-variant)' }}>
+                  {searchQuery ? `Tidak ada pelanggan untuk "${searchQuery}"` : 'Belum ada data pelanggan.'}
                 </td>
               </tr>
-            ) : (
-              filteredCustomers.map((c) => (
-                <tr 
-                  key={c.id}
-                  className="hover:bg-surface-container-low/40 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-body-md text-on-surface font-semibold">
-                    {c.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">
-                    <div>{c.phoneNumber}</div>
-                    {c.email ? <div className="text-xs text-on-surface-variant mt-0.5">{c.email}</div> : null}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusPill tone="primary">
-                      Manual Ready
-                    </StatusPill>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
-                    <button
-                      onClick={() => setSelectedCustomer(c)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
-                    >
-                      <Eye className="h-4 w-4" /> Profil
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
+            ) : filtered.map((c) => (
+              <tr key={c.id}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                      background: 'linear-gradient(135deg, var(--color-primary-container), var(--color-primary))',
+                      color: 'var(--color-on-primary)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700,
+                    }}>
+                      {c.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--color-on-surface)' }}>{c.name}</span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ fontSize: 13.5 }}>{c.phoneNumber}</div>
+                  {c.email && <div style={{ fontSize: 12, color: 'var(--color-on-surface-variant)', marginTop: 3 }}>{c.email}</div>}
+                </td>
+                <td><StatusPill tone="primary">Aktif</StatusPill></td>
+                <td style={{ textAlign: 'right' }}>
+                  <button onClick={() => setSelectedCustomer(c)} className="btn btn-ghost btn-sm" style={{ gap: 5 }}>
+                    <Eye size={14} /> Profil
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* Profile Detail Modal */}
+      {/* ── Customer Profile Modal ── */}
       <Modal
         isOpen={selectedCustomer !== null}
         onClose={() => setSelectedCustomer(null)}
-        title="Profil Pelanggan (CRM)"
+        title="Profil Pelanggan"
         size="md"
-        footer={
-          <button
-            onClick={() => setSelectedCustomer(null)}
-            className="btn btn-secondary btn-sm"
-          >
-            Tutup
-          </button>
-        }
+        footer={<button onClick={() => setSelectedCustomer(null)} className="btn btn-secondary btn-sm">Tutup</button>}
       >
         {selectedCustomer && (
-          <div className="space-y-6">
-            {/* Header info */}
-            <div className="flex items-center gap-4 border-b border-outline-variant pb-4 bg-surface-container-low/20 -mx-6 -mt-6 px-6 py-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50 text-teal-800 text-lg font-bold border border-teal-200/50">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 16,
+              borderBottom: '1px solid var(--color-outline-variant)',
+              margin: '-24px -24px 0', padding: '18px 24px 18px',
+              background: 'var(--color-surface-container-low)',
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, var(--color-primary-container), var(--color-primary))',
+                color: 'var(--color-on-primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 17, fontWeight: 700,
+              }}>
                 {selectedCustomer.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-base font-bold text-on-background tracking-tight">{selectedCustomer.name}</h3>
-                <span className="text-xs text-on-surface-variant font-mono">{selectedCustomer.phoneNumber}</span>
+                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-on-surface)', letterSpacing: '-0.01em' }}>{selectedCustomer.name}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--color-on-surface-variant)', fontFamily: 'var(--font-mono)', marginTop: 3 }}>{selectedCustomer.phoneNumber}</div>
               </div>
             </div>
 
-            {/* Profile fields */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 border border-teal-200/50">
-                  <Phone className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Telepon</span>
-                  <span className="mt-1 block text-body-sm text-on-surface font-semibold">{selectedCustomer.phoneNumber}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 border border-sky-200/50">
-                  <Mail className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email</span>
-                  <span className="mt-1 block text-body-sm text-on-surface font-semibold truncate max-w-[200px]">{selectedCustomer.email || '-'}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/50">
-                  <ShoppingBag className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Total Transaksi</span>
-                  <span className="mt-1 block text-body-sm text-on-surface font-semibold">{selectedCustomer.totalBookings || 0} order</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/50">
-                  <DollarSign className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Total Belanja</span>
-                  <span className="mt-1 block text-body-sm text-primary font-bold">{formatRupiah(selectedCustomer.totalSpent)}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 sm:col-span-2 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Alamat</span>
-                  <span className="mt-1 block text-body-sm text-on-surface leading-relaxed">{selectedCustomer.address || 'Alamat belum diisi.'}</span>
-                </div>
-              </div>
+            {/* Detail grid */}
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+              <DetailRow Icon={Phone}      label="Telepon"         value={selectedCustomer.phoneNumber || '—'}       bg="rgba(15,118,110,0.08)"  color="#0f766e" />
+              <DetailRow Icon={Mail}       label="Email"           value={selectedCustomer.email || '—'}             bg="rgba(2,132,199,0.08)"   color="#0284c7" />
+              <DetailRow Icon={ShoppingBag} label="Total Transaksi" value={`${selectedCustomer.totalBookings || 0} order`} bg="rgba(217,119,6,0.08)" color="#d97706" />
+              <DetailRow Icon={DollarSign} label="Total Belanja"   value={formatRupiah(selectedCustomer.totalSpent)} bg="rgba(5,150,105,0.08)"   color="#059669" mono accent />
+              <DetailRow Icon={MapPin}     label="Alamat"          value={selectedCustomer.address || 'Belum diisi.'} bg="rgba(100,116,139,0.08)" color="#64748b" fullWidth />
             </div>
 
-            {/* Note details */}
-            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
-              <div className="flex gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
-                  <FileText className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Catatan Internal CRM</span>
-                  <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed break-words whitespace-pre-wrap">
-                    {selectedCustomer.notes || 'Tidak ada catatan internal untuk pelanggan ini.'}
-                  </p>
-                </div>
+            {/* Notes */}
+            <div style={{
+              display: 'flex', gap: 12, borderRadius: 11,
+              border: '1px solid var(--color-outline-variant)',
+              background: 'var(--color-surface-container-low)', padding: '14px 16px',
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(100,116,139,0.08)', color: '#64748b' }}>
+                <FileText size={16} strokeWidth={1.8} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Catatan Internal CRM</div>
+                <p style={{ marginTop: 6, fontSize: 13, color: 'var(--color-on-surface-variant)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                  {selectedCustomer.notes || 'Tidak ada catatan internal.'}
+                </p>
               </div>
             </div>
           </div>

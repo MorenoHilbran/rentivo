@@ -83,6 +83,7 @@ Script ini akan membuat atau memperbarui data demo menggunakan credential contoh
 
 ## 6. Jalankan aplikasi
 
+
 ```bash
 npm run dev
 ```
@@ -114,9 +115,54 @@ npm run build
 4. `npm run db:seed`
 5. `npm run dev`
 6. Jalankan `npm run inngest:worker` jika dibutuhkan
+7. Jalankan WhatsApp Bridge jika memerlukan integrasi WA nyata (lihat bagian di bawah)
 
 ## Troubleshooting singkat
 
 - Jika login atau session Supabase gagal, cek ulang `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY`.
 - Jika koneksi database error, cek `SUPABASE_DB_URL` dan pastikan database Supabase bisa diakses dari mesin lokal.
-- Jika analisis AI tidak jalan, aplikasi tetap bisa dipakai dengan mode mock selama `GEMINI_API_URL` dan `GEMINI_API_KEY` belum diisi.
+- Jika analisis AI tidak jalan, aplikasi tetap bisa dipakai dengan mode mock selama `GEMINI_API_KEY` belum diisi.
+
+---
+
+## 9. Setup WhatsApp Bridge (Baileys Microservice)
+
+Layanan ini opsional untuk development, wajib untuk production.
+
+### 9.1. Install dependencies Baileys
+
+```bash
+npm run wa:install
+```
+
+### 9.2. Konfigurasi environment Baileys
+
+```bash
+cp services/whatsapp-bridge/.env.example services/whatsapp-bridge/.env
+```
+
+Edit `services/whatsapp-bridge/.env` dan isi:
+- `TENANT_ID` — UUID tenant dari tabel `tenants` di Supabase
+- `RENTIVO_WEBHOOK_URL` — `http://localhost:3000/api/inngest` untuk development
+- `BAILEYS_WEBHOOK_SECRET` — Harus sama dengan `BAILEYS_WEBHOOK_SECRET` di `.env.local`
+- `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` — Sama dengan yang ada di `.env.local`
+
+### 9.3. Jalankan WhatsApp Bridge
+
+Di terminal terpisah:
+
+```bash
+npm run wa:dev
+```
+
+### 9.4. Pairing QR Code
+
+Buka browser ke `http://localhost:3001/api/qr` dan scan QR dengan nomor WhatsApp bisnis Anda menggunakan fitur "Perangkat Tertaut" di WhatsApp.
+
+### 9.5. Verifikasi koneksi
+
+```
+GET http://localhost:3001/api/status
+```
+
+Jika response `"status": "connected"`, WhatsApp Bridge sudah aktif dan siap menerima chat masuk.

@@ -2,6 +2,7 @@
 
 import { useFormStatus } from 'react-dom'
 import { registerAction } from '@/app/(auth)/register/actions'
+import { Loader2, ArrowRight } from 'lucide-react'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -15,38 +16,17 @@ function SubmitButton() {
     >
       {pending ? (
         <>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            style={{ animation: 'spin 0.8s linear infinite' }}
-          >
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
+          <Loader2
+            size={16}
+            strokeWidth={2.5}
+            style={{ animation: 'spin 0.8s linear infinite', flexShrink: 0 }}
+          />
           Membuat workspace…
         </>
       ) : (
         <>
           Lanjutkan
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+          <ArrowRight size={16} strokeWidth={2.5} style={{ marginLeft: '2px' }} />
         </>
       )}
     </button>

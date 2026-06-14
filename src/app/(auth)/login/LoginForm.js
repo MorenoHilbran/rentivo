@@ -1,6 +1,8 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
+import { useState } from 'react'
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -11,35 +13,30 @@ function SubmitButton() {
       disabled={pending}
       className="btn btn-primary btn-full btn-lg"
       aria-busy={pending}
+      style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '-0.01em' }}
     >
       {pending ? (
         <>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            style={{
-              animation: 'spin 0.8s linear infinite',
-            }}
-          >
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
+          <Loader2
+            size={16}
+            strokeWidth={2.5}
+            style={{ animation: 'spin 0.8s linear infinite', flexShrink: 0 }}
+          />
           Sedang masuk…
         </>
       ) : (
-        'Masuk'
+        <>
+          Masuk ke Rentivo
+          <ArrowRight size={16} strokeWidth={2.5} style={{ marginLeft: '2px' }} />
+        </>
       )}
     </button>
   )
 }
 
 export default function LoginForm({ action }) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <form action={action} noValidate>
       <style>{`
@@ -48,43 +45,84 @@ export default function LoginForm({ action }) {
         }
       `}</style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Email */}
         <div className="form-group">
-          <label htmlFor="login-email" className="form-label">
+          <label
+            htmlFor="login-email"
+            style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)', letterSpacing: '0.03em', display: 'block', marginBottom: '6px' }}
+          >
             Email
           </label>
-          <input
-            id="login-email"
-            className="form-input"
-            type="email"
-            name="email"
-            placeholder="nama@perusahaan.com"
-            autoComplete="email"
-            required
-            aria-required="true"
-          />
+          <div style={{ position: 'relative' }}>
+            <span style={{
+              position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none',
+              color: 'var(--color-on-surface-variant)', opacity: 0.5, display: 'flex',
+            }}>
+              <Mail size={16} strokeWidth={2} />
+            </span>
+            <input
+              id="login-email"
+              className="form-input"
+              type="email"
+              name="email"
+              placeholder="nama@perusahaan.com"
+              autoComplete="email"
+              required
+              aria-required="true"
+              style={{ paddingLeft: '40px' }}
+            />
+          </div>
         </div>
 
         {/* Password */}
         <div className="form-group">
-          <label htmlFor="login-password" className="form-label">
+          <label
+            htmlFor="login-password"
+            style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)', letterSpacing: '0.03em', display: 'block', marginBottom: '6px' }}
+          >
             Password
           </label>
-          <input
-            id="login-password"
-            className="form-input"
-            type="password"
-            name="password"
-            placeholder="Masukkan password"
-            autoComplete="current-password"
-            required
-            aria-required="true"
-          />
+          <div style={{ position: 'relative' }}>
+            <span style={{
+              position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none',
+              color: 'var(--color-on-surface-variant)', opacity: 0.5, display: 'flex',
+            }}>
+              <Lock size={16} strokeWidth={2} />
+            </span>
+            <input
+              id="login-password"
+              className="form-input"
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              placeholder="Masukkan password"
+              autoComplete="current-password"
+              required
+              aria-required="true"
+              style={{ paddingLeft: '40px', paddingRight: '42px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              style={{
+                position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--color-on-surface-variant)', opacity: 0.6, padding: '4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+              aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+            >
+              {showPassword ? (
+                <EyeOff size={15} strokeWidth={2} />
+              ) : (
+                <Eye size={15} strokeWidth={2} />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Submit */}
-        <div style={{ marginTop: 'var(--space-sm)' }}>
+        <div style={{ marginTop: '4px' }}>
           <SubmitButton />
         </div>
       </div>

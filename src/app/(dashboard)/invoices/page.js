@@ -10,7 +10,7 @@ import InvoiceListClient from '@/components/InvoiceListClient'
 export const metadata = { title: 'Invoice | Rentivo' }
 
 export default async function InvoicesPage({ searchParams: searchParamsPromise }) {
-  const { tenantId } = await requireTenantAuth()
+  const { tenantId } = await requireTenantAuth(['owner', 'admin'])
 
   const invoiceRows = await db
     .select({

@@ -7,6 +7,11 @@
  * Tugas:
  * 1. Refresh session Supabase (agar cookie auth tetap valid)
  * 2. Guard rute berdasarkan status autentikasi dan role
+ *
+ * Error handling:
+ * Jika Supabase tidak bisa diakses (project paused, ENOTFOUND, timeout),
+ * getUser() akan throw atau return null. Dalam kasus ini, rute publik
+ * tetap bisa diakses, rute protected diarahkan ke /login.
  */
 import { NextResponse } from 'next/server'
 import { createMiddlewareClient } from '@/lib/supabase/middleware'
@@ -27,8 +32,25 @@ export async function proxy(request) {
   })
 
   // Refresh session Supabase agar tidak expired
-  const supabase = createMiddlewareClient(request, response)
-  const { data: { user } } = await supabase.auth.getUser()
+  // Wrapped dalam try-catch agar tidak crash saat Supabase tidak tersedia
+  let user = null
+  try {
+    const supabase = createMiddlewareClient(request, response)
+    const { data, error } = await supabase.auth.getUser()
+    if (!error) {
+      user = data?.user ?? null
+    }
+  } catch (err) {
+    // Supabase tidak bisa diakses (ENOTFOUND, timeout, dll)
+    // Log singkat tanpa spam, lanjutkan dengan user = null
+    if (process.env.NODE_ENV === 'development') {
+      const msg = err?.message ?? String(err)
+      // Hanya log sekali per jenis error agar tidak spam
+      if (!msg.includes('ENOTFOUND') && !msg.includes('AbortError')) {
+        console.warn('[Proxy] Supabase auth check failed:', msg)
+      }
+    }
+  }
 
   // Izinkan akses ke rute publik tanpa auth
   const isPublic = PUBLIC_ROUTES.some(
@@ -47,7 +69,7 @@ export async function proxy(request) {
     return response
   }
 
-  // Jika belum login, redirect ke /login
+  // Jika belum login (atau Supabase tidak tersedia), redirect ke /login
   if (!user) {
     const loginUrl = new URL('/login', request.url)
     return NextResponse.redirect(loginUrl)

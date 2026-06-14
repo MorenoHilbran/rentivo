@@ -5,226 +5,236 @@ import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
 import { Search, Info, Calendar, FileText, DollarSign } from 'lucide-react'
 
+/* ─── Filter Tab Bar ─── */
+function FilterTabs({ tabs, active, counts, onChange }) {
+  return (
+    <div style={{
+      display: 'flex', gap: 3,
+      background: 'var(--color-surface-container)',
+      padding: 4, borderRadius: 10,
+      border: '1px solid var(--color-outline-variant)',
+      flexWrap: 'wrap',
+    }}>
+      {tabs.map((tab) => {
+        const isActive = active === tab.id
+        return (
+          <button key={tab.id} onClick={() => onChange(tab.id)} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
+            border: 'none', cursor: 'pointer', transition: 'all 150ms ease',
+            background: isActive ? 'var(--color-surface-container-lowest)' : 'transparent',
+            color: isActive ? 'var(--color-primary)' : 'var(--color-on-surface-variant)',
+            boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
+          }}>
+            {tab.label}
+            {counts[tab.id] > 0 && (
+              <span style={{
+                borderRadius: 99, padding: '1px 6px', fontSize: 10.5, fontWeight: 700,
+                fontFamily: 'var(--font-mono)', lineHeight: 1.5,
+                background: isActive ? 'rgba(0,92,85,0.1)' : 'var(--color-surface-container-high)',
+                color: isActive ? 'var(--color-primary)' : 'var(--color-on-surface-variant)',
+              }}>
+                {counts[tab.id]}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+const CONDITION_TABS = [
+  { id: 'all',          label: 'Semua' },
+  { id: 'good',         label: 'Bagus' },
+  { id: 'minor_damage', label: 'Rusak Ringan' },
+  { id: 'major_damage', label: 'Rusak Berat' },
+  { id: 'lost',         label: 'Hilang' },
+]
+
+const CONDITION_MAP = {
+  good:         { label: 'Bagus',       tone: 'success' },
+  minor_damage: { label: 'Rusak Ringan', tone: 'warning' },
+  major_damage: { label: 'Rusak Berat', tone: 'error'   },
+  lost:         { label: 'Hilang',      tone: 'error'   },
+}
+
+const formatRupiah = (val) => new Intl.NumberFormat('id-ID', {
+  style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0,
+}).format(Number(val || 0))
+
+const formatDate = (d) => d
+  ? new Date(d).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  : '—'
+
 export default function ReturnListClient({ returns }) {
   const [selectedReturn, setSelectedReturn] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [conditionFilter, setConditionFilter] = useState('all')
 
-  const filteredReturns = returns.filter((r) => {
+  const filtered = returns.filter((r) => {
     const term = searchQuery.toLowerCase()
-    const matchesSearch = 
-      r.bookingNumber && r.bookingNumber.toLowerCase().includes(term)
-
-    const matchesCondition = conditionFilter === 'all' || r.condition === conditionFilter
-
-    return matchesSearch && matchesCondition
+    const matchSearch = r.bookingNumber && r.bookingNumber.toLowerCase().includes(term)
+    const matchCondition = conditionFilter === 'all' || r.condition === conditionFilter
+    return matchSearch && matchCondition
   })
 
-  // Format currency
-  const formatRupiah = (val) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Number(val || 0))
-  }
-
-  // Format date range nicely
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  const getConditionTone = (cond) => {
-    switch (cond) {
-      case 'good': return 'success'
-      case 'minor_damage': return 'warning'
-      case 'major_damage': return 'error'
-      case 'lost': return 'error'
-      default: return 'neutral'
-    }
-  }
-
-  const getConditionLabel = (cond) => {
-    switch (cond) {
-      case 'good': return 'Bagus (Good)'
-      case 'minor_damage': return 'Rusak Ringan (Minor Damage)'
-      case 'major_damage': return 'Rusak Berat (Major Damage)'
-      case 'lost': return 'Hilang (Lost)'
-      default: return cond
-    }
-  }
+  const counts = CONDITION_TABS.reduce((acc, t) => {
+    acc[t.id] = t.id === 'all' ? returns.length : returns.filter(r => r.condition === t.id).length
+    return acc
+  }, {})
 
   return (
-    <div className="space-y-4">
-      {/* Search & Tabs */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-2">
-        {/* Search */}
-        <div className="relative max-w-xs w-full">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="h-4 w-4 text-on-surface-variant" />
-          </span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* ── Toolbar ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', maxWidth: 300, flex: 1 }}>
+          <Search size={15} style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            pointerEvents: 'none', color: 'var(--color-on-surface-variant)', opacity: 0.5,
+          }} />
           <input
             type="text"
-            placeholder="Cari nomor booking..."
+            placeholder="Cari nomor booking…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest pl-10 pr-4 py-2 text-body-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-outline"
+            className="form-input"
+            style={{ paddingLeft: 36, fontSize: 13 }}
           />
         </div>
-
-        {/* Tab Filters */}
-        <div className="flex flex-wrap gap-1.5 bg-surface-container p-1 rounded-xl border border-outline-variant/60">
-          {[
-            { id: 'all', label: 'Semua' },
-            { id: 'good', label: 'Bagus' },
-            { id: 'minor_damage', label: 'Rusak Ringan' },
-            { id: 'major_damage', label: 'Rusak Berat' },
-            { id: 'lost', label: 'Hilang' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setConditionFilter(tab.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-                conditionFilter === tab.id
-                  ? 'bg-surface-container-lowest text-primary shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <FilterTabs tabs={CONDITION_TABS} active={conditionFilter} counts={counts} onChange={setConditionFilter} />
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-outline-variant/60">
-        <table className="table min-w-full divide-y divide-outline-variant">
+      {/* ── Table ── */}
+      <div className="table-container">
+        <table className="table">
           <thead>
             <tr>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</th>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Waktu Pengembalian</th>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kondisi</th>
-              <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-on-surface-variant">Denda</th>
-              <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">Aksi</th>
+              <th>Kode Booking</th>
+              <th>Waktu Pengembalian</th>
+              <th>Kondisi</th>
+              <th>Denda</th>
+              <th style={{ textAlign: 'right' }}>Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-outline-variant/60 bg-surface-container-lowest">
-            {filteredReturns.length === 0 ? (
+          <tbody>
+            {filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-body-sm text-on-surface-variant">
-                  Tidak ada data pengembalian yang cocok.
+                <td colSpan={5} style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--color-on-surface-variant)' }}>
+                  {searchQuery || conditionFilter !== 'all' ? 'Tidak ada pengembalian yang cocok.' : 'Belum ada data pengembalian.'}
                 </td>
               </tr>
-            ) : (
-              filteredReturns.map((item) => (
-                <tr 
-                  key={item.id}
-                  className="hover:bg-surface-container-low/40 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap font-mono font-semibold text-body-md text-on-surface">
-                    {item.bookingNumber ?? '-'}
+            ) : filtered.map((item) => {
+              const cm = CONDITION_MAP[item.condition] || { label: item.condition, tone: 'neutral' }
+              return (
+                <tr key={item.id}>
+                  <td>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13.5 }}>
+                      {item.bookingNumber ?? '—'}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">
-                    {formatDate(item.returnedAt)}
+                  <td style={{ color: 'var(--color-on-surface)' }}>{formatDate(item.returnedAt)}</td>
+                  <td><StatusPill tone={cm.tone}>{cm.label}</StatusPill></td>
+                  <td>
+                    {Number(item.damageFee) > 0 ? (
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: '#dc2626' }}>
+                        {formatRupiah(item.damageFee)}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 13, color: 'var(--color-on-surface-variant)', opacity: 0.4 }}>—</span>
+                    )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusPill tone={getConditionTone(item.condition)}>
-                      {item.condition}
-                    </StatusPill>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap font-mono text-body-sm text-rose-600 font-semibold">
-                    {formatRupiah(item.damageFee)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
-                    <button
-                      onClick={() => setSelectedReturn(item)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/5 transition-colors"
-                    >
-                      <Info className="h-4 w-4" /> Detail
+                  <td style={{ textAlign: 'right' }}>
+                    <button onClick={() => setSelectedReturn(item)} className="btn btn-ghost btn-sm" style={{ gap: 5 }}>
+                      <Info size={14} /> Detail
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
+              )
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Detail Return Modal */}
+      {/* ── Return Detail Modal ── */}
       <Modal
         isOpen={selectedReturn !== null}
         onClose={() => setSelectedReturn(null)}
         title="Detail Pengembalian"
         size="md"
-        footer={
-          <button
-            onClick={() => setSelectedReturn(null)}
-            className="btn btn-secondary btn-sm"
-          >
-            Tutup
-          </button>
-        }
+        footer={<button onClick={() => setSelectedReturn(null)} className="btn btn-secondary btn-sm">Tutup</button>}
       >
-        {selectedReturn && (
-          <div className="space-y-6">
-            {/* Header info */}
-            <div className="flex items-center justify-between border-b border-outline-variant pb-4 bg-surface-container-low/20 -mx-6 -mt-6 px-6 py-4">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Kode Booking</span>
-                <h3 className="font-mono text-xl font-bold text-on-background tracking-tight">{selectedReturn.bookingNumber || '-'}</h3>
-              </div>
-              <StatusPill tone={getConditionTone(selectedReturn.condition)}>
-                {getConditionLabel(selectedReturn.condition)}
-              </StatusPill>
-            </div>
-
-            {/* Details Grid */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 border border-sky-200/50">
-                  <Calendar className="h-5 w-5" />
-                </div>
+        {selectedReturn && (() => {
+          const cm = CONDITION_MAP[selectedReturn.condition] || { label: selectedReturn.condition, tone: 'neutral' }
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Header */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderBottom: '1px solid var(--color-outline-variant)',
+                margin: '-24px -24px 0', padding: '18px 24px 18px',
+                background: 'var(--color-surface-container-low)',
+              }}>
                 <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Waktu Kembali</span>
-                  <span className="mt-1 block text-body-sm text-on-surface font-semibold">{formatDate(selectedReturn.returnedAt)}</span>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-on-surface-variant)' }}>Kode Booking</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 19, fontWeight: 800, color: 'var(--color-on-surface)', marginTop: 3 }}>{selectedReturn.bookingNumber || '—'}</div>
+                </div>
+                <StatusPill tone={cm.tone}>{cm.label}</StatusPill>
+              </div>
+
+              {/* Detail grid */}
+              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+                <div style={{
+                  display: 'flex', gap: 12, borderRadius: 11,
+                  border: '1px solid var(--color-outline-variant)',
+                  background: 'var(--color-surface-container-low)', padding: '14px 16px',
+                }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,132,199,0.08)', color: '#0284c7' }}>
+                    <Calendar size={16} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Waktu Kembali</div>
+                    <div style={{ marginTop: 4, fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)' }}>{formatDate(selectedReturn.returnedAt)}</div>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex', gap: 12, borderRadius: 11,
+                  border: '1px solid var(--color-outline-variant)',
+                  background: 'var(--color-surface-container-low)', padding: '14px 16px',
+                }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: Number(selectedReturn.damageFee) > 0 ? 'rgba(220,38,38,0.08)' : 'rgba(5,150,105,0.08)', color: Number(selectedReturn.damageFee) > 0 ? '#dc2626' : '#059669' }}>
+                    <DollarSign size={16} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Biaya Kerusakan</div>
+                    <div style={{ marginTop: 4, fontSize: 13, fontWeight: 700, color: Number(selectedReturn.damageFee) > 0 ? '#dc2626' : 'var(--color-on-surface-variant)', fontFamily: 'var(--font-mono)' }}>
+                      {Number(selectedReturn.damageFee) > 0 ? formatRupiah(selectedReturn.damageFee) : 'Tidak ada'}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4 transition hover:bg-surface-container-low/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700 border border-rose-200/50">
-                  <DollarSign className="h-5 w-5" />
+              {/* Condition notes */}
+              <div style={{
+                display: 'flex', gap: 12, borderRadius: 11,
+                border: '1px solid var(--color-outline-variant)',
+                background: 'var(--color-surface-container-low)', padding: '14px 16px',
+              }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(100,116,139,0.08)', color: '#64748b' }}>
+                  <FileText size={16} strokeWidth={1.8} />
                 </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Biaya Kerusakan (Denda)</span>
-                  <span className="mt-1 block text-body-sm text-rose-600 font-bold">{formatRupiah(selectedReturn.damageFee)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Condition Notes */}
-            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/30 p-4">
-              <div className="flex gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 border border-slate-200/50">
-                  <Info className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Catatan Kondisi</span>
-                  <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed break-words whitespace-pre-wrap">
-                    {selectedReturn.conditionNotes || 'Tidak ada catatan kondisi khusus yang dilaporkan.'}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Catatan Kondisi</div>
+                  <p style={{ marginTop: 6, fontSize: 13, color: 'var(--color-on-surface-variant)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    {selectedReturn.conditionNotes || 'Tidak ada catatan kondisi khusus.'}
                   </p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
       </Modal>
     </div>
   )

@@ -10,7 +10,7 @@ import CustomerListClient from '@/components/CustomerListClient'
 export const metadata = { title: 'Pelanggan | Rentivo' }
 
 export default async function CustomersPage({ searchParams: searchParamsPromise }) {
-  const { tenantId } = await requireTenantAuth()
+  const { tenantId } = await requireTenantAuth(['owner', 'admin'])
 
   const recentCustomers = await db
     .select()

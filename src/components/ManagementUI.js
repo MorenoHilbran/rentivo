@@ -2,69 +2,89 @@
 
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, ChevronDown } from 'lucide-react'
 
+/* ─── Notice / Alert Banner ─── */
 export function Notice({ tone = 'success', title, message }) {
   const configs = {
     success: {
-      card: 'border-emerald-500/20 bg-emerald-50/60 text-emerald-900',
-      icon: <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />,
-      kicker: 'text-emerald-800'
+      card: 'border-emerald-500/20 bg-emerald-50 text-emerald-900',
+      icon: <CheckCircle2 size={15} strokeWidth={2} className="text-emerald-600" style={{ flexShrink: 0, marginTop: 1 }} />,
+      kicker: '#065f46',
     },
     error: {
-      card: 'border-rose-500/20 bg-rose-50/60 text-rose-900',
-      icon: <AlertCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />,
-      kicker: 'text-rose-800'
+      card: 'border-rose-500/20 bg-rose-50 text-rose-900',
+      icon: <AlertCircle size={15} strokeWidth={2} className="text-rose-600" style={{ flexShrink: 0, marginTop: 1 }} />,
+      kicker: '#9f1239',
     },
     info: {
-      card: 'border-sky-500/20 bg-sky-50/60 text-sky-900',
-      icon: <Info className="h-4 w-4 text-sky-600 shrink-0 mt-0.5" />,
-      kicker: 'text-sky-800'
+      card: 'border-sky-500/20 bg-sky-50 text-sky-900',
+      icon: <Info size={15} strokeWidth={2} className="text-sky-600" style={{ flexShrink: 0, marginTop: 1 }} />,
+      kicker: '#0c4a6e',
     },
     warning: {
-      card: 'border-amber-500/20 bg-amber-50/60 text-amber-900',
-      icon: <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />,
-      kicker: 'text-amber-800'
-    }
+      card: 'border-amber-500/20 bg-amber-50 text-amber-900',
+      icon: <AlertTriangle size={15} strokeWidth={2} className="text-amber-600" style={{ flexShrink: 0, marginTop: 1 }} />,
+      kicker: '#78350f',
+    },
   }
 
   const current = configs[tone] || configs.success
 
   return (
-    <div className={`flex gap-2.5 rounded-lg border px-3.5 py-3 shadow-sm transition-all duration-200 ${current.card}`}>
+    <div
+      style={{
+        display: 'flex', gap: 12, borderRadius: 10,
+        border: '1px solid', padding: '12px 16px',
+        boxShadow: 'var(--shadow-sm)',
+      }}
+      className={current.card}
+    >
       {current.icon}
-      <div className="flex-1 min-w-0">
-        <p className={`font-semibold text-sm leading-5 ${current.kicker}`}>{title}</p>
-        {message && <p className="mt-0.5 text-xs opacity-80 leading-4">{message}</p>}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontWeight: 700, fontSize: 13.5, lineHeight: 1.4, color: current.kicker }}>{title}</p>
+        {message && <p style={{ marginTop: 4, fontSize: 12.5, opacity: 0.8, lineHeight: 1.5 }}>{message}</p>}
       </div>
     </div>
   )
 }
 
+/* ─── Form Card (section wrapper) ─── */
 export function FormCard({ title, description, children, action }) {
   return (
-    <section className="relative rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-md overflow-hidden">
-      {/* Header with left border accent */}
-      <div
-        style={{ borderLeft: '3px solid var(--color-primary-container)' }}
-        className="flex flex-col gap-1.5 border-b border-outline-variant bg-surface-container-low/40 px-6 py-4 md:flex-row md:items-start md:justify-between"
-      >
-        <div>
-          <h2 className="font-title-sm text-title-sm font-semibold text-on-background leading-tight">{title}</h2>
-          {description && (
-            <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant leading-relaxed max-w-prose">{description}</p>
-          )}
+    <section style={{
+      borderRadius: 16, border: '1px solid var(--color-outline-variant)',
+      background: 'var(--color-surface-container-lowest)',
+      boxShadow: 'var(--shadow-sm)', overflow: 'hidden',
+      transition: 'box-shadow 200ms ease',
+    }}>
+      {/* Header with left accent */}
+      <div style={{
+        borderLeft: '4px solid var(--color-primary-container)',
+        borderBottom: '1px solid var(--color-outline-variant)',
+        background: 'var(--color-surface-container-low)',
+        padding: '18px 24px',
+        display: 'flex', flexDirection: 'column', gap: 4,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+          <div>
+            <h2 style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--color-on-surface)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>{title}</h2>
+            {description && (
+              <p style={{ marginTop: 5, fontSize: 13, color: 'var(--color-on-surface-variant)', lineHeight: 1.55, maxWidth: 480, opacity: 0.85 }}>{description}</p>
+            )}
+          </div>
+          {action && <div style={{ flexShrink: 0, marginTop: 2 }}>{action}</div>}
         </div>
-        {action ? <div className="shrink-0 mt-1">{action}</div> : null}
       </div>
-      <div className="p-6">{children}</div>
+      <div style={{ padding: '24px' }}>{children}</div>
     </section>
   )
 }
 
+/* ─── Input Field ─── */
 export function Field({ label, name, type = 'text', placeholder, defaultValue, required = true, hint, step, min }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-bold text-on-surface-variant tracking-wider uppercase">
-        {label} {required && <span className="text-rose-500">*</span>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-on-surface-variant)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        {label} {required && <span style={{ color: '#e11d48' }}>*</span>}
       </label>
       <input
         name={name}
@@ -74,19 +94,20 @@ export function Field({ label, name, type = 'text', placeholder, defaultValue, r
         required={required}
         step={step}
         min={min}
-        style={{ height: 44 }}
-        className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 font-body-md text-body-md text-on-surface outline-none transition duration-150 focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-outline"
+        className="form-input"
+        style={{ height: 42 }}
       />
-      {hint ? <span className="text-xs text-on-surface-variant leading-4">{hint}</span> : null}
+      {hint && <span style={{ fontSize: 12, color: 'var(--color-on-surface-variant)', lineHeight: 1.45, opacity: 0.8 }}>{hint}</span>}
     </div>
   )
 }
 
+/* ─── Textarea Field ─── */
 export function TextareaField({ label, name, placeholder, defaultValue, required = true, hint, rows = 4 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-bold text-on-surface-variant tracking-wider uppercase">
-        {label} {required && <span className="text-rose-500">*</span>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-on-surface-variant)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        {label} {required && <span style={{ color: '#e11d48' }}>*</span>}
       </label>
       <textarea
         name={name}
@@ -94,70 +115,89 @@ export function TextareaField({ label, name, placeholder, defaultValue, required
         placeholder={placeholder}
         required={required}
         rows={rows}
-        className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-body-md text-on-surface outline-none transition duration-150 focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-outline resize-y"
+        className="form-input"
+        style={{ height: 'auto', padding: '10px 14px', resize: 'vertical', lineHeight: 1.55 }}
       />
-      {hint ? <span className="text-xs text-on-surface-variant leading-4">{hint}</span> : null}
+      {hint && <span style={{ fontSize: 12, color: 'var(--color-on-surface-variant)', lineHeight: 1.45, opacity: 0.8 }}>{hint}</span>}
     </div>
   )
 }
 
+/* ─── Select Field ─── */
 export function SelectField({ label, name, children, required = true, hint, defaultValue }) {
   return (
-    <div className="flex flex-col gap-1.5 relative">
-      <label className="text-xs font-bold text-on-surface-variant tracking-wider uppercase">
-        {label} {required && <span className="text-rose-500">*</span>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-on-surface-variant)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        {label} {required && <span style={{ color: '#e11d48' }}>*</span>}
       </label>
-      <div className="relative">
+      <div style={{ position: 'relative' }}>
         <select
           name={name}
           defaultValue={defaultValue}
           required={required}
-          style={{ height: 44 }}
-          className="w-full appearance-none rounded-xl border border-outline-variant bg-surface-container-lowest pl-4 pr-10 font-body-md text-body-md text-on-surface outline-none transition duration-150 focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-outline"
+          className="form-input"
+          style={{ height: 42, appearance: 'none', paddingRight: 40 }}
         >
           {children}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-          <ChevronDown className="h-4 w-4 text-on-surface-variant" />
+        <div style={{ pointerEvents: 'none', position: 'absolute', inset: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 12 }}>
+          <ChevronDown size={15} strokeWidth={2} style={{ color: 'var(--color-on-surface-variant)' }} />
         </div>
       </div>
-      {hint ? <span className="text-xs text-on-surface-variant leading-4">{hint}</span> : null}
+      {hint && <span style={{ fontSize: 12, color: 'var(--color-on-surface-variant)', lineHeight: 1.45, opacity: 0.8 }}>{hint}</span>}
     </div>
   )
 }
 
+/* ─── 2-col Grid Form ─── */
 export function GridForm({ children }) {
-  return <div className="grid gap-4 md:grid-cols-2">{children}</div>
+  return <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(2, 1fr)' }}>{children}</div>
 }
 
+/* ─── Table Card wrapper ─── */
 export function TableCard({ title, description, children }) {
   return (
-    <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 hover:shadow-md">
-      <div className="border-b border-outline-variant pb-4">
-        <h2 className="font-title-sm text-title-sm font-semibold text-on-background">{title}</h2>
-        <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{description}</p>
+    <section style={{
+      borderRadius: 16, border: '1px solid var(--color-outline-variant)',
+      background: 'var(--color-surface-container-lowest)',
+      padding: 0, boxShadow: 'var(--shadow-sm)',
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '18px 24px 16px',
+        borderBottom: '1px solid var(--color-outline-variant)',
+        background: 'var(--color-surface-container-low)',
+      }}>
+        <h2 style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--color-on-surface)', letterSpacing: '-0.01em' }}>{title}</h2>
+        {description && <p style={{ marginTop: 5, fontSize: 13, color: 'var(--color-on-surface-variant)', lineHeight: 1.55, opacity: 0.85 }}>{description}</p>}
       </div>
-      <div className="mt-4">
-        {children}
-      </div>
+      <div style={{ padding: '20px 24px 24px' }}>{children}</div>
     </section>
   )
 }
 
+/* ─── Status Pill ─── */
 export function StatusPill({ children, tone = 'neutral' }) {
-  const toneConfigs = {
-    neutral: 'bg-neutral-100 text-neutral-800 border-neutral-200/50',
-    success: 'bg-emerald-50 text-emerald-800 border-emerald-200/50',
-    warning: 'bg-amber-50 text-amber-800 border-amber-200/50',
-    error: 'bg-rose-50 text-rose-800 border-rose-200/50',
-    info: 'bg-sky-50 text-sky-800 border-sky-200/50',
-    primary: 'bg-teal-50 text-teal-800 border-teal-200/50',
+  const toneMap = {
+    neutral: { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' },
+    success: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+    warning: { bg: '#fffbeb', color: '#b45309', border: '#fde68a' },
+    error:   { bg: '#fff1f2', color: '#be123c', border: '#fecdd3' },
+    info:    { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+    primary: { bg: '#f0fdfa', color: '#0f766e', border: '#99f6e4' },
   }
 
-  const selected = toneConfigs[tone] || toneConfigs.neutral
+  const { bg, color, border } = toneMap[tone] || toneMap.neutral
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${selected}`}>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      borderRadius: 9999, border: `1px solid ${border}`,
+      padding: '3px 10px', fontSize: 11, fontWeight: 700,
+      letterSpacing: '0.06em', textTransform: 'uppercase',
+      background: bg, color,
+      lineHeight: 1.5, whiteSpace: 'nowrap',
+    }}>
       {children}
     </span>
   )

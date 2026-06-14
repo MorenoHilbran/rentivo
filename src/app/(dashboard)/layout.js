@@ -27,6 +27,7 @@ export default async function DashboardLayout({ children }) {
         }}
         role={role}
         tenantName={tenantName}
+        tenantId={tenantId}
       />
       <main className="main-content">
         {children}
