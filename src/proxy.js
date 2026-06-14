@@ -17,7 +17,7 @@ import { NextResponse } from 'next/server'
 import { createMiddlewareClient } from '@/lib/supabase/middleware'
 
 // Rute publik yang tidak memerlukan autentikasi
-const PUBLIC_ROUTES = ['/', '/login', '/register']
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/api']
 
 // Rute SuperAdmin — hanya untuk role superadmin
 const SUPERADMIN_ROUTES = ['/superadmin']
