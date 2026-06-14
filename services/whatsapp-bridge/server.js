@@ -97,7 +97,7 @@ async function sendToRentivo(event, payload) {
       log('info', `Webhook terkirim → event=${event}`, data)
     }
   } catch (err) {
-    log('error', 'Webhook error:', err?.message ?? err)
+    log('error', 'Webhook error:', err?.message ?? err, 'Cause:', err?.cause?.message ?? err?.cause)
   }
 }
 
