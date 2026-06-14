@@ -383,9 +383,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     try {
-      // Normalise nomor HP ke format WhatsApp JID
-      const normalised = to.replace(/[^0-9]/g, '').replace(/^0/, '62')
-      const jid = `${normalised}@s.whatsapp.net`
+      let jid
+      if (to.includes('@lid')) {
+        const clean = to.replace(/[^0-9]/g, '')
+        jid = `${clean}@lid`
+      } else if (to.includes('@s.whatsapp.net')) {
+        jid = to
+      } else {
+        const normalised = to.replace(/[^0-9]/g, '').replace(/^0/, '62')
+        jid = `${normalised}@s.whatsapp.net`
+      }
 
       await sock.sendMessage(jid, { text })
       log('info', `Pesan terkirim ke ${jid}: "${text?.substring(0, 60)}"`)

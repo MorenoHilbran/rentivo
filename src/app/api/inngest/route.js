@@ -6,6 +6,10 @@ import crypto from 'crypto'
 
 function normalizePhone(number) {
   if (!number) return number
+  if (number.includes('@lid')) {
+    const cleanNum = number.split('@')[0].replace(/[^0-9]/g, '')
+    return `${cleanNum}@lid`
+  }
   return number.replace(/[^0-9+]/g, '')
 }
 
