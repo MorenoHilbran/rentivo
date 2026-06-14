@@ -63,8 +63,12 @@ export async function POST(request) {
     // Kirim pesan ke WhatsApp nyata via Baileys microservice
     // Ini dilakukan secara fire-and-forget: jika Baileys tidak running,
     // pesan tetap tersimpan di database — tidak ada error fatal.
-    const baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL
+    let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
     if (baileysUrl && customerPhone) {
+      baileysUrl = baileysUrl.trim().replace(/\/$/, '')
+      if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
+        baileysUrl = `https://${baileysUrl}`
+      }
       try {
         const sendResp = await fetch(`${baileysUrl}/api/send-message`, {
           method: 'POST',

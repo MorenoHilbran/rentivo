@@ -136,8 +136,12 @@ Catatan: [Catatan Anda]`
       }).where(eq(conversations.id, conv.id))
 
       // Send auto-reply template to WhatsApp via Baileys Bridge
-      const baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL
+      let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
       if (baileysUrl && from) {
+        baileysUrl = baileysUrl.trim().replace(/\/$/, '')
+        if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
+          baileysUrl = `https://${baileysUrl}`
+        }
         try {
           await fetch(`${baileysUrl}/api/send-message`, {
             method: 'POST',
