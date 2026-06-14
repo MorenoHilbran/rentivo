@@ -45,7 +45,7 @@ if (!existsSync(SESSION_DIR)) mkdirSync(SESSION_DIR, { recursive: true })
 // ─── Baileys dynamic import (CommonJS) ───────────────────────────────────────
 // Baileys menggunakan CJS; kita gunakan createRequire agar kompatibel dengan ESM
 const require = createRequire(import.meta.url)
-let makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage
+let makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage, fetchLatestBaileysVersion
 
 try {
   const baileys = require('@whiskeysockets/baileys')
@@ -53,6 +53,7 @@ try {
   useMultiFileAuthState = baileys.useMultiFileAuthState
   DisconnectReason = baileys.DisconnectReason
   downloadMediaMessage = baileys.downloadMediaMessage
+  fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion
 } catch (e) {
   console.error('[Baileys] Gagal import @whiskeysockets/baileys:', e.message)
   console.error('Jalankan: npm install di folder services/whatsapp-bridge/')
@@ -198,10 +199,23 @@ async function startSocket() {
   connectionStatus = 'connecting'
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR)
 
+  // Fetch WA Web Version dynamically to avoid 405 Connection Failure
+  let waVersion = [2, 3000, 1017578296]
+  if (fetchLatestBaileysVersion) {
+    try {
+      const { version, isLatest } = await fetchLatestBaileysVersion()
+      waVersion = version
+      log('info', `Menggunakan WA Web versi ${version.join('.')}, isLatest: ${isLatest}`)
+    } catch (err) {
+      log('warn', `Gagal fetch versi terbaru, menggunakan fallback: ${waVersion.join('.')}`)
+    }
+  }
+
   sock = makeWASocket({
     auth: state,
     printQRInTerminal: true,
     logger: pino({ level: 'silent' }),
+    version: waVersion,
   })
 
   sock.ev.on('creds.update', saveCreds)
