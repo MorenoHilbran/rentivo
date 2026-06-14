@@ -26,6 +26,7 @@ import http from 'node:http'
 import crypto from 'node:crypto'
 import dotenv from 'dotenv'
 import qrcode from 'qrcode'
+import pino from 'pino'
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -197,7 +198,7 @@ async function startSocket() {
   sock = makeWASocket({
     auth: state,
     printQRInTerminal: true,
-    logger: { level: 'silent', info: () => {}, debug: () => {}, warn: () => {}, error: (obj) => log('error', obj) },
+    logger: pino({ level: 'silent' }),
   })
 
   sock.ev.on('creds.update', saveCreds)
