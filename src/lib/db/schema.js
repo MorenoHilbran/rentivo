@@ -128,6 +128,10 @@ export const tenants = pgTable('tenants', {
   planType: varchar('plan_type', { length: 50 }).default('basic').notNull(), // 'basic', 'pro', 'enterprise'
   subscriptionStatus: varchar('subscription_status', { length: 50 }).default('trial').notNull(), // 'trial', 'active', 'expired', 'unpaid'
   subscriptionExpiresAt: timestamp('subscription_expires_at', { withTimezone: true }),
+  bankName: varchar('bank_name', { length: 100 }),
+  bankAccountNumber: varchar('bank_account_number', { length: 100 }),
+  bankAccountName: varchar('bank_account_name', { length: 255 }),
+  bookingTemplate: text('booking_template'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [

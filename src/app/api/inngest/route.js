@@ -114,8 +114,26 @@ export async function POST(request) {
     const hasTemplate = content.includes('Nama Penyewa:') || content.includes('Produk:')
 
     if (!hasTemplate) {
-      // It's a greeting/other message. Reply with our booking template!
-      const templateText = `Halo! Selamat datang di Rentivo. Silakan isi format berikut untuk melakukan pemesanan:
+      // ONLY trigger auto-reply template if keyword "sewa" or "rental" is detected (case-insensitive)
+      const lowerContent = content.toLowerCase()
+      const isRentKeyword = lowerContent.includes('sewa') || lowerContent.includes('rental')
+
+      if (!isRentKeyword) {
+        return NextResponse.json({
+          ok: true,
+          repliedWithTemplate: false,
+          customerId: customer.id,
+          conversationId: conv.id,
+          reason: 'No booking keywords detected, skipping template auto-reply'
+        })
+      }
+
+      // Fetch tenant details for shop name and custom template
+      const tenant = await db.query.tenants.findFirst({
+        where: (t, { eq }) => eq(t.id, tenantId),
+      })
+      const shopName = tenant?.name || 'Rentivo'
+      const templateText = tenant?.bookingTemplate || `Halo! Selamat datang di ${shopName}. Silakan isi format berikut untuk melakukan pemesanan:
 
 Nama Penyewa: [Nama Anda]
 Produk: [Nama Produk, cth: Sony A7 III Body]
@@ -203,7 +221,66 @@ Catatan: [Catatan Anda]`
     const { analyzeDraftById } = await import('@/lib/inngest/geminiAnalyze')
     await analyzeDraftById(draft.id)
 
-    return NextResponse.json({ ok: true, customerId: customer.id, conversationId: conv.id, messageId: msg.id, draftId: draft.id })
+    // Send confirmation message to customer via WhatsApp Baileys Bridge
+    const confirmationText = 'Silakan tunggu untuk konfirmasi ketersediaannya.'
+
+    // Insert outbound message to database
+    await db.insert(messages).values({
+      tenantId,
+      conversationId: conv.id,
+      direction: 'outbound',
+      content: confirmationText,
+      sentAt: new Date(new Date().getTime() + 1000),
+    })
+
+    // Update conversation with confirmation message
+    await db.update(conversations).set({
+      lastMessageAt: new Date(new Date().getTime() + 1000),
+      lastMessagePreview: confirmationText,
+    }).where(eq(conversations.id, conv.id))
+
+    // Send to WhatsApp via Baileys Bridge
+    let replied = false
+    let replyError = null
+    let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
+    if (baileysUrl && from) {
+      baileysUrl = baileysUrl.trim().replace(/\/$/, '')
+      if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
+        baileysUrl = `https://${baileysUrl}`
+      }
+      try {
+        const sendResp = await fetch(`${baileysUrl}/api/send-message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
+          },
+          body: JSON.stringify({
+            to: from,
+            text: confirmationText,
+          }),
+          signal: AbortSignal.timeout(5000),
+        })
+        if (sendResp.ok) {
+          replied = true
+        } else {
+          replyError = `Status ${sendResp.status}`
+        }
+      } catch (err) {
+        replyError = err.message
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      customerId: customer.id,
+      conversationId: conv.id,
+      messageId: msg.id,
+      draftId: draft.id,
+      repliedWithConfirmation: true,
+      baileysSuccess: replied,
+      baileysError: replyError
+    })
   } catch (err) {
     console.error('inngest webhook error:', err)
     return NextResponse.json({ ok: false, error: 'internal_error' }, { status: 500 })

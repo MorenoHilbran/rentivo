@@ -97,7 +97,49 @@ Catatan: [Catatan Anda]`
                     defaultValue={tenant?.address ?? ''} 
                     placeholder="Alamat lengkap toko / kantor" 
                     required={false}
-                    rows={3}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="md:col-span-2" style={{ borderTop: '1px solid var(--color-outline-variant)', paddingTop: '16px', marginTop: '8px' }}>
+                  <h4 className="text-body-md font-bold text-on-background" style={{ marginBottom: '12.5px', fontSize: '13.5px', color: 'var(--color-primary)' }}>💳 Informasi Rekening Pembayaran</h4>
+                </div>
+                <Field 
+                  label="Nama Bank" 
+                  name="bankName" 
+                  defaultValue={tenant?.bankName ?? ''} 
+                  placeholder="Contoh: BCA, Mandiri, BRI" 
+                  required={false}
+                />
+                <Field 
+                  label="Nomor Rekening" 
+                  name="bankAccountNumber" 
+                  defaultValue={tenant?.bankAccountNumber ?? ''} 
+                  placeholder="Contoh: 1234567890" 
+                  required={false}
+                />
+                <div className="md:col-span-2">
+                  <Field 
+                    label="Nama Pemilik Rekening" 
+                    name="bankAccountName" 
+                    defaultValue={tenant?.bankAccountName ?? ''} 
+                    placeholder="Contoh: Moreno Hilbran" 
+                    required={false}
+                  />
+                </div>
+
+                <div className="md:col-span-2" style={{ borderTop: '1px solid var(--color-outline-variant)', paddingTop: '16px', marginTop: '8px' }}>
+                  <h4 className="text-body-md font-bold text-on-background" style={{ marginBottom: '12.5px', fontSize: '13.5px', color: 'var(--color-primary)' }}>🤖 Kustomisasi Auto-Reply AI</h4>
+                </div>
+                <div className="md:col-span-2">
+                  <TextareaField 
+                    label="Template Format Pemesanan WhatsApp" 
+                    name="bookingTemplate" 
+                    defaultValue={tenant?.bookingTemplate ?? ''} 
+                    placeholder={`Contoh:\nHalo! Selamat datang di Moreno Rental. Silakan lengkapi format ini:\n\nNama Penyewa:\nProduk:\nJumlah Unit:\nWaktu Sewa:\nTanggal Mulai:`} 
+                    required={false}
+                    rows={6}
+                    hint="Kosongkan untuk menggunakan template bawaan sistem."
                   />
                 </div>
               </GridForm>
@@ -192,7 +234,14 @@ Catatan: [Catatan Anda]`
                 }} />
 
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', whiteSpace: 'pre-wrap', color: '#111b21', letterSpacing: '-0.01em' }}>
-                  {defaultTemplate}
+                  {tenant?.bookingTemplate || `Halo! Selamat datang di ${tenant?.name || 'Rentivo'}. Silakan isi format berikut untuk melakukan pemesanan:
+
+Nama Penyewa: [Nama Anda]
+Produk: [Nama Produk, cth: Sony A7 III Body]
+Jumlah Unit: [Jumlah, cth: 1]
+Waktu Sewa: [Hari/Jam, cth: 3 hari]
+Tanggal Mulai: [Format YYYY-MM-DD, cth: 2026-06-10]
+Catatan: [Catatan Anda]`}
                 </div>
 
                 <div style={{

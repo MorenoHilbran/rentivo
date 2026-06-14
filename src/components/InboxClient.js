@@ -625,6 +625,13 @@ Catatan: Butuh filter ND jika ada`
                           fontSize: 13,
                         }}
                       >
+                        {m.mediaType === 'image' && m.mediaUrl && (
+                          <div style={{ marginBottom: m.content ? 8 : 0, borderRadius: 8, overflow: 'hidden' }}>
+                            <a href={m.mediaUrl} target="_blank" rel="noopener noreferrer">
+                              <img src={m.mediaUrl} alt="Bukti Pembayaran" style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 6 }} />
+                            </a>
+                          </div>
+                        )}
                         {m.content}
                         <span style={isInbound ? {
                           fontSize: 9.5,
