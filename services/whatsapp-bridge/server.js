@@ -221,7 +221,7 @@ async function startSocket() {
       connectionStatus = 'disconnected'
       const code = lastDisconnect?.error?.output?.statusCode
       const shouldReconnect = code !== DisconnectReason?.loggedOut
-      log('warn', `Koneksi terputus (code=${code}). Reconnect: ${shouldReconnect}`)
+      log('warn', `Koneksi terputus (code=${code}). Reconnect: ${shouldReconnect}. Detail: ${lastDisconnect?.error?.message ?? lastDisconnect?.error}`)
 
       if (shouldReconnect) {
         setTimeout(startSocket, 5000) // Reconnect setelah 5 detik
