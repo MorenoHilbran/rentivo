@@ -135,6 +135,28 @@ Catatan: [Catatan Anda]`
         lastMessagePreview: templateText.substring(0, 200),
       }).where(eq(conversations.id, conv.id))
 
+      // Send auto-reply template to WhatsApp via Baileys Bridge
+      const baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL
+      if (baileysUrl && from) {
+        try {
+          await fetch(`${baileysUrl}/api/send-message`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
+            },
+            body: JSON.stringify({
+              to: from,
+              text: templateText,
+            }),
+            signal: AbortSignal.timeout(5000),
+          })
+          console.log('[Baileys] Auto-reply template sent to', from)
+        } catch (err) {
+          console.warn('[Baileys] Failed to send auto-reply template:', err.message)
+        }
+      }
+
       return NextResponse.json({ ok: true, repliedWithTemplate: true, customerId: customer.id, conversationId: conv.id })
     }
 
