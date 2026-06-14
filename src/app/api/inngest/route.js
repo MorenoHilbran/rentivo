@@ -136,6 +136,8 @@ Catatan: [Catatan Anda]`
       }).where(eq(conversations.id, conv.id))
 
       // Send auto-reply template to WhatsApp via Baileys Bridge
+      let replied = false
+      let replyError = null
       let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
       if (baileysUrl && from) {
         baileysUrl = baileysUrl.trim().replace(/\/$/, '')
@@ -143,7 +145,7 @@ Catatan: [Catatan Anda]`
           baileysUrl = `https://${baileysUrl}`
         }
         try {
-          await fetch(`${baileysUrl}/api/send-message`, {
+          const sendResp = await fetch(`${baileysUrl}/api/send-message`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -155,13 +157,31 @@ Catatan: [Catatan Anda]`
             }),
             signal: AbortSignal.timeout(5000),
           })
-          console.log('[Baileys] Auto-reply template sent to', from)
+          if (sendResp.ok) {
+            replied = true
+            console.log('[Baileys] Auto-reply template sent to', from)
+          } else {
+            const errTxt = await sendResp.text().catch(() => '')
+            replyError = `Status ${sendResp.status}: ${errTxt}`
+            console.warn('[Baileys] Failed to send auto-reply: ', replyError)
+          }
         } catch (err) {
-          console.warn('[Baileys] Failed to send auto-reply template:', err.message)
+          replyError = err.message
+          console.warn('[Baileys] Failed to send auto-reply: ', err.message)
         }
+      } else {
+        replyError = `Config error: baileysUrl=${baileysUrl ? 'present' : 'missing'}, from=${from ? 'present' : 'missing'}`
+        console.warn('[Baileys] Cannot send auto-reply: ', replyError)
       }
 
-      return NextResponse.json({ ok: true, repliedWithTemplate: true, customerId: customer.id, conversationId: conv.id })
+      return NextResponse.json({
+        ok: true,
+        repliedWithTemplate: true,
+        customerId: customer.id,
+        conversationId: conv.id,
+        baileysSuccess: replied,
+        baileysError: replyError
+      })
     }
 
     // 5) Create an AI draft placeholder since the customer replied with template data
