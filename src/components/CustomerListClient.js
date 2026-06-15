@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { Search, Eye, Phone, Mail, MapPin, FileText, ShoppingBag, DollarSign } from 'lucide-react'
+import { Search, Eye, Phone, Mail, MapPin, FileText, ShoppingBag, DollarSign, Trash2 } from 'lucide-react'
+import { deleteCustomerAction } from '@/app/(dashboard)/actions'
 
 /* ─── Reusable detail row component ─── */
 function DetailRow({ Icon, label, value, bg, color, mono, accent, fullWidth }) {
