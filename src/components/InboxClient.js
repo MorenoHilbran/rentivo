@@ -55,7 +55,8 @@ export default function InboxClient({
   messages: initialMessages, 
   pendingDraft: initialPendingDraft,
   tenantId,
-  tenantPhone
+  tenantPhone,
+  productsWithStock = [],
 }) {
   const router = useRouter()
   const { addToast } = useToast()
@@ -363,10 +364,33 @@ Catatan: Butuh filter ND jika ada`
     }
   }
 
-  // ─── Kirim Reply via form submit ──────────────────────────────────────────────
-  function handleReplySubmit(e) {
-    // Clear client-side input setelah form submit
-    setTimeout(() => setReplyText(''), 50)
+  // ─── Kirim Reply via async fetch ──────────────────────────────────────────────
+  async function handleReplySubmit(e) {
+    e.preventDefault()
+    const textToSend = replyText.trim()
+    if (!textToSend || !activeConvId) return
+
+    setReplyText('') // Clear input immediately for responsiveness
+
+    try {
+      const formData = new FormData()
+      formData.append('conversationId', activeConvId)
+      formData.append('content', textToSend)
+
+      const response = await fetch('/api/inbox/send', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        addToast({ title: 'Gagal mengirim', message: 'Gagal mengirim pesan', tone: 'error' })
+        setReplyText(textToSend) // Restore text on failure
+      }
+    } catch (err) {
+      console.error('Send error:', err)
+      addToast({ title: 'Gagal mengirim', message: String(err), tone: 'error' })
+      setReplyText(textToSend) // Restore text on failure
+    }
   }
 
   const activeConv = conversations.find((c) => c.id === activeConvId)
@@ -597,38 +621,46 @@ Catatan: Butuh filter ND jika ada`
                     <p className="text-xs text-on-surface-variant">Belum ada pesan di percakapan ini.</p>
                   </div>
                 )}
-                {messages.map((m) => {
+                {messages.map((m, index) => {
                   const isInbound = m.direction === 'inbound'
+                  const prevMsg = index > 0 ? messages[index - 1] : null
+                  const isSameSender = prevMsg && prevMsg.direction === m.direction
+
                   return (
                     <div
                       key={m.id}
                       className={`flex ${isInbound ? 'justify-start' : 'justify-end'}`}
-                      style={{ animation: 'fadeInUp 0.2s ease-out' }}
+                      style={{ 
+                        animation: 'fadeInUp 0.2s ease-out',
+                        marginTop: isSameSender ? 3 : 16,
+                      }}
                     >
                       <div
                         style={isInbound ? {
                           background: 'var(--color-surface-container-lowest)',
                           color: 'var(--color-on-surface)',
                           border: '1px solid var(--color-outline-variant)',
-                          borderRadius: 12,
-                          borderTopLeftRadius: 0,
+                          borderRadius: 16,
+                          borderTopLeftRadius: isSameSender ? 16 : 4,
                           padding: '10px 14px',
-                          boxShadow: 'var(--shadow-sm)',
-                          maxWidth: '75%',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          maxWidth: '70%',
                           wordBreak: 'break-word',
                           whiteSpace: 'pre-wrap',
-                          fontSize: 13,
+                          fontSize: 13.5,
+                          lineHeight: 1.45,
                         } : {
                           background: 'var(--color-primary-container)',
                           color: 'var(--color-on-primary)',
-                          borderRadius: 12,
-                          borderTopRightRadius: 0,
+                          borderRadius: 16,
+                          borderTopRightRadius: isSameSender ? 16 : 4,
                           padding: '10px 14px',
-                          boxShadow: 'var(--shadow-sm)',
-                          maxWidth: '75%',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          maxWidth: '70%',
                           wordBreak: 'break-word',
                           whiteSpace: 'pre-wrap',
-                          fontSize: 13,
+                          fontSize: 13.5,
+                          lineHeight: 1.45,
                         }}
                       >
                         {m.mediaType === 'image' && m.mediaUrl && (
@@ -667,8 +699,6 @@ Catatan: Butuh filter ND jika ada`
 
               {/* Reply Input Form */}
               <form
-                action="/api/inbox/send"
-                method="POST"
                 onSubmit={handleReplySubmit}
                 style={{
                   padding: 16,
@@ -874,49 +904,88 @@ Catatan: Butuh filter ND jika ada`
                 </div>
 
                 {/* Items */}
-                {pendingDraft.extractedData?.items?.length > 0 && (
-                  <div style={{
-                    borderRadius: 12,
-                    border: '1px solid var(--color-outline-variant)',
-                    background: 'var(--color-surface-container-lowest)',
-                    padding: 16,
-                    boxShadow: 'var(--shadow-sm)',
-                  }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)', display: 'block', marginBottom: 10 }}>
-                      Aset / Produk Sewa
-                    </span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {pendingDraft.extractedData.items.map((it, idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            borderRadius: 8,
-                            background: 'var(--color-surface-container-low)',
-                            padding: '8px 12px',
-                            border: '1px solid var(--color-outline-variant)',
-                          }}
-                        >
-                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.productName}</span>
-                          <span style={{
-                            borderRadius: 99,
-                            padding: '2px 8px',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-mono)',
-                            background: 'rgba(0,92,85,0.1)',
-                            color: 'var(--color-primary)',
-                            flexShrink: 0,
-                          }}>
-                            {it.quantity} {it.unit || 'unit'}
-                          </span>
-                        </div>
-                      ))}
+                {pendingDraft.extractedData?.items?.length > 0 && (() => {
+                  // Precompute stock availability for warning validations
+                  let isApproveDisabled = false
+                  const stockDetails = []
+
+                  for (const it of pendingDraft.extractedData.items) {
+                    const matchedProd = productsWithStock?.find(p => 
+                      p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === it.productName.toLowerCase().replace(/[^a-z0-9]/g, '')
+                    ) || productsWithStock?.find(p => 
+                      p.name.toLowerCase().includes(it.productName.toLowerCase()) || 
+                      it.productName.toLowerCase().includes(p.name.toLowerCase())
+                    )
+
+                    const available = matchedProd ? matchedProd.availableStock : 0
+                    const sufficient = matchedProd && available >= it.quantity
+
+                    stockDetails.push({ sufficient, available })
+                    if (!sufficient) isApproveDisabled = true
+                  }
+
+                  return (
+                    <div style={{
+                      borderRadius: 12,
+                      border: '1px solid var(--color-outline-variant)',
+                      background: 'var(--color-surface-container-lowest)',
+                      padding: 16,
+                      boxShadow: 'var(--shadow-sm)',
+                    }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)', display: 'block', marginBottom: 10 }}>
+                        Aset / Produk Sewa
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {pendingDraft.extractedData.items.map((it, idx) => {
+                          const stockInfo = stockDetails[idx]
+                          const isSufficient = stockInfo ? stockInfo.sufficient : false
+                          const availableCount = stockInfo ? stockInfo.available : 0
+
+                          return (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 4,
+                                borderRadius: 8,
+                                background: 'var(--color-surface-container-low)',
+                                padding: '10px 12px',
+                                border: isSufficient ? '1px solid var(--color-outline-variant)' : '1px solid rgba(239, 68, 68, 0.4)',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.productName}</span>
+                                <span style={{
+                                  borderRadius: 99,
+                                  padding: '2px 8px',
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  fontFamily: 'var(--font-mono)',
+                                  background: isSufficient ? 'rgba(0,92,85,0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                  color: isSufficient ? 'var(--color-primary)' : '#dc2626',
+                                  flexShrink: 0,
+                                }}>
+                                  {it.quantity} {it.unit || 'unit'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, marginTop: 2 }}>
+                                <span style={{ color: 'var(--color-on-surface-variant)', opacity: 0.8 }}>Stok Tersedia:</span>
+                                <span style={{ 
+                                  fontWeight: 700, 
+                                  color: isSufficient ? 'var(--color-primary)' : '#dc2626',
+                                  fontFamily: 'var(--font-mono)' 
+                                }}>
+                                  {availableCount} unit
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
 
                 {/* Catatan */}
                 {pendingDraft.extractedData?.notes && (
@@ -938,25 +1007,62 @@ Catatan: Butuh filter ND jika ada`
                   </div>
                 )}
 
-                {/* Approve / Reject Buttons */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
-                  <button
-                    onClick={handleRejectDraft}
-                    disabled={rejecting || approving}
-                    className="btn btn-secondary"
-                    style={{ fontSize: 12, height: 38, borderRadius: 8, fontWeight: 700, width: '100%' }}
-                  >
-                    {rejecting ? 'Menolak...' : 'Tolak Draft'}
-                  </button>
-                  <button
-                    onClick={handleApproveDraft}
-                    disabled={approving || rejecting}
-                    className="btn btn-primary"
-                    style={{ fontSize: 12, height: 38, borderRadius: 8, fontWeight: 700, width: '100%' }}
-                  >
-                    {approving ? 'Menyetujui...' : 'Setujui Booking'}
-                  </button>
-                </div>
+                {(() => {
+                  let isApproveDisabled = false
+                  if (pendingDraft?.extractedData?.items) {
+                    for (const it of pendingDraft.extractedData.items) {
+                      const matchedProd = productsWithStock?.find(p => 
+                        p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === it.productName.toLowerCase().replace(/[^a-z0-9]/g, '')
+                      ) || productsWithStock?.find(p => 
+                        p.name.toLowerCase().includes(it.productName.toLowerCase()) || 
+                        it.productName.toLowerCase().includes(p.name.toLowerCase())
+                      )
+                      const available = matchedProd ? matchedProd.availableStock : 0
+                      if (!matchedProd || available < it.quantity) {
+                        isApproveDisabled = true
+                        break
+                      }
+                    }
+                  }
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {isApproveDisabled && (
+                        <div style={{
+                          background: 'rgba(220, 38, 38, 0.08)',
+                          border: '1px solid rgba(220, 38, 38, 0.2)',
+                          color: '#dc2626',
+                          padding: '10px 12px',
+                          borderRadius: 8,
+                          fontSize: 11.5,
+                          fontWeight: 600,
+                          lineHeight: 1.4,
+                          marginTop: 4
+                        }}>
+                          ⚠️ Stok unit inventaris tidak mencukupi untuk menyetujui pemesanan ini.
+                        </div>
+                      )}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
+                        <button
+                          onClick={handleRejectDraft}
+                          disabled={rejecting || approving}
+                          className="btn btn-secondary"
+                          style={{ fontSize: 12, height: 38, borderRadius: 8, fontWeight: 700, width: '100%' }}
+                        >
+                          {rejecting ? 'Menolak...' : 'Tolak Draft'}
+                        </button>
+                        <button
+                          onClick={handleApproveDraft}
+                          disabled={approving || rejecting || isApproveDisabled}
+                          className="btn btn-primary"
+                          style={{ fontSize: 12, height: 38, borderRadius: 8, fontWeight: 700, width: '100%' }}
+                        >
+                          {approving ? 'Menyetujui...' : 'Setujui Booking'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', textAlign: 'center', height: '100%' }}>

@@ -7,7 +7,7 @@ import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
 import CustomerListClient from '@/components/CustomerListClient'
 
-export const metadata = { title: 'Pelanggan | Rentivo' }
+export const metadata = { title: 'Pelanggan' }
 
 export default async function CustomersPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])

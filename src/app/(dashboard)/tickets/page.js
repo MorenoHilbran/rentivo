@@ -7,7 +7,7 @@ import { requireTenantAuth } from '@/lib/session'
 import { eq, desc } from 'drizzle-orm'
 import { HelpCircle } from 'lucide-react'
 
-export const metadata = { title: 'Tiket Bantuan | Rentivo' }
+export const metadata = { title: 'Tiket Bantuan' }
 
 export default async function TicketsPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])

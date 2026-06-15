@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ToastProvider'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { updateBookingStatusAction } from '@/app/(dashboard)/actions'
+import { updateBookingStatusAction, deleteBookingAction } from '@/app/(dashboard)/actions'
 import {
   LayoutGrid,
   Table2,
@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Truck,
   RotateCcw,
+  Trash2,
 } from 'lucide-react'
 
 const STATUS_LABELS = {
@@ -80,6 +81,26 @@ export default function BookingKanbanClient({ bookings }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data booking ini secara permanen? Semua data invoice dan returns terkait juga akan dihapus.')) return
+    setDeleting(true)
+    try {
+      const res = await deleteBookingAction(id)
+      if (res.ok) {
+        setSelectedBooking(null)
+        addToast({ title: 'Booking Dihapus', message: 'Data booking berhasil dibersihkan', tone: 'success' })
+        router.refresh()
+      } else {
+        addToast({ title: 'Gagal Menghapus', message: res.error || 'Terjadi kesalahan', tone: 'error' })
+      }
+    } catch (err) {
+      addToast({ title: 'Error', message: String(err), tone: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const filtered = bookings.filter((b) => {
     const term = searchQuery.toLowerCase()
@@ -368,22 +389,38 @@ export default function BookingKanbanClient({ bookings }) {
         title="Detail Booking"
         size="md"
         footer={
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-            {selectedBooking?.status === 'confirmed' ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {selectedBooking?.status === 'confirmed' && (
+                <button
+                  onClick={async () => {
+                    if (confirm('Apakah Anda yakin ingin membatalkan penyewaan ini?')) {
+                      const bId = selectedBooking.id
+                      setSelectedBooking(null)
+                      await transitionStatus(bId, 'cancelled', 'Dibatalkan')
+                    }
+                  }}
+                  disabled={updatingId === selectedBooking.id}
+                  className="btn btn-error btn-sm"
+                >
+                  Batal Sewa
+                </button>
+              )}
               <button
-                onClick={async () => {
-                  if (confirm('Apakah Anda yakin ingin membatalkan penyewaan ini?')) {
-                    const bId = selectedBooking.id
-                    setSelectedBooking(null)
-                    await transitionStatus(bId, 'cancelled', 'Dibatalkan')
-                  }
+                onClick={() => handleDelete(selectedBooking.id)}
+                disabled={deleting}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 150ms ease',
+                  background: 'transparent', color: '#dc2626', border: '1px solid rgba(220, 38, 38, 0.25)',
                 }}
-                disabled={updatingId === selectedBooking.id}
-                className="btn btn-error btn-sm"
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                Batal Sewa
+                <Trash2 size={13.5} /> {deleting ? 'Hapus...' : 'Hapus'}
               </button>
-            ) : <div />}
+            </div>
             <button onClick={() => setSelectedBooking(null)} className="btn btn-secondary btn-sm">Tutup</button>
           </div>
         }

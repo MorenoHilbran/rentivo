@@ -7,7 +7,7 @@ import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
 import BookingKanbanClient from '@/components/BookingKanbanClient'
 
-export const metadata = { title: 'Pemesanan | Rentivo' }
+export const metadata = { title: 'Pemesanan' }
 
 export default async function BookingsPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])

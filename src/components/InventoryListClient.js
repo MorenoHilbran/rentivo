@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { Search, Info, Package, Tag } from 'lucide-react'
+import { Search, Info, Package, Tag, Trash2 } from 'lucide-react'
+import { deleteInventoryUnitAction } from '@/app/(dashboard)/actions'
 
 /* ─── Filter Tab Bar ─── */
 function FilterTabs({ tabs, active, counts, onChange }) {
@@ -82,6 +83,25 @@ const STATUS_MAP = {
 export default function InventoryListClient({ units }) {
   const [selectedUnit, setSelectedUnit] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus unit inventaris ini? Data pemesanan historis yang memuat unit ini tetap dipertahankan, namun referensi unit fisiknya akan dikosongkan.')) return
+    setDeleting(true)
+    try {
+      const res = await deleteInventoryUnitAction(id)
+      if (res.ok) {
+        setSelectedUnit(null)
+        window.location.reload()
+      } else {
+        alert(res.error || 'Gagal menghapus data')
+      }
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setDeleting(false)
+    }
+  }
   const [statusFilter, setStatusFilter] = useState('all')
 
   const filtered = units.filter((u) => {
@@ -166,7 +186,25 @@ export default function InventoryListClient({ units }) {
         onClose={() => setSelectedUnit(null)}
         title="Detail Unit"
         size="sm"
-        footer={<button onClick={() => setSelectedUnit(null)} className="btn btn-secondary btn-sm">Tutup</button>}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <button
+              onClick={() => handleDelete(selectedUnit.id)}
+              disabled={deleting}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,
+                cursor: 'pointer', transition: 'all 150ms ease',
+                background: 'transparent', color: '#dc2626', border: '1px solid rgba(220, 38, 38, 0.25)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <Trash2 size={13.5} /> {deleting ? 'Hapus...' : 'Hapus Unit'}
+            </button>
+            <button onClick={() => setSelectedUnit(null)} className="btn btn-secondary btn-sm">Tutup</button>
+          </div>
+        }
       >
         {selectedUnit && (() => {
           const sm = STATUS_MAP[selectedUnit.status] || { label: selectedUnit.status, tone: 'neutral' }

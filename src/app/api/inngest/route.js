@@ -162,15 +162,42 @@ export async function POST(request) {
         where: (t, { eq }) => eq(t.id, tenantId),
       })
       const shopName = tenant?.name || 'Rentivo'
-      const templateText = tenant?.bookingTemplate || `Halo! Selamat datang di ${shopName}. Silakan isi format berikut untuk melakukan pemesanan:
 
-Nama Penyewa: [Nama Anda]
+      // Fetch all products of the tenant with available units count
+      let availabilityInfo = ''
+      try {
+        const allProds = await db.query.products.findMany({
+          where: (p, { eq }) => eq(p.tenantId, tenantId) && eq(p.isActive, true),
+        })
+        const lines = []
+        for (const prod of allProds) {
+          const units = await db.query.inventoryUnits.findMany({
+            where: (u, { eq, and }) => and(
+              eq(u.tenantId, tenantId),
+              eq(u.productId, prod.id),
+              eq(u.status, 'available')
+            )
+          })
+          lines.push(`- ${prod.name} (Tersedia: ${units.length} unit)`)
+        }
+        if (lines.length > 0) {
+          availabilityInfo = `Berikut adalah daftar produk yang tersedia saat ini:\n${lines.join('\n')}\n\n`
+        } else {
+          availabilityInfo = `Maaf, saat ini semua produk kami sedang disewa atau tidak tersedia.\n\n`
+        }
+      } catch (err) {
+        console.error('Failed to fetch product availability for template:', err)
+      }
+
+      const rawTemplate = tenant?.bookingTemplate || `Nama Penyewa: [Nama Anda]
 No. HP / WhatsApp: [Nomor HP Anda]
 Produk: [Nama Produk, cth: Sony A7 III Body]
 Jumlah Unit: [Jumlah, cth: 1]
 Waktu Sewa: [Hari/Jam, cth: 3 hari]
 Tanggal Mulai: [Format YYYY-MM-DD, cth: 2026-06-10]
 Catatan: [Catatan Anda]`
+
+      const templateText = `Halo! Selamat datang di ${shopName}.\n\n${availabilityInfo}Silakan isi format berikut untuk melakukan pemesanan:\n\n${rawTemplate}`
 
       // Insert outbound auto-reply message
       await db.insert(messages).values({
@@ -251,8 +278,12 @@ Catatan: [Catatan Anda]`
     const { analyzeDraftById } = await import('@/lib/inngest/geminiAnalyze')
     await analyzeDraftById(draft.id)
 
-    // Send confirmation message to customer via WhatsApp Baileys Bridge
-    const confirmationText = 'Silakan tunggu untuk konfirmasi ketersediaannya.'
+    // Load the updated draft to get the AI-generated response text
+    const updatedDraft = await db.query.aiDrafts.findFirst({
+      where: (d, { eq }) => eq(d.id, draft.id)
+    })
+
+    const confirmationText = updatedDraft?.extractedData?.aiResponseText || 'Silakan tunggu untuk konfirmasi ketersediaannya.'
 
     // Insert outbound message to database
     await db.insert(messages).values({

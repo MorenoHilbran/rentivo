@@ -38,6 +38,25 @@ function DetailRow({ Icon, label, value, bg, color, mono, accent, fullWidth }) {
 export default function CustomerListClient({ customers }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data pelanggan ini? Semua data percakapan, booking, invoice, dan return terkait dengan pelanggan ini akan dihapus secara permanen!')) return
+    setDeleting(true)
+    try {
+      const res = await deleteCustomerAction(id)
+      if (res.ok) {
+        setSelectedCustomer(null)
+        window.location.reload()
+      } else {
+        alert(res.error || 'Gagal menghapus data')
+      }
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const filtered = customers.filter((c) => {
     const term = searchQuery.toLowerCase()
@@ -137,7 +156,25 @@ export default function CustomerListClient({ customers }) {
         onClose={() => setSelectedCustomer(null)}
         title="Profil Pelanggan"
         size="md"
-        footer={<button onClick={() => setSelectedCustomer(null)} className="btn btn-secondary btn-sm">Tutup</button>}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <button
+              onClick={() => handleDelete(selectedCustomer.id)}
+              disabled={deleting}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,
+                cursor: 'pointer', transition: 'all 150ms ease',
+                background: 'transparent', color: '#dc2626', border: '1px solid rgba(220, 38, 38, 0.25)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <Trash2 size={13.5} /> {deleting ? 'Hapus...' : 'Hapus Pelanggan'}
+            </button>
+            <button onClick={() => setSelectedCustomer(null)} className="btn btn-secondary btn-sm">Tutup</button>
+          </div>
+        }
       >
         {selectedCustomer && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

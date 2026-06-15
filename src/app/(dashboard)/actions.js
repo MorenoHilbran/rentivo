@@ -347,6 +347,9 @@ export async function recordReturnAction(formData) {
 
   await db.update(bookings).set({ status: 'completed', updatedAt: new Date() }).where(eq(bookings.id, bookingId))
 
+  // Send status update notification to customer
+  await sendAIStatusNotification(tenantId, booking, 'completed')
+
   refreshPaths()
   redirect('/returns')
 }
@@ -558,6 +561,9 @@ export async function updateBookingStatusAction(bookingId, nextStatus) {
     updatedAt: new Date()
   }).where(eq(bookings.id, bookingId))
 
+  // Send status update notification to customer
+  await sendAIStatusNotification(tenantId, booking, nextStatus)
+
   refreshPaths()
   revalidatePath('/bookings')
   return { ok: true }
@@ -740,4 +746,285 @@ export async function deleteTeamMemberAction(memberId) {
 
   revalidatePath('/settings')
   return { ok: true }
+}
+
+// ─── Booking & Data Deletion CRUD Actions ──────────────────────────────────────
+
+export async function deleteBookingAction(bookingId) {
+  try {
+    const { tenantId } = await requireTenantAuth()
+
+    // 1. Delete returns related to this booking
+    await db.delete(returns).where(and(eq(returns.tenantId, tenantId), eq(returns.bookingId, bookingId)))
+
+    // 2. Free up any inventory units that were allocated to this booking
+    const items = await db.query.bookingItems.findMany({
+      where: (bi, { eq }) => eq(bi.bookingId, bookingId)
+    })
+
+    const unitIds = items.map(i => i.inventoryUnitId).filter(Boolean)
+    if (unitIds.length > 0) {
+      await db.update(inventoryUnits).set({
+        status: 'available',
+        updatedAt: new Date()
+      }).where(and(eq(inventoryUnits.tenantId, tenantId), inArray(inventoryUnits.id, unitIds)))
+    }
+
+    // 3. Delete the booking (cascades to bookingItems and invoices)
+    await db.delete(bookings).where(and(eq(bookings.tenantId, tenantId), eq(bookings.id, bookingId)))
+
+    refreshPaths()
+    return { ok: true }
+  } catch (err) {
+    console.error('deleteBookingAction error:', err)
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+export async function deleteCustomerAction(customerId) {
+  try {
+    const { tenantId } = await requireTenantAuth()
+
+    // 1. Find all bookings for this customer
+    const customerBookings = await db.query.bookings.findMany({
+      where: (b, { eq, and }) => and(eq(b.tenantId, tenantId), eq(b.customerId, customerId))
+    })
+    
+    const bookingIds = customerBookings.map(b => b.id)
+    if (bookingIds.length > 0) {
+      // Delete returns for these bookings
+      await db.delete(returns).where(and(eq(returns.tenantId, tenantId), inArray(returns.bookingId, bookingIds)))
+
+      // Free up inventory units
+      const items = await db.query.bookingItems.findMany({
+        where: (bi, { eq }) => inArray(bi.bookingId, bookingIds)
+      })
+      const unitIds = items.map(i => i.inventoryUnitId).filter(Boolean)
+      if (unitIds.length > 0) {
+        await db.update(inventoryUnits).set({
+          status: 'available',
+          updatedAt: new Date()
+        }).where(and(eq(inventoryUnits.tenantId, tenantId), inArray(inventoryUnits.id, unitIds)))
+      }
+
+      // Delete bookings (cascades to bookingItems and invoices)
+      await db.delete(bookings).where(and(eq(bookings.tenantId, tenantId), inArray(bookings.id, bookingIds)))
+    }
+
+    // 2. Delete conversations (cascades to messages)
+    await db.delete(conversations).where(and(eq(conversations.tenantId, tenantId), eq(conversations.customerId, customerId)))
+
+    // 3. Delete AI Drafts
+    await db.delete(aiDrafts).where(and(eq(aiDrafts.tenantId, tenantId), eq(aiDrafts.customerId, customerId)))
+
+    // 4. Delete customer
+    await db.delete(customers).where(and(eq(customers.tenantId, tenantId), eq(customers.id, customerId)))
+
+    refreshPaths()
+    return { ok: true }
+  } catch (err) {
+    console.error('deleteCustomerAction error:', err)
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+export async function deleteInventoryUnitAction(unitId) {
+  try {
+    const { tenantId } = await requireTenantAuth()
+
+    // 1. Nullify references in bookingItems
+    await db.update(bookingItems).set({ inventoryUnitId: null }).where(eq(bookingItems.inventoryUnitId, unitId))
+
+    // 2. Delete unit
+    await db.delete(inventoryUnits).where(and(eq(inventoryUnits.tenantId, tenantId), eq(inventoryUnits.id, unitId)))
+
+    refreshPaths()
+    return { ok: true }
+  } catch (err) {
+    console.error('deleteInventoryUnitAction error:', err)
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+export async function deleteInvoiceAction(invoiceId) {
+  try {
+    const { tenantId } = await requireTenantAuth()
+
+    // Delete invoice (cascades to payments in database)
+    await db.delete(invoices).where(and(eq(invoices.tenantId, tenantId), eq(invoices.id, invoiceId)))
+
+    refreshPaths()
+    return { ok: true }
+  } catch (err) {
+    console.error('deleteInvoiceAction error:', err)
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+export async function deleteReturnAction(returnId) {
+  try {
+    const { tenantId } = await requireTenantAuth()
+
+    const ret = await db.query.returns.findFirst({
+      where: (r, { eq, and }) => and(eq(r.tenantId, tenantId), eq(r.id, returnId))
+    })
+
+    if (ret) {
+      // Revert booking status back to 'active'
+      await db.update(bookings).set({
+        status: 'active',
+        updatedAt: new Date()
+      }).where(eq(bookings.id, ret.bookingId))
+
+      // Revert inventory units back to 'rented'
+      const items = await db.query.bookingItems.findMany({
+        where: (bi, { eq }) => eq(bi.bookingId, ret.bookingId)
+      })
+      const unitIds = items.map(i => i.inventoryUnitId).filter(Boolean)
+      if (unitIds.length > 0) {
+        await db.update(inventoryUnits).set({
+          status: 'rented',
+          updatedAt: new Date()
+        }).where(and(eq(inventoryUnits.tenantId, tenantId), inArray(inventoryUnits.id, unitIds)))
+      }
+    }
+
+    await db.delete(returns).where(and(eq(returns.tenantId, tenantId), eq(returns.id, returnId)))
+
+    refreshPaths()
+    return { ok: true }
+  } catch (err) {
+    console.error('deleteReturnAction error:', err)
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+// Helper to notify customer of booking status changes via AI
+export async function sendAIStatusNotification(tenantId, booking, nextStatus) {
+  try {
+    const customer = await db.query.customers.findFirst({
+      where: (c, { eq }) => eq(c.id, booking.customerId),
+    })
+
+    const tenant = await db.query.tenants.findFirst({
+      where: (t, { eq }) => eq(t.id, tenantId),
+    })
+
+    if (!customer || !customer.phoneNumber) return
+
+    // Find products in this booking to make the AI response specific
+    const items = await db.query.bookingItems.findMany({
+      where: (bi, { eq }) => eq(bi.bookingId, booking.id),
+    })
+    const productIds = items.map(i => i.productId).filter(Boolean)
+    
+    let productNames = ''
+    if (productIds.length > 0) {
+      const prods = await db.query.products.findMany({
+        where: (p, { eq }) => inArray(p.id, productIds)
+      })
+      productNames = prods.map(p => p.name).join(', ')
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY
+    const shopName = tenant?.name || 'Rentivo'
+    const statusMap = {
+      confirmed: 'dikonfirmasi (unit dipesan)',
+      active: 'aktif (sewa dimulai)',
+      returning: 'proses pengembalian',
+      completed: 'selesai (sudah dikembalikan)',
+      cancelled: 'dibatalkan'
+    }
+    const statusLabel = statusMap[nextStatus] || nextStatus
+
+    let notificationText = ''
+    if (apiKey) {
+      try {
+        const prompt = `Kamu adalah asisten CRM rental bernama Rentivo AI. Generate pesan pemberitahuan WhatsApp yang ramah, sopan, dan profesional untuk pelanggan tentang pembaruan status pesanan mereka.
+        
+Detail:
+- Nama Toko/Rental: ${shopName}
+- Nama Pelanggan: ${customer.name}
+- Nomor Booking: ${booking.bookingNumber}
+- Produk yang disewa: ${productNames || 'produk rental'}
+- Status Baru: ${statusLabel}
+
+Aturan:
+- Gunakan bahasa Indonesia yang santun dan akrab.
+- Sebutkan nama produk secara spesifik.
+- Sebutkan nomor booking.
+- Berikan penjelas/tips pendek yang relevan dengan produk dan status sewa tersebut (misalnya jika status 'active' untuk kamera, ingatkan untuk menjaga lensa/sensor; jika status 'completed', ucapkan terima kasih banyak).
+- Jangan berikan markdown tebal/miring/kode, berikan teks polos (boleh pakai emoji ramah).
+- JANGAN tampilkan label "Jawaban AI:" atau sejenisnya, langsung teks pesan.`
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+          }),
+          signal: AbortSignal.timeout(5000),
+        })
+
+        if (resp.ok) {
+          const data = await resp.json()
+          notificationText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+        }
+      } catch (geminiErr) {
+        console.error('[AI Status Notification] Gemini API error, fallback to template:', geminiErr)
+      }
+    }
+
+    if (!notificationText) {
+      const formattedStatus = statusLabel.toUpperCase()
+      notificationText = `Halo ${customer.name}, pemberitahuan dari ${shopName}. Status pesanan Anda #${booking.bookingNumber} (${productNames || 'produk rental'}) saat ini telah diperbarui menjadi: ${formattedStatus}. Terima kasih.`
+    }
+
+    // Find conversation to log the message
+    const conv = await db.query.conversations.findFirst({
+      where: (c, { eq, and }) => and(eq(c.tenantId, tenantId), eq(c.customerId, customer.id)),
+    })
+
+    if (conv) {
+      // 1) Save to DB
+      await db.insert(messages).values({
+        tenantId,
+        conversationId: conv.id,
+        direction: 'outbound',
+        content: notificationText,
+        sentAt: new Date(),
+      })
+
+      // 2) Update conversation
+      await db.update(conversations).set({
+        lastMessageAt: new Date(),
+        lastMessagePreview: notificationText.substring(0, 200),
+      }).where(eq(conversations.id, conv.id))
+
+      // 3) Send to WA via Baileys Bridge
+      let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
+      if (baileysUrl) {
+        baileysUrl = baileysUrl.trim().replace(/\/$/, '')
+        if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
+          baileysUrl = `https://${baileysUrl}`
+        }
+        await fetch(`${baileysUrl}/api/send-message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
+          },
+          body: JSON.stringify({
+            to: customer.whatsappJid || customer.phoneNumber,
+            text: notificationText,
+          }),
+          signal: AbortSignal.timeout(5000),
+        })
+      }
+    }
+  } catch (err) {
+    console.error('[AI Status Notification] Error:', err)
+  }
 }

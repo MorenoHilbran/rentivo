@@ -103,8 +103,17 @@ async function sendToRentivo(event, payload) {
 
 // ─── Upload gambar ke Supabase Storage (bukti bayar) ─────────────────────────
 async function uploadMediaToSupabase(buffer, mimeType, fileName) {
-  const supabaseUrl = process.env.SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  let supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+
+  if (supabaseUrl && (supabaseUrl.startsWith('postgresql://') || supabaseUrl.startsWith('postgres://'))) {
+    const match = supabaseUrl.match(/postgres\.([^:@/]+)/)
+    if (match && match[1]) {
+      const correctedUrl = `https://${match[1]}.supabase.co`
+      log('info', `Automatically corrected SUPABASE_URL from database URL to: ${correctedUrl}`)
+      supabaseUrl = correctedUrl
+    }
+  }
 
   if (!supabaseUrl || !serviceKey) {
     log('warn', 'SUPABASE_URL atau SUPABASE_SERVICE_ROLE_KEY tidak diset — skip upload gambar')

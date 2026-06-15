@@ -7,7 +7,7 @@ import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
 import InventoryListClient from '@/components/InventoryListClient'
 
-export const metadata = { title: 'Inventaris | Rentivo' }
+export const metadata = { title: 'Inventaris' }
 
 export default async function InventoryPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])

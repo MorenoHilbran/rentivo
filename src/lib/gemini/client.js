@@ -69,8 +69,12 @@ const BOOKING_EXTRACTION_SCHEMA = {
       minimum: 0.0,
       maximum: 1.0,
     },
+    aiResponseText: {
+      type: 'string',
+      description: 'Pesan konfirmasi spesifik yang sopan untuk pelanggan tentang produk yang dipesan (seperti menyebutkan pemeriksaan kamera/drone/alat rental spesifik yang dipesan agar siap pakai) dan meminta mereka menunggu konfirmasi admin.',
+    },
   },
-  required: ['intent', 'customerName', 'items', 'startDate', 'endDate', 'notes', 'confidence'],
+  required: ['intent', 'customerName', 'items', 'startDate', 'endDate', 'notes', 'confidence', 'aiResponseText'],
 }
 
 /**
@@ -135,6 +139,7 @@ function mockExtract(text) {
     endDate,
     notes,
     confidence: 0.85,
+    aiResponseText: `Halo! Terima kasih atas pemesanan Anda untuk ${productName}. Kami sedang memeriksa ketersediaan dan kelayakan unit agar siap digunakan. Mohon tunggu konfirmasi dari kami.`,
     raw: { mocked: true },
   }
 }
@@ -173,6 +178,7 @@ Aturan penting:
 - Konversi semua tanggal ke format YYYY-MM-DD
 - Jika intent bukan booking (hanya sapaan/pertanyaan), kembalikan items kosong dan confidence rendah
 - confidence harus mencerminkan seberapa yakin kamu terhadap data yang diekstrak (0.0 - 1.0)
+- Untuk aiResponseText, buat tanggapan ramah dalam Bahasa Indonesia yang menyebutkan produk yang mereka sewa secara spesifik (misal jika sewa drone, sebutkan pemeriksaan kalibrasi/terbang drone, jika kamera sebutkan baterai/sensor kamera, dll) dan beri tahu bahwa pelanggan mohon menunggu konfirmasi admin.
 
 Nama produk yang tersedia di sistem:
 - Sony A7 III Body (kamera mirrorless full-frame)

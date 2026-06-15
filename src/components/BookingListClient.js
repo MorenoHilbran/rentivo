@@ -3,11 +3,31 @@
 import { useState } from 'react'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { Eye, Calendar, User, FileText, DollarSign, Search } from 'lucide-react'
+import { Eye, Calendar, User, FileText, DollarSign, Search, Trash2 } from 'lucide-react'
+import { deleteBookingAction } from '@/app/(dashboard)/actions'
 
 export default function BookingListClient({ bookings }) {
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data booking ini secara permanen? Semua data invoice dan returns terkait juga akan dihapus.')) return
+    setDeleting(true)
+    try {
+      const res = await deleteBookingAction(id)
+      if (res.ok) {
+        setSelectedBooking(null)
+        window.location.reload()
+      } else {
+        alert(res.error || 'Gagal menghapus data')
+      }
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const filteredBookings = bookings.filter((b) => {
     const term = searchQuery.toLowerCase()
@@ -113,12 +133,21 @@ export default function BookingListClient({ bookings }) {
         title="Detail Booking"
         size="md"
         footer={
-          <button
-            onClick={() => setSelectedBooking(null)}
-            className="btn btn-secondary btn-sm"
-          >
-            Tutup
-          </button>
+          <div className="flex justify-between items-center w-full">
+            <button
+              onClick={() => handleDelete(selectedBooking.id)}
+              disabled={deleting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 transition-colors text-xs font-semibold"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> {deleting ? 'Menghapus...' : 'Hapus Booking'}
+            </button>
+            <button
+              onClick={() => setSelectedBooking(null)}
+              className="btn btn-secondary btn-sm"
+            >
+              Tutup
+            </button>
+          </div>
         }
       >
         {selectedBooking && (

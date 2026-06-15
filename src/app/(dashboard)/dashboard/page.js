@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 
 export const metadata = {
-  title: 'Dashboard | Rentivo',
+  title: 'Dashboard',
 }
 
 /* Format angka sebagai Rupiah */

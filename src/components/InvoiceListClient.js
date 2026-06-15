@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { Search, FileText, CheckCircle2 } from 'lucide-react'
+import { Search, FileText, CheckCircle2, Trash2 } from 'lucide-react'
+import { deleteInvoiceAction } from '@/app/(dashboard)/actions'
 
 /* ─── Filter Tab Bar ─── */
 function FilterTabs({ tabs, active, counts, onChange }) {
@@ -66,6 +67,25 @@ const formatRupiah = (val) => new Intl.NumberFormat('id-ID', {
 export default function InvoiceListClient({ invoices }) {
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data invoice ini? Semua riwayat pembayaran terkait akan dihapus secara permanen.')) return
+    setDeleting(true)
+    try {
+      const res = await deleteInvoiceAction(id)
+      if (res.ok) {
+        setSelectedInvoice(null)
+        window.location.reload()
+      } else {
+        alert(res.error || 'Gagal menghapus data')
+      }
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setDeleting(false)
+    }
+  }
   const [statusFilter, setStatusFilter] = useState('all')
 
   const filtered = invoices.filter((inv) => {
@@ -164,7 +184,25 @@ export default function InvoiceListClient({ invoices }) {
         onClose={() => setSelectedInvoice(null)}
         title="Rincian Invoice"
         size="md"
-        footer={<button onClick={() => setSelectedInvoice(null)} className="btn btn-secondary btn-sm">Tutup</button>}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <button
+              onClick={() => handleDelete(selectedInvoice.id)}
+              disabled={deleting}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,
+                cursor: 'pointer', transition: 'all 150ms ease',
+                background: 'transparent', color: '#dc2626', border: '1px solid rgba(220, 38, 38, 0.25)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <Trash2 size={13.5} /> {deleting ? 'Hapus...' : 'Hapus Invoice'}
+            </button>
+            <button onClick={() => setSelectedInvoice(null)} className="btn btn-secondary btn-sm">Tutup</button>
+          </div>
+        }
       >
         {selectedInvoice && (() => {
           const sm = STATUS_MAP[selectedInvoice.status] || { label: selectedInvoice.status, tone: 'neutral' }

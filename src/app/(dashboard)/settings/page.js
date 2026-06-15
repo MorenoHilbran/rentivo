@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm'
 import { Settings, MessageCircle, Sparkles, ShieldAlert } from 'lucide-react'
 import TeamManagementClient from '@/components/TeamManagementClient'
 
-export const metadata = { title: 'Pengaturan | Rentivo' }
+export const metadata = { title: 'Pengaturan' }
 
 export default async function SettingsPage({ searchParams: searchParamsPromise }) {
   const { user, tenantId, role } = await requireTenantAuth(['owner', 'admin'])

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { StatusPill } from '@/components/ManagementUI'
 import Modal from '@/components/Modal'
-import { Search, Info, Calendar, FileText, DollarSign } from 'lucide-react'
+import { Search, Info, Calendar, FileText, DollarSign, Trash2 } from 'lucide-react'
+import { deleteReturnAction } from '@/app/(dashboard)/actions'
 
 /* ─── Filter Tab Bar ─── */
 function FilterTabs({ tabs, active, counts, onChange }) {
@@ -70,6 +71,25 @@ const formatDate = (d) => d
 export default function ReturnListClient({ returns }) {
   const [selectedReturn, setSelectedReturn] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data pengembalian ini? Status penyewaan terkait akan dikembalikan menjadi AKTIF, dan unit fisik terkait akan diubah statusnya menjadi DISEWA kembali.')) return
+    setDeleting(true)
+    try {
+      const res = await deleteReturnAction(id)
+      if (res.ok) {
+        setSelectedReturn(null)
+        window.location.reload()
+      } else {
+        alert(res.error || 'Gagal menghapus data')
+      }
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setDeleting(false)
+    }
+  }
   const [conditionFilter, setConditionFilter] = useState('all')
 
   const filtered = returns.filter((r) => {
@@ -163,7 +183,25 @@ export default function ReturnListClient({ returns }) {
         onClose={() => setSelectedReturn(null)}
         title="Detail Pengembalian"
         size="md"
-        footer={<button onClick={() => setSelectedReturn(null)} className="btn btn-secondary btn-sm">Tutup</button>}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <button
+              onClick={() => handleDelete(selectedReturn.id)}
+              disabled={deleting}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,
+                cursor: 'pointer', transition: 'all 150ms ease',
+                background: 'transparent', color: '#dc2626', border: '1px solid rgba(220, 38, 38, 0.25)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <Trash2 size={13.5} /> {deleting ? 'Hapus...' : 'Hapus Return'}
+            </button>
+            <button onClick={() => setSelectedReturn(null)} className="btn btn-secondary btn-sm">Tutup</button>
+          </div>
+        }
       >
         {selectedReturn && (() => {
           const cm = CONDITION_MAP[selectedReturn.condition] || { label: selectedReturn.condition, tone: 'neutral' }

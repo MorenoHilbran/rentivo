@@ -7,7 +7,7 @@ import { requireTenantAuth } from '@/lib/session'
 import { desc, eq } from 'drizzle-orm'
 import ReturnListClient from '@/components/ReturnListClient'
 
-export const metadata = { title: 'Pengembalian | Rentivo' }
+export const metadata = { title: 'Pengembalian' }
 
 export default async function ReturnsPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth()

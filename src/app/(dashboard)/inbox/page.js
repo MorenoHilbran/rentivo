@@ -1,11 +1,11 @@
 import SectionPage from '@/components/SectionPage'
 import { db } from '@/lib/db'
-import { conversations, customers, messages, aiDrafts, tenants } from '@/lib/db/schema'
+import { conversations, customers, messages, aiDrafts, tenants, products, inventoryUnits } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
 import { desc, eq, and } from 'drizzle-orm'
 import InboxClient from '@/components/InboxClient'
 
-export const metadata = { title: 'Kotak Masuk | Rentivo' }
+export const metadata = { title: 'Kotak Masuk' }
 
 export default async function InboxPage({ searchParams }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])
@@ -65,6 +65,30 @@ export default async function InboxPage({ searchParams }) {
     }
   }
 
+  // Fetch all products of the tenant with available units count
+  let productsWithStock = []
+  try {
+    const allProducts = await db.query.products.findMany({
+      where: eq(products.tenantId, tenantId),
+    })
+    for (const prod of allProducts) {
+      const units = await db.query.inventoryUnits.findMany({
+        where: (u, { eq, and }) => and(
+          eq(u.tenantId, tenantId),
+          eq(u.productId, prod.id),
+          eq(u.status, 'available')
+        )
+      })
+      productsWithStock.push({
+        id: prod.id,
+        name: prod.name,
+        availableStock: units.length
+      })
+    }
+  } catch (err) {
+    console.error('Failed to fetch products with stock in InboxPage:', err)
+  }
+
   return (
     <SectionPage
       title="Kotak Masuk"
@@ -77,6 +101,7 @@ export default async function InboxPage({ searchParams }) {
         pendingDraft={pendingDraft}
         tenantId={tenantId}
         tenantPhone={tenant?.phoneNumber ?? null}
+        productsWithStock={productsWithStock}
       />
     </SectionPage>
   )

@@ -35,7 +35,7 @@ const SETTINGS_ITEMS = [
 ]
 
 /* ─── Main Component ─── */
-export default function Sidebar({ user, role, tenantName, tenantId }) {
+export default function Sidebar({ user, role, tenantName, tenantId, pendingDraftsCount = 0 }) {
   const pathname = usePathname()
   const router = useRouter()
   const { addToast } = useToast()
@@ -114,10 +114,28 @@ export default function Sidebar({ user, role, tenantName, tenantId }) {
       )
       .subscribe()
 
+    // 4. Subscribe to ai_drafts changes
+    const aiDraftsChannel = supabase
+      .channel(`global-drafts-${tenantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ai_drafts',
+          filter: `tenant_id=eq.${tenantId}`,
+        },
+        () => {
+          router.refresh()
+        }
+      )
+      .subscribe()
+
     return () => {
       supabase.removeChannel(bookingsChannel)
       supabase.removeChannel(customersChannel)
       supabase.removeChannel(invoicesChannel)
+      supabase.removeChannel(aiDraftsChannel)
     }
   }, [tenantId, router, addToast])
 
@@ -175,6 +193,7 @@ export default function Sidebar({ user, role, tenantName, tenantId }) {
 
         {NAV_ITEMS.filter((item) => canSee(item.roles)).map(({ href, label, Icon }) => {
           const active = isActive(href)
+          const isInbox = href === '/inbox'
           return (
             <Link
               key={href}
@@ -188,6 +207,22 @@ export default function Sidebar({ user, role, tenantName, tenantId }) {
                 style={{ opacity: active ? 1 : undefined }}
               />
               <span style={{ flex: 1 }}>{label}</span>
+              {isInbox && pendingDraftsCount > 0 && (
+                <span style={{
+                  background: 'var(--color-error, #ba1a1a)',
+                  color: 'var(--color-on-error, #ffffff)',
+                  borderRadius: '999px',
+                  padding: '2px 7px',
+                  fontSize: '10.5px',
+                  fontWeight: '700',
+                  lineHeight: '1',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                  display: 'inline-block',
+                }}>
+                  {pendingDraftsCount}
+                </span>
+              )}
             </Link>
           )
         })}
