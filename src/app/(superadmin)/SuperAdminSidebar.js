@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Globe, LogOut, LifeBuoy, BarChart3 } from 'lucide-react'
+import RentivoBrand from '@/components/RentivoBrand'
 
 export default function SuperAdminSidebar({ user }) {
   const pathname = usePathname()
@@ -24,10 +25,7 @@ export default function SuperAdminSidebar({ user }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="sidebar-logo-mark" style={{ background: 'var(--color-error)' }}>S</div>
-        <span className="sidebar-logo-text">
-          Rentivo <span>Admin</span>
-        </span>
+        <RentivoBrand label="Rentivo Admin" eyebrow="Platform Console" tone="admin" compact />
       </div>
 
       <nav className="sidebar-nav">

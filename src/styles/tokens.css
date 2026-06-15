@@ -1,0 +1,222 @@
+﻿/* Design tokens and Tailwind theme */
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* === Spacing === */
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  32px;
+  --spacing-2xl: 48px;
+
+  /* === Border Radius === */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-3xl:  24px;
+  --radius-full: 9999px;
+
+  /* === Shadows === */
+  --shadow-sm:  0 1px 2px rgba(24, 28, 28, 0.04);
+  --shadow-md:  0 2px 4px rgba(24, 28, 28, 0.06), 0 1px 2px rgba(24, 28, 28, 0.04);
+  --shadow-lg:  0 8px 24px rgba(24, 28, 28, 0.08);
+
+  /* === Brand Colors (Material You Teal palette) === */
+  --color-primary:              #005c55;
+  --color-primary-container:    #0f766e;
+  --color-on-primary:           #ffffff;
+  --color-on-primary-container: #a3faef;
+  --color-primary-fixed:        #9cf2e8;
+  --color-primary-fixed-dim:    #80d5cb;
+
+  --color-secondary:              #505f76;
+  --color-secondary-container:    #d0e1fb;
+  --color-on-secondary:           #ffffff;
+  --color-on-secondary-container: #54647a;
+
+  --color-tertiary:              #7f4025;
+  --color-tertiary-container:    #9c573a;
+  --color-on-tertiary:           #ffffff;
+
+  /* === Surface Colors === */
+  --color-surface:                  #f7faf8;
+  --color-surface-dim:              #d7dbd9;
+  --color-surface-bright:           #f7faf8;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low:    #f1f4f3;
+  --color-surface-container:        #ebefed;
+  --color-surface-container-high:   #e5e9e7;
+  --color-surface-container-highest:#e0e3e1;
+  --color-surface-variant:          #e0e3e1;
+  --color-surface-tint:             #006a63;
+
+  --color-on-surface:         #181c1c;
+  --color-on-surface-variant: #3e4947;
+  --color-inverse-surface:    #2d3130;
+  --color-inverse-on-surface: #eef1f0;
+  --color-inverse-primary:    #80d5cb;
+
+  --color-outline:         #6e7977;
+  --color-outline-variant: #bdc9c6;
+
+  --color-background:    #f7faf8;
+  --color-on-background: #181c1c;
+
+  /* === Semantic Colors === */
+  --color-error:              #ba1a1a;
+  --color-error-container:    #ffdad6;
+  --color-on-error:           #ffffff;
+  --color-on-error-container: #93000a;
+
+  --color-success:           #006a4f;
+  --color-success-container: #d9ffe3;
+  --color-on-success:        #ffffff;
+
+  --color-warning:           #7a5900;
+  --color-warning-container: #ffedc5;
+  --color-on-warning:        #ffffff;
+
+  --color-info:              #006496;
+  --color-info-container:    #cfe5ff;
+  --color-on-info:           #ffffff;
+
+  /* === Font families === */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* === Font sizes (for Tailwind text-* utilities) === */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 14px;
+  --text-lg:   16px;
+  --text-xl:   20px;
+  --text-2xl:  24px;
+  --text-3xl:  28px;
+  --text-4xl:  32px;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DESIGN TOKENS (CSS Custom Properties)
+   Only variables NOT already in @theme
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+:root {
+  /* === RGB variants for rgba() in plain CSS === */
+  --color-primary-rgb:              0 92 85;
+  --color-primary-container-rgb:    15 118 110;
+  --color-primary-fixed-rgb:        156 242 232;
+  --color-on-primary-fixed-variant-rgb: 128 213 203;
+  --color-secondary-rgb:            80 95 118;
+  --color-secondary-container-rgb:  208 225 251;
+  --color-tertiary-rgb:             127 64 37;
+  --color-tertiary-container-rgb:   156 87 58;
+  --color-surface-rgb:              247 250 248;
+  --color-surface-container-lowest-rgb: 255 255 255;
+  --color-surface-container-low-rgb: 241 244 243;
+  --color-surface-container-rgb:    235 239 237;
+  --color-surface-container-high-rgb: 229 233 231;
+  --color-surface-variant-rgb:      224 227 225;
+  --color-outline-rgb:              110 121 119;
+  --color-outline-variant-rgb:      189 201 198;
+  --color-error-rgb:                186 26 26;
+  --color-error-container-rgb:      255 218 214;
+  --color-success-rgb:              0 106 79;
+  --color-success-container-rgb:    217 255 227;
+  --color-warning-rgb:              122 89 0;
+  --color-warning-container-rgb:    255 237 197;
+  --color-info-rgb:                 0 100 150;
+  --color-info-container-rgb:       207 229 255;
+
+  /* === Typography Scale (for component-level CSS classes) === */
+  --text-display-lg:      32px;
+  --text-display-lg-mobile: 28px;
+  --text-headline-lg:     24px;
+  --text-headline-md:     20px;
+  --text-title-sm:        16px;
+  --text-body-md:         14px;
+  --text-body-sm:         13px;
+  --text-label-caps:      11px;
+  --text-code:            13px;
+
+  /* Line heights */
+  --leading-display:          40px;
+  --leading-display-lg-mobile: 36px;
+  --leading-headline-lg:      32px;
+  --leading-headline:         28px;
+  --leading-title:            24px;
+  --leading-body-md:          20px;
+  --leading-body-sm:          18px;
+  --leading-label:            16px;
+
+  /* === Spacing aliases (for component CSS) === */
+  --space-xs:     4px;
+  --space-sm:     8px;
+  --space-md:     16px;
+  --space-lg:     24px;
+  --space-xl:     32px;
+  --space-2xl:    48px;
+  --space-gutter: 16px;
+  --container-max: 1440px;
+
+  /* === Borders === */
+  --border-width: 1px;
+  --border-color: var(--color-outline-variant);
+  --border:  oklch(0.922 0 0);
+
+  /* === Transitions === */
+  --transition-fast:   150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   300ms ease;
+
+  /* === Layout === */
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+  --background:  oklch(1 0 0);
+  --foreground:  oklch(0.145 0 0);
+  --card:  oklch(1 0 0);
+  --card-foreground:  oklch(0.145 0 0);
+  --popover:  oklch(1 0 0);
+  --popover-foreground:  oklch(0.145 0 0);
+  --primary:  oklch(0.205 0 0);
+  --primary-foreground:  oklch(0.985 0 0);
+  --secondary:  oklch(0.97 0 0);
+  --secondary-foreground:  oklch(0.205 0 0);
+  --muted:  oklch(0.97 0 0);
+  --muted-foreground:  oklch(0.556 0 0);
+  --accent:  oklch(0.97 0 0);
+  --accent-foreground:  oklch(0.205 0 0);
+  --destructive:  oklch(0.577 0.245 27.325);
+  --input:  oklch(0.922 0 0);
+  --ring:  oklch(0.708 0 0);
+  --chart-1:  oklch(0.87 0 0);
+  --chart-2:  oklch(0.556 0 0);
+  --chart-3:  oklch(0.439 0 0);
+  --chart-4:  oklch(0.371 0 0);
+  --chart-5:  oklch(0.269 0 0);
+  --radius:  0.625rem;
+  --sidebar:  oklch(0.985 0 0);
+  --sidebar-foreground:  oklch(0.145 0 0);
+  --sidebar-primary:  oklch(0.205 0 0);
+  --sidebar-primary-foreground:  oklch(0.985 0 0);
+  --sidebar-accent:  oklch(0.97 0 0);
+  --sidebar-accent-foreground:  oklch(0.205 0 0);
+  --sidebar-border:  oklch(0.922 0 0);
+  --sidebar-ring:  oklch(0.708 0 0);
+}
+
+
+:root {
+  --rentivo-navy: #061B5C;
+  --rentivo-deep-navy: #03113D;
+  --rentivo-blue: #1557FF;
+  --rentivo-cyan: #12CBBE;
+  --rentivo-sky: #0EA5E9;
+  --rentivo-bg: #F7FAFF;
+  --rentivo-surface: #FFFFFF;
+  --rentivo-text: #07162F;
+  --rentivo-muted: #64748B;
+  --rentivo-border: #E2E8F0;
+}

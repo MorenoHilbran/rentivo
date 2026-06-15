@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import RentivoBrand from '@/components/RentivoBrand'
 import SetupForm from './SetupForm'
 
 export const metadata = {
@@ -23,10 +23,8 @@ export default async function RegisterSetupPage() {
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col items-center justify-center p-md md:p-xl antialiased">
-      {/* Brand Anchor */}
-      <div className="mb-xl text-center">
-        <h1 className="font-display-lg-mobile md:font-display-lg text-primary">Rentivo</h1>
-        <p className="font-label-caps text-label-caps text-secondary mt-xs uppercase tracking-widest">Operations Suite</p>
+      <div className="mb-xl flex justify-center">
+        <RentivoBrand eyebrow="Operations Suite" />
       </div>
 
       {/* Wizard Container */}

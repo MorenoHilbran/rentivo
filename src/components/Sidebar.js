@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ToastProvider'
+import RentivoBrand from '@/components/RentivoBrand'
 import {
   LayoutDashboard,
   MessageSquare,
@@ -167,24 +168,7 @@ export default function Sidebar({ user, role, tenantName, tenantId, pendingDraft
     <aside className="sidebar">
       {/* ── Logo ── */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-mark">
-          {tenantDisplay.charAt(0).toUpperCase()}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span className="sidebar-logo-text">{tenantDisplay}</span>
-          <div style={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: 'var(--color-on-surface-variant)',
-            opacity: 0.45,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginTop: 2,
-            lineHeight: 1,
-          }}>
-            CRM Suite
-          </div>
-        </div>
+        <RentivoBrand label={tenantDisplay} eyebrow="CRM Suite" compact />
       </div>
 
       {/* ── Main Navigation ── */}

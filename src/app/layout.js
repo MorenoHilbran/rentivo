@@ -9,6 +9,22 @@ export const metadata = {
   },
   description: 'Platform AI-assisted omnichannel CRM untuk bisnis rental/persewaan barang berbasis jadwal.',
   keywords: ['rental', 'CRM', 'bisnis rental', 'manajemen penyewaan', 'Rentivo'],
+  icons: {
+    icon: [
+      {
+        url: '/icon.png',
+        type: 'image/png',
+        sizes: '1254x1254',
+      },
+    ],
+    apple: [
+      {
+        url: '/apple-icon.png',
+        type: 'image/png',
+        sizes: '1254x1254',
+      },
+    ],
+  },
 }
 
 export default function RootLayout({ children }) {
