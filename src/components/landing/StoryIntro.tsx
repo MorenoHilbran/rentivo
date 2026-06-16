@@ -123,6 +123,18 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         const s3Copy = scene3Ref.current?.querySelector('.story-copy')
         const s3Highlights = scene3Ref.current?.querySelectorAll('.story-highlight')
 
+        const heroSection = document.querySelector('.landing-hero')
+        const heroBadge = heroSection?.querySelector('.landing-hero-badge')
+        const heroTitle = heroSection?.querySelector('.landing-hero-title')
+        const heroHighlight = heroSection?.querySelector('.landing-hero-highlight')
+        const heroSubtitle = heroSection?.querySelector('.landing-hero-subtitle')
+        const heroActions = heroSection?.querySelector('.landing-hero-actions')
+        const heroFlowLine = heroSection?.querySelector('.landing-hero-flowline')
+        const heroPanel = heroSection?.querySelector('.landing-hero-panel')
+        const heroPanelItems = heroSection?.querySelectorAll('.landing-hero-panel-item')
+        const heroPills = heroSection?.querySelectorAll('.landing-hero-pill')
+        const lamp = containerRef.current?.querySelector('.rentivo-lamp')
+
         gsap.set([scene2Ref.current, scene3Ref.current], { opacity: 0, y: 52, scale: 0.982 })
         gsap.set(bg1Ref.current, { opacity: 1 })
         gsap.set([bg2Ref.current, bg3Ref.current], { opacity: 0 })
@@ -131,17 +143,23 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         gsap.set([s2Copy, s3Copy], { opacity: 0.72, y: 0 })
         gsap.set([s2Highlights, s3Highlights], { textShadow: '0 0 18px rgba(18, 203, 190, 0.22)' })
 
+        gsap.set(heroSection, { opacity: 0, y: 44, scale: 0.985 })
+        gsap.set([heroBadge, heroTitle, heroHighlight, heroSubtitle, heroActions, heroFlowLine, heroPanel], { opacity: 0, y: 24 })
+        gsap.set(heroPanelItems, { opacity: 0, y: 14, scale: 0.98 })
+        gsap.set(heroPills, { opacity: 0, y: 15, scale: 0.98 })
+
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: containerRef.current,
             start: 'top top',
-            end: 'bottom top',
-            pin: true,
+            end: 'bottom bottom',
+            pin: stageRef.current,
+            pinSpacing: false,
             scrub: 1.15,
             anticipatePin: 1,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
-              const nextScene = self.progress < 0.34 ? 1 : self.progress < 0.68 ? 2 : 3
+              const nextScene = self.progress < 0.18 ? 1 : self.progress < 0.44 ? 2 : 3
               if (activeSceneRef.current === nextScene) return
               activeSceneRef.current = nextScene
               setActiveScene(nextScene)
@@ -152,6 +170,7 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         tl.to({}, { duration: 0.35 })
           .to(scene1Ref.current, { opacity: 0, y: -54, scale: 1.018, duration: 0.72, ease: 'none' })
           .to(bg1Ref.current, { opacity: 0, duration: 0.8, ease: 'none' }, '<')
+          .to(lamp, { opacity: 0.28, duration: 0.36, ease: 'power1.out' }, '<')
           .fromTo(
             scene2Ref.current,
             { opacity: 0, y: 52, scale: 0.982 },
@@ -159,9 +178,11 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
             '<0.3'
           )
           .to(bg2Ref.current, { opacity: 1, duration: 0.86, ease: 'none' }, '<')
+          .to(lamp, { opacity: 1, duration: 0.4, ease: 'power1.in' }, '<0.4')
           .to({}, { duration: 0.46 })
           .to(scene2Ref.current, { opacity: 0, y: -54, scale: 1.018, duration: 0.72, ease: 'none' })
           .to(bg2Ref.current, { opacity: 0, duration: 0.8, ease: 'none' }, '<')
+          .to(lamp, { opacity: 0.28, duration: 0.36, ease: 'power1.out' }, '<')
           .fromTo(
             scene3Ref.current,
             { opacity: 0, y: 52, scale: 0.982 },
@@ -169,14 +190,81 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
             '<0.3'
           )
           .to(bg3Ref.current, { opacity: 1, duration: 0.86, ease: 'none' }, '<')
-          .to({}, { duration: 0.46 })
+          .to(lamp, { opacity: 1, duration: 0.4, ease: 'power1.in' }, '<0.4')
+          .to({}, { duration: 0.90 })
           .to(scene3Ref.current, {
-            opacity: 0.08,
-            y: -42,
-            scale: 1.018,
-            duration: 0.62,
-            ease: 'none',
+            opacity: 0,
+            y: -44,
+            scale: 1.012,
+            duration: 0.80,
+            ease: 'power2.inOut',
           })
+          .to(lamp, { opacity: 0, duration: 0.80, ease: 'power2.inOut' }, '<')
+          .to(heroSection, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.95,
+            ease: 'power2.out',
+          }, '-=0.70')
+          .to(heroBadge, {
+            opacity: 1,
+            y: 0,
+            duration: 0.55,
+            ease: 'power3.out',
+          }, '-=0.60')
+          .to(heroTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.72,
+            ease: 'power3.out',
+          }, '-=0.50')
+          .to(heroHighlight, {
+            opacity: 0.92,
+            y: 0,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '-=0.20')
+          .to(heroSubtitle, {
+            opacity: 0.72,
+            y: 0,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+          .to(heroActions, {
+            opacity: 1,
+            y: 0,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+          .to(heroFlowLine, {
+            opacity: 1,
+            y: 0,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+          .to(heroPanel, {
+            opacity: 1,
+            y: 0,
+            duration: 0.55,
+            ease: 'power3.out',
+          }, '<0.05')
+          .to(heroPanelItems, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            stagger: 0.06,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+          .to(heroPills, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            stagger: 0.05,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
 
         return () => tl.kill()
       })

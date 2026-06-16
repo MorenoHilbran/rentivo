@@ -10,6 +10,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const pills = ['Omnichannel Inbox', 'Anti Double Booking', 'Payment Verification', 'AI Copilot']
+const heroSignals = [
+  { label: 'Chat', value: 'Captured' },
+  { label: 'Booking', value: 'Synced' },
+  { label: 'Payment', value: 'Verified' },
+  { label: 'Return', value: 'Closed' },
+]
 
 function HeroWords({ text }: { text: string }) {
   const words = text.split(' ')
@@ -41,57 +47,14 @@ export default function HeroSection({
 
       const heroVisibilityTrigger = ScrollTrigger.create({
         trigger: sectionRef.current,
-        start: 'top 88%',
+        start: 'top 12%',
         onEnter: () => onHeroEnter?.(),
         onEnterBack: () => onHeroEnter?.(),
         onLeaveBack: () => onHeroLeaveBack?.(),
       })
 
-      const mm = gsap.matchMedia()
-
-      mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', () => {
-        gsap.set(sectionRef.current, { opacity: 0, y: 72, scale: 0.985 })
-        // Set initial states for desktop entrance reveal
-        gsap.set(
-          [
-            sectionRef.current?.querySelector('.landing-hero-badge'),
-            sectionRef.current?.querySelector('.landing-hero-highlight'),
-            sectionRef.current?.querySelector('.landing-hero-subtitle'),
-            sectionRef.current?.querySelector('.landing-hero-actions'),
-          ],
-          { opacity: 0, y: 30 }
-        )
-        gsap.set(sectionRef.current?.querySelectorAll('.hero-word'), { opacity: 0, y: 20 })
-        gsap.set(sectionRef.current?.querySelectorAll('.landing-hero-pill'), { opacity: 0, y: 15, scale: 0.98 })
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 88%',
-            toggleActions: 'play none none none',
-          },
-        })
-
-        const badge = sectionRef.current?.querySelector('.landing-hero-badge')
-        const titleWords = sectionRef.current?.querySelectorAll('.hero-word')
-        const highlight = sectionRef.current?.querySelector('.landing-hero-highlight')
-        const subtitle = sectionRef.current?.querySelector('.landing-hero-subtitle')
-        const actions = sectionRef.current?.querySelector('.landing-hero-actions')
-        const pillsElements = sectionRef.current?.querySelectorAll('.landing-hero-pill')
-
-        // Reveal timeline in order
-        tl.to(sectionRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: 'power3.out' })
-          .to(badge, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.1')
-          .to(titleWords, { opacity: 1, y: 0, stagger: 0.04, duration: 0.6, ease: 'power3.out' }, '<0.1')
-          .to(highlight, { opacity: 0.92, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.15')
-          .to(subtitle, { opacity: 0.72, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.1')
-          .to(actions, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.1')
-          .to(pillsElements, { opacity: 1, y: 0, scale: 1, stagger: 0.05, duration: 0.5, ease: 'power3.out' }, '<0.15')
-      })
-
       return () => {
         heroVisibilityTrigger.kill()
-        mm.revert()
       }
     },
     { scope: sectionRef }
@@ -102,29 +65,36 @@ export default function HeroSection({
       {/* CSS-only background layers */}
       <div className="landing-hero-grid-pattern" aria-hidden="true" />
       <div className="landing-hero-light-beam" aria-hidden="true" />
+      <div className="landing-hero-aura landing-hero-aura-left" aria-hidden="true" />
+      <div className="landing-hero-aura landing-hero-aura-right" aria-hidden="true" />
 
       <div className="landing-hero-content">
         <span className="landing-hero-badge">
           <Sparkles size={13} className="hero-badge-sparkle" />
-          FlowTech CRM untuk Bisnis Rental Indonesia
+          Dark Luxury FlowTech CRM
         </span>
 
         <h1 className="landing-hero-title">
-          <HeroWords text="Ubah Chat Customer Jadi" />{' '}
-          <span className="hero-gradient-text">
-            <HeroWords text="Booking Rental" />
+          <span className="landing-hero-title-line">
+            <HeroWords text="Ubah Chat Customer" />
           </span>{' '}
-          <HeroWords text="yang Rapi" />
+          <span className="landing-hero-title-line">
+            <HeroWords text="Jadi" />{' '}
+            <span className="hero-gradient-text">
+              <HeroWords text="Rental Flow" />
+            </span>{' '}
+            <HeroWords text="yang" />{' '}
+            <span className="hero-accent-word">rapi</span>
+          </span>
         </h1>
 
         <p className="landing-hero-highlight">
-          Dalam satu sistem untuk chat, inventory, invoice, pembayaran, dan return.
+          Satu command center untuk chat, booking, inventory, invoice, pembayaran, dan return.
         </p>
 
         <p className="landing-hero-subtitle">
-          Rentivo membantu bisnis rental mengelola percakapan customer, mengecek ketersediaan barang,
-          membuat invoice, memverifikasi pembayaran, hingga menyelesaikan return dalam alur kerja
-          yang terhubung.
+          Rentivo membantu bisnis rental mengubah percakapan customer menjadi alur operasional yang
+          tersambung, terukur, dan siap dieksekusi oleh owner, admin, dan tim lapangan.
         </p>
 
         <div className="landing-hero-actions">
@@ -135,6 +105,19 @@ export default function HeroSection({
           <Link href="/login" className="landing-secondary-button hero-btn-secondary">
             Masuk ke Dashboard
           </Link>
+        </div>
+
+        <div className="landing-hero-flowline" aria-hidden="true">
+          <span />
+        </div>
+
+        <div className="landing-hero-panel" aria-label="Rentivo rental operations flow">
+          {heroSignals.map((signal) => (
+            <div className="landing-hero-panel-item" key={signal.label}>
+              <span>{signal.label}</span>
+              <strong>{signal.value}</strong>
+            </div>
+          ))}
         </div>
 
         <div className="landing-hero-pills" aria-label="Fitur ringkas">

@@ -1398,8 +1398,12 @@
 }
 
 @media (min-width: 900px) {
-  .story-intro {
-    height: 285vh;
+  .landing-hero {
+    margin-top: -100vh;
+    z-index: 10;
+    position: relative;
+    background-color: #03113D;
+    padding: clamp(5rem, 8vh, 7rem) 0 clamp(64px, 8vh, 92px);
   }
 }
 
@@ -1436,9 +1440,10 @@
 .landing-navbar-visible {
   pointer-events: auto;
 }
-
-.landing-hero {
-  margin-top: 0;
+@media (max-width: 899px) {
+  .landing-hero {
+    margin-top: 0;
+  }
 }
 
 .story-bg {
@@ -1468,8 +1473,8 @@
 .story-bg-vignette {
   z-index: 2;
   background:
-    linear-gradient(180deg, rgba(3, 17, 61, 0.14), rgba(3, 17, 61, 0.10)),
-    radial-gradient(circle at center, transparent 42%, rgba(3, 17, 61, 0.84) 100%);
+    linear-gradient(180deg, rgba(3, 17, 61, 0.10), rgba(3, 17, 61, 0.06)),
+    radial-gradient(circle at center, transparent 46%, rgba(3, 17, 61, 0.82) 100%);
 }
 
 .story-scene {
@@ -1533,249 +1538,151 @@
 }
 
 .rentivo-lamp {
-  --lamp-core: rgba(18, 203, 190, 0.62);
-  --lamp-blue: rgba(21, 87, 255, 0.44);
-  --lamp-horizon: rgba(142, 232, 255, 0.78);
-  --lamp-y: 34%;
   position: absolute;
   inset: 0;
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
-  opacity: 1;
-  transition:
-    opacity 560ms var(--landing-ease),
-    transform 760ms var(--landing-ease);
-  transform: scale(1);
-  will-change: opacity, transform;
+  transition: opacity 800ms var(--landing-ease);
 }
 
-.rentivo-lamp__aperture {
-  position: absolute;
-  left: 50%;
-  top: calc(var(--lamp-y) - 1.8rem);
-  width: min(58rem, 82vw);
-  height: min(10rem, 18vw);
-  border-radius: 999px;
-  opacity: 0.74;
-  background:
-    radial-gradient(ellipse at center, rgba(223, 253, 252, 0.30) 0%, rgba(18, 203, 190, 0.18) 34%, transparent 70%),
-    linear-gradient(90deg, transparent, rgba(142, 232, 255, 0.26), transparent);
-  box-shadow:
-    0 0 40px rgba(18, 203, 190, 0.16),
-    0 0 96px rgba(21, 87, 255, 0.18);
-  mask-image: radial-gradient(ellipse at center, #000 0%, #000 44%, transparent 76%);
-  transform: translate(-50%, -50%) scaleX(0.88);
-}
-
-.rentivo-lamp__beam {
-  position: absolute;
-  top: var(--lamp-y);
-  width: min(56rem, 72vw);
-  height: min(25rem, 39vw);
-  opacity: 0.88;
-  transform-origin: center top;
-  background-image: conic-gradient(var(--conic-position), var(--beam-stops));
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.44) 48%, transparent 88%);
-}
-
-.rentivo-lamp__beam-left {
-  --conic-position: from 69deg at center top;
-  --beam-stops: var(--lamp-core), rgba(18, 203, 190, 0.20) 30%, transparent 64%;
-  right: 50%;
-  transform: translateY(-50%) skewY(1.2deg) scaleX(1.08);
-}
-
-.rentivo-lamp__beam-right {
-  --conic-position: from 291deg at center top;
-  --beam-stops: transparent 36%, rgba(14, 165, 233, 0.20) 68%, var(--lamp-blue);
-  left: 50%;
-  transform: translateY(-50%) skewY(-1.2deg) scaleX(1.08);
-}
-
-.rentivo-lamp__glow {
-  position: absolute;
-  left: 50%;
-  top: calc(var(--lamp-y) + 5.5rem);
-  width: min(58rem, 84vw);
-  height: min(24rem, 42vw);
-  border-radius: 50%;
-  opacity: 0.68;
-  background:
-    radial-gradient(ellipse at center, rgba(223, 253, 252, 0.15) 0%, var(--lamp-core) 24%, rgba(18, 203, 190, 0.10) 48%, transparent 76%),
-    radial-gradient(ellipse at center, var(--lamp-blue) 0%, transparent 70%);
-  filter: blur(54px);
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.rentivo-lamp__halo {
-  position: absolute;
-  left: 50%;
-  top: calc(var(--lamp-y) + 0.4rem);
-  width: min(44rem, 68vw);
-  height: min(18rem, 32vw);
-  border-radius: 50%;
-  opacity: 0.34;
-  border: 1px solid rgba(142, 232, 255, 0.18);
-  background:
-    radial-gradient(ellipse at center, transparent 52%, rgba(18, 203, 190, 0.13) 72%, transparent 76%),
-    radial-gradient(ellipse at center, rgba(21, 87, 255, 0.10), transparent 64%);
-  transform: translate(-50%, -50%) scaleX(1.12);
-}
-
-.rentivo-lamp__horizon {
-  position: absolute;
-  left: 50%;
-  top: var(--lamp-y);
-  width: min(52rem, 76vw);
-  height: 2px;
-  border-radius: 999px;
-  opacity: 0.94;
-  background: linear-gradient(90deg, transparent 0%, var(--lamp-blue) 16%, var(--lamp-horizon) 48%, var(--lamp-core) 82%, transparent 100%);
-  box-shadow:
-    0 0 18px rgba(223, 253, 252, 0.34),
-    0 0 38px rgba(18, 203, 190, 0.38),
-    0 0 86px rgba(21, 87, 255, 0.22);
-  transform: translateX(-50%);
-}
-
-.rentivo-lamp__sweep {
-  position: absolute;
-  left: 50%;
-  top: calc(var(--lamp-y) + 0.1rem);
-  width: min(20rem, 34vw);
-  height: 2px;
-  border-radius: 999px;
-  opacity: 0;
-  background: linear-gradient(90deg, transparent, rgba(223, 253, 252, 0.94), rgba(18, 203, 190, 0.48), transparent);
-  box-shadow:
-    0 0 18px rgba(223, 253, 252, 0.40),
-    0 0 34px rgba(18, 203, 190, 0.30);
-  transform: translateX(-150%) scaleX(0.35);
-  animation: rentivoLampSweep 8.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  will-change: opacity, transform;
-}
-
-.rentivo-lamp__mask {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(3, 17, 61, 0.02) 0%, rgba(3, 17, 61, 0.10) 46%, rgba(3, 17, 61, 0.70) 100%),
-    radial-gradient(circle at 50% 36%, transparent 0%, rgba(3, 17, 61, 0.18) 62%, rgba(3, 17, 61, 0.72) 100%);
+.rentivo-lamp--scene-1 {
+  --lamp-color-1: rgba(18, 203, 190, 0.16);
+  --lamp-color-2: rgba(21, 87, 255, 0.08);
+  --lamp-horizon-color: rgba(18, 203, 190, 0.28);
+  --lamp-beam-1: rgba(18, 203, 190, 0.35);
+  --lamp-beam-2: rgba(21, 87, 255, 0.16);
+  --lamp-glow: rgba(18, 203, 190, 0.34);
+  --lamp-line: rgba(18, 203, 190, 0.70);
 }
 
 .rentivo-lamp--scene-2 {
-  --lamp-core: rgba(14, 165, 233, 0.58);
-  --lamp-blue: rgba(21, 87, 255, 0.54);
-  --lamp-horizon: rgba(142, 232, 255, 0.72);
-  --lamp-y: 33%;
-  opacity: 0.92;
-  transform: scale(1.03) translateY(-1.5%);
+  --lamp-color-1: rgba(21, 87, 255, 0.20);
+  --lamp-color-2: rgba(14, 165, 233, 0.08);
+  --lamp-horizon-color: rgba(21, 87, 255, 0.32);
+  --lamp-beam-1: rgba(21, 87, 255, 0.30);
+  --lamp-beam-2: rgba(14, 165, 233, 0.14);
+  --lamp-glow: rgba(21, 87, 255, 0.30);
+  --lamp-line: rgba(14, 165, 233, 0.60);
 }
 
 .rentivo-lamp--scene-3 {
-  --lamp-core: rgba(18, 203, 190, 0.54);
-  --lamp-blue: rgba(14, 165, 233, 0.40);
-  --lamp-horizon: rgba(223, 253, 252, 0.82);
-  --lamp-y: 35%;
-  opacity: 0.96;
-  transform: scale(0.985) translateY(1%);
+  --lamp-color-1: rgba(18, 203, 190, 0.22);
+  --lamp-color-2: rgba(21, 87, 255, 0.14);
+  --lamp-horizon-color: rgba(142, 232, 255, 0.38);
+  --lamp-beam-1: rgba(142, 232, 255, 0.35);
+  --lamp-beam-2: rgba(21, 87, 255, 0.20);
+  --lamp-glow: rgba(142, 232, 255, 0.38);
+  --lamp-line: rgba(142, 232, 255, 0.70);
 }
 
-@keyframes rentivoLampAperture {
-  0%,
-  100% {
-    opacity: 0.58;
-    transform: translate(-50%, -50%) scaleX(0.82);
-  }
-
-  48% {
-    opacity: 0.88;
-    transform: translate(-50%, -50%) scaleX(1.02);
-  }
+/* Container stretch */
+.rentivo-lamp__container {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  z-index: 0;
+  transform: scaleY(1.25);
+  pointer-events: none;
 }
 
-@keyframes rentivoLampLeft {
-  0%,
-  100% {
-    opacity: 0.72;
-    transform: translateY(-50%) skewY(1.2deg) scaleX(1);
-  }
-
-  50% {
-    opacity: 0.96;
-    transform: translateY(-50%) skewY(1.2deg) scaleX(1.12);
-  }
+/* Beams */
+.rentivo-lamp__beam-new {
+  position: absolute;
+  inset: auto;
+  height: 16rem; /* h-64 */
+  overflow: visible;
+  width: 32rem; /* w-[32rem] */
+  transition: width 0.8s ease-in-out;
 }
 
-@keyframes rentivoLampRight {
-  0%,
-  100% {
-    opacity: 0.70;
-    transform: translateY(-50%) skewY(-1.2deg) scaleX(1);
-  }
-
-  52% {
-    opacity: 0.92;
-    transform: translateY(-50%) skewY(-1.2deg) scaleX(1.13);
-  }
+.rentivo-lamp__beam-new--left {
+  right: 50%;
+  -webkit-mask-image: radial-gradient(circle at 100% 0%, white 10%, transparent 80%);
+  mask-image: radial-gradient(circle at 100% 0%, white 10%, transparent 80%);
 }
 
-@keyframes rentivoLampGlow {
-  0%,
-  100% {
-    opacity: 0.56;
-    transform: translate(-50%, -50%) scale(0.96);
-  }
-
-  50% {
-    opacity: 0.78;
-    transform: translate(-50%, -50%) scale(1.04);
-  }
+.rentivo-lamp__beam-new--right {
+  left: 50%;
+  -webkit-mask-image: radial-gradient(circle at 0% 0%, white 10%, transparent 80%);
+  mask-image: radial-gradient(circle at 0% 0%, white 10%, transparent 80%);
 }
 
-@keyframes rentivoLampHalo {
-  0%,
-  100% {
-    opacity: 0.20;
-    transform: translate(-50%, -50%) scaleX(1.02) scaleY(0.94);
-  }
-
-  46% {
-    opacity: 0.42;
-    transform: translate(-50%, -50%) scaleX(1.18) scaleY(1);
-  }
+/* Glow blobs */
+.rentivo-lamp__glow-soft {
+  position: absolute;
+  inset: auto;
+  z-index: 50;
+  height: 9rem; /* h-36 */
+  width: 28rem;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background-color: var(--lamp-beam-1);
+  opacity: 0.42;
+  filter: blur(64px);
+  transition: background-color 800ms var(--landing-ease);
 }
 
-@keyframes rentivoLampHorizon {
-  0%,
-  100% {
-    opacity: 0.76;
-    transform: translateX(-50%) scaleX(0.86);
-  }
-
-  42% {
-    opacity: 1;
-    transform: translateX(-50%) scaleX(1);
-  }
+.rentivo-lamp__glow-bright {
+  position: absolute;
+  inset: auto;
+  z-index: 30;
+  height: 9rem;
+  /* width animated by framer motion */
+  transform: translateY(-6rem);
+  border-radius: 9999px;
+  background-color: var(--lamp-glow);
+  filter: blur(36px);
+  transition: background-color 800ms var(--landing-ease);
 }
 
-@keyframes rentivoLampSweep {
-  0%,
-  24% {
-    opacity: 0;
-    transform: translateX(-175%) scaleX(0.25);
-  }
+/* Filament line */
+.rentivo-lamp__filament {
+  position: absolute;
+  inset: auto;
+  z-index: 50;
+  height: 2px;
+  /* width animated by framer motion */
+  transform: translateY(-7rem);
+  background-color: var(--lamp-line);
+  box-shadow: 0 0 16px var(--lamp-line);
+  transition: background-color 800ms var(--landing-ease), box-shadow 800ms var(--landing-ease);
+}
 
-  38% {
-    opacity: 0.88;
-  }
+/* Ambient background aura (retained from original) */
+.rentivo-lamp__aura {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(820px, 90vw);
+  height: min(320px, 35vh);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--lamp-color-1) 0%, var(--lamp-color-2) 50%, transparent 100%);
+  filter: blur(48px);
+  opacity: 0.85;
+  transition: background 800ms var(--landing-ease);
+  will-change: background;
+  z-index: 0;
+}
 
-  58%,
-  100% {
-    opacity: 0;
-    transform: translateX(72%) scaleX(1);
-  }
+/* Horizon line (retained from original) */
+.rentivo-lamp__horizon {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(680px, 76vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--lamp-horizon-color) 50%, transparent 100%);
+  opacity: 0.35;
+  transition: background 800ms var(--landing-ease);
+  will-change: background;
+  z-index: 1;
 }
 
 .landing-preloader {
@@ -2038,42 +1945,57 @@
 
 @media (max-width: 899px) {
   .rentivo-lamp {
-    --lamp-y: 30%;
-    min-height: 100svh;
     opacity: 0.72;
   }
 
-  .rentivo-lamp__aperture {
-    top: calc(var(--lamp-y) - 1rem);
-    width: 86vw;
-    height: 20vw;
+  .rentivo-lamp__container {
+    transform: scaleY(1);
   }
 
-  .rentivo-lamp__beam {
-    width: 86vw;
-    height: 46vw;
-    opacity: 0.66;
+  .rentivo-lamp__beam-new {
+    height: 10rem;
+    width: 20rem;
   }
 
-  .rentivo-lamp__glow {
-    top: calc(var(--lamp-y) + 3rem);
-    width: 96vw;
-    height: 46vw;
-    filter: blur(42px);
+  .rentivo-lamp__glow-soft {
+    width: 18rem;
+    height: 6rem;
   }
 
-  .rentivo-lamp__halo {
-    width: 82vw;
-    height: 34vw;
-    opacity: 0.24;
+  .rentivo-lamp__glow-bright {
+    height: 6rem;
+    transform: translateY(-4rem);
+  }
+
+  .rentivo-lamp__filament {
+    transform: translateY(-4.5rem);
+  }
+
+  .rentivo-lamp__cutoff {
+    height: 7rem;
+    transform: translateY(-8rem);
+  }
+
+  .rentivo-lamp__mask-bottom,
+  .rentivo-lamp__mask-bottom-right {
+    height: 7rem;
+  }
+
+  .rentivo-lamp__mask-left,
+  .rentivo-lamp__mask-right {
+    width: 7rem;
+  }
+
+  .rentivo-lamp__aura {
+    top: 30%;
+    width: 90vw;
+    height: 30vh;
+    filter: blur(36px);
   }
 
   .rentivo-lamp__horizon {
+    top: 30%;
     width: 76vw;
-  }
-
-  .rentivo-lamp__sweep {
-    width: 40vw;
   }
 
   .story-bg-vignette {
@@ -2107,12 +2029,19 @@
     transition: none !important;
   }
 
-  .rentivo-lamp__aperture,
-  .rentivo-lamp__beam,
-  .rentivo-lamp__glow,
-  .rentivo-lamp__halo,
-  .rentivo-lamp__horizon,
-  .rentivo-lamp__sweep {
-    animation: none !important;
+  .rentivo-lamp__beam-new {
+    opacity: 0.80 !important;
+    transition: none !important;
+  }
+
+  .rentivo-lamp__filament,
+  .rentivo-lamp__glow-soft,
+  .rentivo-lamp__glow-bright {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+
+  .rentivo-lamp__glow-soft {
+    opacity: 0.30 !important;
   }
 }

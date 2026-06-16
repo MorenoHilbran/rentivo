@@ -498,6 +498,14 @@ Jika user mengaktifkan reduced motion:
 * Gunakan fade sederhana.
 * Jangan animasikan angka terlalu agresif.
 
+### 6.5 Cinematic Handoff (StoryIntro -> Hero)
+
+Untuk menjaga transisi yang premium dan tanpa *blank space* (*no empty handoff phase*):
+* **Overlap Reveal**: Animasi masuk *hero background* dan *content* boleh dimulai (*overlap*) sebelum animasi *exit* Story scene 3 selesai sepenuhnya, tetapi jangan membuat story text ghosting.
+* **Navbar Entrance**: Navbar tidak boleh dianimasikan dari timeline `StoryIntro`. Navbar hanya boleh muncul dari state `heroActive` setelah `HeroSection` melewati threshold sendiri.
+* **ScrollTrigger Start**: Untuk layout desktop yang memakai overlap `margin-top: -100vh`, trigger navbar harus telat, sekitar `start: "top 12%"`, agar navbar tidak terlihat saat Story scene 3 masih menjadi fokus utama.
+* **Continuous Background**: Background Story dan Hero diselaraskan menggunakan base color `#03113D` untuk menghindari fase kontras kosong/hitam.
+
 ---
 
 ## 7. Landing Page Design
@@ -2014,7 +2022,7 @@ After `LandingPreloader` completes, the page must reset to the top of the landin
 * Refresh ScrollTrigger after the scroll reset and layout unlock.
 * Do not reset scroll again after the user can interact with the page.
 * Do not use hash/autofocus behavior that lands directly on HeroSection.
-* Hero ScrollTrigger must not use `start: "top bottom"` for navbar reveal because that can fire while Hero is merely touching the viewport bottom below StoryIntro. Use a later threshold such as `top 76%`.
+* Hero ScrollTrigger must not use `start: "top bottom"`, `top 100%`, or other early thresholds for navbar reveal because that can fire while Hero is merely touching the viewport bottom below StoryIntro. With the current desktop overlap layout, use a late threshold such as `top 12%`.
 
 ---
 
@@ -2079,7 +2087,7 @@ HeroSection entrance is tied to the hero entering the viewport, not to preloader
 
 ### Rules
 
-* Use GSAP ScrollTrigger for Hero entrance with `start: "top 76%"`.
+* Use GSAP ScrollTrigger for navbar visibility with a late threshold. Current overlap layout uses `start: "top 12%"`.
 * Keep the entrance once-only for hero content, but navbar visibility can respond to enter/leave back.
 * Do not show navbar during StoryIntro.
 * Do not use Hero motion to scroll the page.
@@ -2102,51 +2110,128 @@ HeroSection entrance is tied to the hero entering the viewport, not to preloader
 
 ## StoryIntro Lamp Backdrop
 
-StoryIntro may use the Aceternity / 21st.dev Lamp as visual inspiration, but the installed demo must not be used as the final Rentivo experience.
+StoryIntro uses the Aceternity / 21st.dev Lamp as the ambient cinematic backdrop. The installed `src/components/ui/lamp.jsx` is a reference artifact only. `LampDemo` is never imported into the landing page. `LampContainer` is not used directly because it carries `min-h-screen`, demo children, default slate/cyan treatment, and heavy blur layers that would fight StoryIntro pinning.
 
 ### Implementation
 
 ```txt
-src/components/ui/lamp.jsx
-src/components/landing/RentivoLampBackdrop.tsx
-src/components/landing/StoryIntro.tsx
-src/styles/landing.css
+src/components/ui/lamp.jsx           — reference artifact (not imported by landing)
+src/components/landing/RentivoLampBackdrop.tsx  — active lamp backdrop
+src/components/landing/StoryIntro.tsx            — renders one RentivoLampBackdrop
+src/styles/landing.css                           — lamp CSS + conic beam classes
 ```
 
-The installed `src/components/ui/lamp.jsx` is treated as a reference artifact only. Do not import `LampDemo` into the landing page. Do not use its full `LampContainer` layout directly because it carries `min-h-screen`, demo children, default slate/cyan treatment, and multiple large blur layers that can fight StoryIntro pinning.
+Rentivo uses one custom backdrop: `RentivoLampBackdrop`. It renders a single Aceternity-inspired lamp instance behind all StoryIntro scenes. The backdrop uses the signature conic gradient beam structure from 21st.dev, adapted with Rentivo colors and performance constraints.
 
-Rentivo uses one lightweight custom backdrop: `RentivoLampBackdrop`. It renders a single ambient lamp instance behind all StoryIntro scenes and never renders children or creates layout height.
+### Lamp Structure (Aceternity-Inspired)
 
-### Visual Rules
+The backdrop renders these layers directly inside `.rentivo-lamp`:
 
-* Use Rentivo deep navy, electric blue, cyan, and sky tones.
-* Lamp should feel like a visible cinematic stage light: aperture, horizon glow, soft cone beams, and one restrained sweep.
-* Lamp must not overpower headline readability.
-* Scene variants may change opacity, scale, and color variables only.
-* Keep StoryIntro text-only in content. The lamp is ambient background, not an illustration.
-* If the lamp only appears as a thin cyan line, the implementation is too subtle. Increase beam/glow visibility before adding new effects.
+1. **Two conic beams (V shape)** — two separate beams creating the signature Aceternity "V" shape:
+   - Left beam: `conic-gradient(from 70deg at center top)` positioned at `right: 50%`
+   - Right beam: `conic-gradient(from 290deg at center top)` positioned at `left: 50%`
+   - Both beams use CSS `mask-image: linear-gradient(to bottom, ...)` to fade edges softly
+   - This matches the exact structure of the Aceternity demo
+2. **Top horizontal accent line** — a bright 2px cyan line at `top: 18%` with glow box-shadow, mimicking the Aceternity lamp aperture.
+3. **Center glow** — a large radial gradient behind the headline area (`top: 34%`), providing cinematic depth.
+4. **Spotlight** — a secondary radial glow above center (`top: 26%`) for additional depth.
+5. **Ambient aura** — a wide background radial glow (existing layer, retained).
+6. **Static horizon line** — a subtle 1px transition light (existing layer, retained).
+
+The light source is positioned ABOVE the text (top 15-18%), with beams spreading DOWNWARD in a V shape. This matches the Aceternity demo where two beams originate from the center top and fan outward.
+
+### Conic Gradient Fallback
+
+The original Aceternity `lamp.jsx` uses `bg-gradient-conic` which is a custom Tailwind utility not present in the Rentivo Tailwind config. The `RentivoLampBackdrop` uses CSS classes with `conic-gradient()` and CSS custom properties instead:
+
+```css
+.rentivo-lamp__beam--left {
+  background: conic-gradient(
+    from 70deg at center top,
+    var(--lamp-beam-1, rgba(18, 203, 190, 0.42)),
+    transparent 40%
+  );
+  mask-image: linear-gradient(
+    to bottom, white 0%, rgba(255,255,255,0.5) 50%, transparent 85%
+  );
+}
+
+.rentivo-lamp__beam--right {
+  background: conic-gradient(
+    from 290deg at center top,
+    var(--lamp-beam-1, rgba(18, 203, 190, 0.42)),
+    transparent 40%
+  );
+  mask-image: linear-gradient(
+    to bottom, white 0%, rgba(255,255,255,0.5) 50%, transparent 85%
+  );
+}
+```
+
+CSS variables `--lamp-beam-1`, `--lamp-beam-2`, `--lamp-glow`, and `--lamp-line` are set per scene modifier class and transition smoothly when the active scene changes.
+
+### Color Adaptation
+
+All Aceternity default colors are replaced with Rentivo palette:
+
+| Aceternity Default | Rentivo Replacement |
+|---|---|
+| `bg-slate-950` | `#03113D` (deep navy) |
+| `cyan-500` | `rgba(18, 203, 190, 0.26)` — `0.30` per scene |
+| `cyan-400` | `rgba(21, 87, 255, 0.16)` — `0.20` per scene |
+| Scene 1 accent | Cyan-dominant |
+| Scene 2 accent | Blue-dominant |
+| Scene 3 accent | Cyan + Blue + Sky mix |
+
+### Motion
+
+Framer Motion handles the one-time beam reveal on mount:
+- Beams (left + right): `opacity 0 → 0.95`, `scaleX 0.6 → 1` over 1.1s
+- Top line: `opacity 0 → 1`, `scaleX 0.5 → 1` over 0.9s
+- Glow: `opacity 0 → 0.7` over 1.0s
+- Spotlight: `opacity 0 → 1`, `scaleX 0.6 → 1` over 1.0s
+
+Since the component mounts behind the preloader, the beam reveal completes before StoryIntro is visible. No `whileInView` is used because StoryIntro is GSAP-pinned. Scene changes only shift CSS variables (color), not re-trigger motion.
+
+### Z-Index Contract
+
+```txt
+story-bg:            z-index: 0
+rentivo-lamp:        z-index: 1
+story-bg-vignette:   z-index: 2
+story-scene text:    z-index: 3
+```
+
+The lamp sits above the background but below the vignette and text. The vignette's transparent center (`transparent 46%`) allows the lamp beams to show through while the vignette edges darken corners for depth.
 
 ### Performance Guardrails
 
 * One lamp instance per StoryIntro.
-* 1 to 2 conic beam layers.
-* One aperture layer, one halo layer, one soft glow layer, one horizon line, and one sweep line are the maximum decorative lamp details.
-* Do not animate filter blur.
-* Animate only opacity and transform for lamp ambient motion.
-* Do not add particles, canvas, WebGL, or repeated `whileInView` lamp animations inside pinned StoryIntro.
-* Mobile and reduced-motion must lower intensity.
+* 2 conic beams (left + right, creating V shape).
+* 1 top line, 1 center glow, 1 spotlight, 1 aura, 1 horizon = 5 additional layers.
+* Total: 7 layers, all lightweight.
+* No particle, canvas, or WebGL.
+* No animated blur/filter. Blur values are static CSS.
+* Framer Motion fires once on mount (no `whileInView`, no infinite loops).
+* Animate only `opacity` and `transform` (scaleX) for beam reveal.
+* CSS transitions handle scene color shifts (background, background-image).
+* Mobile reduces beam width, glow size, and filter blur.
+* Reduced motion sets beams to static final state at lower opacity.
 
-### Visibility Audit Fix
+### Background Preservation
 
-The previous lamp was present in the DOM but barely visible because the horizon sat behind oversized StoryIntro type, the beam opacity was too low, `.story-bg-vignette` darkened the center too aggressively, and `.story-scene` shared the same z-index level as the vignette. The fixed contract is:
+The existing story background (`.story-bg`, `.story-bg-1/2/3`) is never removed or overwritten by the lamp. The lamp sits as an additional layer on top of the background but below the vignette and text. The layering order is:
 
 ```txt
-lamp aperture / beams / glow: visible behind copy
-vignette: soft edge control only
-story text: z-index 3
+story-bg (z-index: 0) → rentivo-lamp (z-index: 1) → vignette (z-index: 2) → text (z-index: 3+)
 ```
 
-The lamp should read clearly in Scene 1 without scrolling or inspecting the DOM.
+### Tailwind Conic Fallback
+
+If `bg-gradient-conic` is needed in the future, either:
+1. Add it to `tailwind.config.js` as a custom utility.
+2. Use inline `style={{ backgroundImage: "conic-gradient(...)" }}`.
+3. Use CSS classes with `conic-gradient()` and CSS custom properties (current approach).
 
 ---
 
@@ -2189,11 +2274,16 @@ Highlights should be cyan/blue luminous accents with readable contrast. Do not u
 * Do not import or display `LampDemo` on the landing page.
 * Do not let a lamp component create `min-h-screen` or extra spacer height inside StoryIntro.
 * Do not hide StoryIntro text behind the lamp.
-* Do not regress the lamp into a barely visible single line.
+* Do not regress the lamp into a barely visible single line — the downward cone beam and top horizontal line must be visible.
 * Do not make navbar visible during StoryIntro.
 * Do not make loading jump directly to HeroSection.
 * Do not add large landing styles to `globals.css`.
 * Do not animate blur/filter or use particle/canvas/WebGL effects for the lamp.
+* Do not use `bg-gradient-conic` Tailwind class — it does not exist in the config. Use CSS `conic-gradient()` with CSS custom properties instead.
+* Do not use `whileInView` for lamp animations inside the GSAP-pinned StoryIntro. Use one-time `initial`/`animate` on mount.
+* Do not change `.rentivo-lamp` z-index below 1 (it must be above `.story-bg` at z-index 0 and below `.story-bg-vignette` at z-index 2).
+* Do not remove or overwrite the existing story background (`.story-bg`, `.story-bg-1/2/3`). The lamp is an additional layer, not a replacement.
+* Do not position the lamp light source below the text. The top horizontal line and cone beam must originate from ABOVE the headline area (top 15-18%).
 
 ---
 
@@ -2217,7 +2307,7 @@ Active implementation files are TypeScript landing components under `src/compone
 * Do not reintroduce `.landing-page.is-preloading > :not(.landing-preloader) { opacity: 0; }`; StoryIntro must remain visible behind the fixed preloader overlay.
 * `StoryIntro` must receive `preloaderDone` so Scene 1 can reveal after the preloader exits.
 * `RentivoLampBackdrop` is one ambient instance inside StoryIntro, not the raw Aceternity `LampDemo`.
-* Hero/navbar reveal threshold must stay around `top 76%`, not `top 100%` or `top bottom`.
+* Hero/navbar reveal threshold must stay late enough that navbar is hidden during Story scene 3. Current overlap layout uses `top 12%`, not `top 100%` or `top bottom`.
 * Animated words must preserve spaces with `\u00A0` or equivalent tested spacing.
 
 ### Recreated Pieces
@@ -2407,14 +2497,20 @@ StoryIntro scroll must feel slow, cinematic, and premium without dropping frames
 
 The handoff from StoryIntro to HeroSection must feel continuous and must not create an empty page between sections.
 
+### Root Cause Fix
+
+The blank gap was caused by combining a multi-viewport `.story-intro` height with GSAP `pin: true` on the StoryIntro container. That creates an extra pin spacer on top of the section's own scroll height, so Scene 3 can finish while the document still has dark spacer distance before HeroSection.
+
 ### Layout Rules
 
-* StoryIntro desktop height must stay synchronized with its ScrollTrigger end. Prefer `end: "bottom top"` when `.story-intro` owns the scroll distance.
+* StoryIntro desktop uses a tall `.story-intro` section and pins only `.story-stage`.
+* ScrollTrigger should scrub progress with `start: "top top"` and `end: "bottom bottom"`.
+* Use `pin: stageRef.current` with `pinSpacing: false`; do not use `pin: true` on the StoryIntro container.
 * Do not make `ScrollTrigger end` longer than the actual `.story-intro` layout height.
 * Do not add manual transition spacers, `story-exit-spacer`, large `padding-bottom`, or `margin-bottom`.
 * `.story-intro` must keep `margin-bottom: 0`.
 * `.landing-hero` must keep `margin-top: 0`.
-* The final StoryIntro scene may fade nearly out, but it should not leave a long fully blank pinned interval before HeroSection releases.
+* The final StoryIntro scene may fade down, but it should retain faint presence until HeroSection starts entering.
 
 ### Motion Rules
 
@@ -2439,6 +2535,111 @@ The navbar is an independent fixed overlay, not a normal layout block between St
 * The navbar reveal should be around `0.55s` to `0.7s` with `power3.out`.
 * Hiding the navbar when scrolling back into StoryIntro should also close the mobile menu.
 * Do not tie navbar reveal to a sticky block or spacer that can create a blank gap before HeroSection.
+
+---
+
+## StoryIntro to HeroSection Handoff Revision
+
+The current landing handoff must read as one cinematic sequence:
+
+```txt
+Scene 3 StoryIntro -> clean story fade -> navbar reveal -> premium HeroSection entrance
+```
+
+### Root Cause Notes
+
+The page-break feeling came from StoryIntro fading Scene 3 and its backdrop too early in the scrubbed timeline while the document still had scroll distance before HeroSection. That left a dark empty viewport and made HeroSection feel like a new page. Story ghosting came from leaving the final scene partially visible while HeroSection and navbar were already entering.
+
+### Fixed Contract
+
+* Keep `.story-intro` margin-bottom at `0`.
+* Keep `.landing-hero` margin-top at `0`.
+* Do not add `story-exit-spacer`, `story-transition-spacer`, `blank-section`, or hero spacer blocks.
+* Scene 3 stays readable for most of the final story range, then fades out near the end.
+* The StoryIntro stage and final background fade to opacity `0` before Hero dominates, preventing text ghosting.
+* Hero content may be revealed by the StoryIntro handoff timeline for seamless overlap, but `.landing-navbar` must not be animated inside StoryIntro.
+* Navbar uses `HeroSection`'s own late threshold (`top 12%` in the current desktop overlap layout) and remains a fixed overlay, never a layout block between StoryIntro and HeroSection.
+
+### Motion Rules
+
+* Story exit uses opacity, y, and tiny scale only.
+* Hero entrance uses opacity, y, scale, and staggered child reveals only.
+* Navbar reveal uses opacity and y only.
+* Do not animate blur, filters, box-shadow, width, height, top, or left.
+* Do not add new heavy ScrollTrigger stacks, canvas, WebGL, or particles.
+
+---
+
+## StoryIntro Ambient Lamp Backdrop System
+
+The lamp backdrop in the `StoryIntro` component functions as an ambient cinematic backdrop using the Aceternity / 21st.dev two-beam V shape structure. It blends smoothly into the deep navy base (#03113D) while providing a visible lamp effect with a top horizontal light and downward-spreading beams.
+
+### Key Visual Constraints
+
+* **Two-Beam V Shape:** Two separate conic gradient beams create the signature Aceternity "V" shape:
+  - Left beam: `conic-gradient(from 70deg at center top)` at `right: 50%`
+  - Right beam: `conic-gradient(from 290deg at center top)` at `left: 50%`
+  - This matches the exact structure of the Aceternity demo
+* **Top Horizontal Line:** A bright 2px cyan accent line at `top: 18%` with glow box-shadow, mimicking the Aceternity lamp aperture.
+* **Layers:** 7 total layers inside `RentivoLampBackdrop`:
+  1. `.rentivo-lamp__beam--left` — left conic beam (conic-gradient + mask-image)
+  2. `.rentivo-lamp__beam--right` — right conic beam (conic-gradient + mask-image)
+  3. `.rentivo-lamp__top-line` — bright horizontal accent line with glow
+  4. `.rentivo-lamp__glow` — large radial glow behind headline area
+  5. `.rentivo-lamp__spotlight` — secondary radial glow for depth
+  6. `.rentivo-lamp__aura` — wide background radial glow
+  7. `.rentivo-lamp__horizon` — subtle 1px static transition light
+* **Light Source Position:** The light originates from ABOVE the text (top 15-18%), spreading downward in a V shape. This matches the Aceternity demo structure.
+* **Soft Edges:** The beams use CSS `mask-image: linear-gradient(to bottom, ...)` to fade edges softly. No hard boxes or split backgrounds.
+* **Opacity and Blur:** Beam opacity animates from 0 to 0.95 during reveal. Glow at 0.7 opacity with `filter: blur(60px)`. Beams at `filter: blur(16px)`. All blur values are static (not animated).
+* **Contrast:** White text sits on `z-index: 3+`, vignetting on `z-index: 2`, lamp on `z-index: 1`, background on `z-index: 0`. The vignette's transparent center allows lamp beams to show through.
+* **Background Preservation:** The existing story background (`.story-bg`, `.story-bg-1/2/3`) is never removed. The lamp is an additional layer on top.
+* **Lightweight Performance:** Framer Motion fires once on mount (beams + line + glow reveal). CSS transitions handle scene color shifts. No WebGL, canvas, particles, or continuous script-based recalculations. Animate only `opacity` and `transform` (scaleX). All blur values are static CSS.
+* **Story → Hero Transition:** The `.story-intro` height must remain at 300vh (desktop) to ensure smooth GSAP ScrollTrigger transitions. No duplicate height declarations that could override this value.
+
+---
+
+## HeroSection Dark Luxury Redesign
+
+HeroSection is the first product promise after the editorial story. It should feel premium and operational, not like a generic SaaS template.
+
+### Visual Direction
+
+* Deep navy base with subtle cyan/blue aurora layers.
+* Low-opacity FlowTech grid, not a loud tech pattern.
+* Refined glass badge, command-center copy, strong headline, and clear CTA.
+* Supporting operations panel shows the product flow: Chat, Booking, Payment, Return.
+* Trust pills remain lightweight and secondary.
+
+### Typography
+
+* Primary sans carries the headline structure.
+* Serif italic accent is limited to one emotional word such as `rapi`.
+* Animated word spans must preserve spaces and never compress words together.
+
+### Entrance Sequence
+
+```txt
+hero shell fade/raise
+auras reveal
+badge fade-up
+headline word reveal
+highlight and subtitle fade-up
+CTA fade-up
+flowline and operations panel reveal
+panel items and trust pills stagger
+```
+
+Use GSAP with `power3.out`, opacity, y, and scale. Keep the sequence once-only and lightweight.
+
+### Do Not Break
+
+* Do not move navbar back into document flow.
+* Do not show navbar during StoryIntro.
+* Do not leave StoryIntro text visible behind HeroSection.
+* Do not add a transition section to fake the handoff.
+* Do not make HeroSection so tall that CTA is pushed too far below the fold on mobile.
+* Do not make the hero look like a dashboard mockup-heavy section unless explicitly requested later.
 
 ---
 
