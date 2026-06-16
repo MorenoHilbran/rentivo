@@ -12,11 +12,14 @@ gsap.registerPlugin(ScrollTrigger)
 const pills = ['Omnichannel Inbox', 'Anti Double Booking', 'Payment Verification', 'AI Copilot']
 
 function HeroWords({ text }: { text: string }) {
+  const words = text.split(' ')
+
   return (
     <>
-      {text.split(' ').map((word, index) => (
+      {words.map((word, index) => (
         <span className="hero-word" key={`${word}-${index}`}>
-          {word}{' '}
+          {word}
+          {index < words.length - 1 ? '\u00A0' : ''}
         </span>
       ))}
     </>
@@ -53,9 +56,10 @@ export default function HeroSection({
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 100%',
-            toggleActions: 'play none none reverse',
+            start: 'top 76%',
+            toggleActions: 'play none none none',
             onEnter: () => onHeroEnter?.(),
+            onEnterBack: () => onHeroEnter?.(),
             onLeaveBack: () => onHeroLeaveBack?.(),
           },
         })

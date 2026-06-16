@@ -2197,6 +2197,39 @@ Highlights should be cyan/blue luminous accents with readable contrast. Do not u
 
 ---
 
+## Recovery Notes
+
+Codex recovery audit on June 16, 2026 found that `feat/frontend` and `backup-codex-recovery` pointed at the same commit, `77c61d2 backup: recover codex frontend changes`. No stash or separate reflog commit contained a more complete landing implementation, so the missing landing behavior was recreated from `DESIGN.md` and the final target flow.
+
+### Recovered Contract
+
+```txt
+LandingPreloader -> StoryIntro -> LandingNavbar -> HeroSection
+```
+
+Active implementation files are TypeScript landing components under `src/components/landing`. Legacy `.js` landing tabs in the editor are not the active source if the file no longer exists on disk.
+
+### Recovery Rules
+
+* `DESIGN.md` is the source of truth for landing design recovery.
+* Do not use README as the landing design source when it conflicts with this file.
+* Do not run `git clean`, hard reset, or delete recovered landing files without explicit confirmation.
+* Do not reintroduce `.landing-page.is-preloading > :not(.landing-preloader) { opacity: 0; }`; StoryIntro must remain visible behind the fixed preloader overlay.
+* `StoryIntro` must receive `preloaderDone` so Scene 1 can reveal after the preloader exits.
+* `RentivoLampBackdrop` is one ambient instance inside StoryIntro, not the raw Aceternity `LampDemo`.
+* Hero/navbar reveal threshold must stay around `top 76%`, not `top 100%` or `top bottom`.
+* Animated words must preserve spaces with `\u00A0` or equivalent tested spacing.
+
+### Recreated Pieces
+
+* Premium PNG preloader using `/brand/rentivo-icon.png` and `/brand/rentivo-logo.png`.
+* StoryIntro scene highlight system and first-scene reveal.
+* Ambient lamp backdrop and lightweight lamp motion.
+* Hero word spacing and safer hero/navbar trigger.
+* Landing CSS recovery overrides in `src/styles/landing.css`.
+
+---
+
 ## 20. Final Design Principle
 
 Rentivo should feel like a premium operational SaaS product.

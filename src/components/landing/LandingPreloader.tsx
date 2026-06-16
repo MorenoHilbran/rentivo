@@ -3,184 +3,134 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import gsap from 'gsap'
-import rentivoLogo from '@/app/logo.png'
 
-export default function LandingPreloader({
-  onComplete,
-}: {
+type LandingPreloaderProps = {
   onComplete: () => void
-}) {
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const glowRef = useRef<HTMLDivElement>(null)
-  const centerRef = useRef<HTMLDivElement>(null)
-  const logoWrapRef = useRef<HTMLDivElement>(null)
-  const logoRef = useRef<HTMLDivElement>(null)
-  const shineRef = useRef<HTMLDivElement>(null)
-  const taglineRef = useRef<HTMLDivElement>(null)
-  const lineRef = useRef<HTMLDivElement>(null)
+}
+
+export default function LandingPreloader({ onComplete }: LandingPreloaderProps) {
+  const [isVisible, setIsVisible] = useState(true)
+  const rootRef = useRef<HTMLElement>(null)
+  const hasPlayedRef = useRef(false)
+  const completedRef = useRef(false)
 
   useEffect(() => {
-    const overlay = overlayRef.current
-    if (!overlay) return
+    const root = rootRef.current
+    if (!root || hasPlayedRef.current) return
 
-    const finish = () => {
+    hasPlayedRef.current = true
+
+    const complete = () => {
+      if (completedRef.current) return
+      completedRef.current = true
+      root.classList.add('is-complete')
       onComplete()
+      setIsVisible(false)
     }
 
-    // Respect reduced motion — brief fade out and exit
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      gsap.to(overlay, {
-        opacity: 0,
-        duration: 0.5,
-        ease: 'power2.out',
-        onComplete: finish,
-      })
-      return
-    }
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
-      // ── Initial hidden states ───────────────────────────────
-      gsap.set(glowRef.current, { scale: 0.6, opacity: 0 })
-      gsap.set(logoRef.current, { opacity: 0, scale: 0.85, y: 24 })
-      gsap.set(shineRef.current, { xPercent: -135, rotation: 8 })
-      gsap.set(taglineRef.current, { opacity: 0, y: 16 })
-      gsap.set(lineRef.current, { scaleX: 0, transformOrigin: 'left center' })
+      const stage = root.querySelector('.landing-preloader__stage')
+      const markWrap = root.querySelector('.landing-preloader__mark-wrap')
+      const glow = root.querySelector('.landing-preloader__mark-glow')
+      const rim = root.querySelector('.landing-preloader__mark-rim')
+      const iconGlow = root.querySelector('.landing-preloader__icon-glow')
+      const iconCore = root.querySelector('.landing-preloader__icon-core')
+      const logo = root.querySelector('.landing-preloader__logo')
+      const trace = root.querySelector('.landing-preloader__trace')
+      const markShine = root.querySelector('.landing-preloader__mark-shine')
+      const logoShine = root.querySelector('.landing-preloader__logo-shine')
+      const progress = root.querySelector('.landing-preloader__progress')
+      const caption = root.querySelector('.landing-preloader__caption')
 
-      const tl = gsap.timeline({ onComplete: finish })
+      gsap.set(root, { opacity: 0 })
+      gsap.set(stage, { opacity: 1, y: 0 })
+      gsap.set([glow, rim, iconGlow, iconCore, logo, progress, caption], { opacity: 0 })
+      gsap.set(markWrap, { scale: 0.94, y: 12 })
+      gsap.set([iconGlow, iconCore], { scale: 0.86, y: 16, clipPath: 'inset(34% 18% 28% 18% round 22px)' })
+      gsap.set(logo, { x: 64, scale: 0.98 })
+      gsap.set(trace, { scaleX: 0, opacity: 0, transformOrigin: 'left center' })
+      gsap.set(markShine, { xPercent: -150, opacity: 0 })
+      gsap.set(logoShine, { xPercent: -130, opacity: 0 })
+      gsap.set(progress, { scaleX: 0, transformOrigin: 'center center' })
 
-      // Phase 1 — Ambient glow expansion
-      tl.to(glowRef.current, {
-        scale: 1.2,
-        opacity: 0.45,
-        duration: 1.8,
-        ease: 'power2.out',
-      })
+      if (reduceMotion) {
+        gsap
+          .timeline({ onComplete: complete })
+          .to(root, { opacity: 1, duration: 0.12, ease: 'power2.out' })
+          .to([iconCore, logo, progress, caption], { opacity: 1, y: 0, x: 0, scale: 1, clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 0.2 })
+          .to(root, { opacity: 0, duration: 0.25, ease: 'power2.out' }, '+=0.35')
+        return
+      }
 
-      // Non-blocking ambient glow breathing loop
-      gsap.to(glowRef.current, {
-        scale: 1.05,
-        opacity: 0.35,
-        duration: 4.0,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-        delay: 1.5,
-      })
-
-      // Phase 2 — Logo Reveal
-      tl.to(logoRef.current, {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 1.4,
-        ease: 'power4.out',
-      }, '>-1.4') // start as the glow is expanding
-
-      // Phase 3 — Premium shine sweep across the logo
-      tl.to(shineRef.current, {
-        xPercent: 135,
-        duration: 1.8,
-        ease: 'power2.inOut',
-      }, '>-0.9')
-
-      // Phase 4 — Tagline slide up
-      tl.to(taglineRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-      }, '>-1.3')
-
-      // Phase 5 — Progress bar draws
-      tl.to(lineRef.current, {
-        scaleX: 1,
-        duration: 1.8,
-        ease: 'power3.inOut',
-      }, '>-0.6')
-
-      // Phase 6 — Brief hold for cinematic focus
-      tl.to({}, { duration: 0.5 })
-
-      // Phase 7 — Exit: content lifts/dissolves, overlay fades out
-      tl.to(
-        [logoRef.current, taglineRef.current, lineRef.current],
-        {
-          opacity: 0,
-          y: -24,
-          duration: 0.7,
-          ease: 'power3.in',
-          stagger: 0.08,
-        }
-      )
-      tl.to(
-        glowRef.current,
-        {
-          scale: 1.5,
-          opacity: 0,
-          duration: 0.7,
-          ease: 'power2.in',
-        },
-        '<'
-      )
-      tl.to(
-        overlay,
-        {
-          opacity: 0,
-          duration: 0.85,
-          ease: 'power3.inOut',
-        },
-        '-=0.45'
-      )
-    }, overlay)
+      gsap
+        .timeline({ onComplete: complete })
+        .to(root, { opacity: 1, duration: 0.28, ease: 'power2.out' })
+        .to(glow, { opacity: 1, scale: 1, duration: 0.46, ease: 'power3.out' }, '<0.04')
+        .to(rim, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, '<0.08')
+        .to(trace, { opacity: 1, scaleX: 1, duration: 0.72, ease: 'power3.out' }, '<0.1')
+        .to(
+          [iconGlow, iconCore],
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            clipPath: 'inset(0% 0% 0% 0% round 0px)',
+            duration: 0.68,
+            ease: 'power4.out',
+            stagger: 0.035,
+          },
+          '<0.24'
+        )
+        .to(markWrap, { scale: 1, y: 0, duration: 0.58, ease: 'power4.out' }, '<')
+        .to(markShine, { opacity: 1, xPercent: 145, duration: 0.62, ease: 'power3.inOut' }, '<0.08')
+        .to(logo, { opacity: 1, x: 0, scale: 1, duration: 0.72, ease: 'power4.out' }, '<0.3')
+        .to(logoShine, { opacity: 1, xPercent: 145, duration: 0.62, ease: 'power3.inOut' }, '<0.1')
+        .to(progress, { opacity: 1, scaleX: 1, duration: 0.58, ease: 'power3.out' }, '<0.16')
+        .to(caption, { opacity: 1, y: 0, duration: 0.42, ease: 'power3.out' }, '<0.08')
+        .to([stage, glow], { opacity: 0, y: -18, scale: 1.04, duration: 0.56, ease: 'power3.inOut' }, '+=0.34')
+        .to(root, { opacity: 0, duration: 0.48, ease: 'power3.inOut' }, '<0.12')
+    }, root)
 
     return () => ctx.revert()
   }, [onComplete])
 
+  if (!isVisible) return null
 
   return (
-    <div
-      ref={overlayRef}
-      className="landing-preloader"
-      role="presentation"
-      aria-hidden="true"
-    >
-      {/* Background layer */}
+    <section ref={rootRef} className="landing-preloader" role="presentation" aria-hidden="true">
       <div className="landing-preloader__bg" />
-
-      {/* Glow / Ambient orb */}
-      <div ref={glowRef} className="landing-preloader__glow" />
-
-      {/* Vignette */}
+      <div className="landing-preloader__beam" />
       <div className="landing-preloader__vignette" />
+      <div className="landing-preloader__grid" />
 
-      {/* Retro-cinematic CRT Scanline Grid */}
-      <div className="landing-preloader__scanlines" />
-
-      {/* Center content container */}
-      <div ref={centerRef} className="landing-preloader__center">
-        {/* Logo wrapper */}
-        <div ref={logoWrapRef} className="landing-preloader__logo-wrap">
-          <div ref={logoRef} className="landing-preloader__logo">
-            <Image
-              src={rentivoLogo}
-              alt="Rentivo"
-              priority
-              className="landing-preloader__logo-img"
-              style={{ height: 'auto' }}
-            />
+      <div className="landing-preloader__stage">
+        <div className="landing-preloader__brand">
+          <div className="landing-preloader__mark-wrap">
+            <div className="landing-preloader__mark-glow" />
+            <div className="landing-preloader__mark-rim" />
+            <span className="landing-preloader__trace" />
+            <div className="landing-preloader__icon-reveal">
+              <div className="landing-preloader__icon-glow" aria-hidden="true">
+                <Image src="/brand/rentivo-icon.png" alt="" width={188} height={188} priority />
+              </div>
+              <div className="landing-preloader__icon-core">
+                <Image src="/brand/rentivo-icon.png" alt="" width={188} height={188} priority />
+              </div>
+              <span className="landing-preloader__mark-shine" />
+            </div>
           </div>
-          {/* Logo shine sweeping overlay */}
-          <div ref={shineRef} className="landing-preloader__shine" />
+
+          <div className="landing-preloader__logo">
+            <Image src="/brand/rentivo-logo.png" alt="Rentivo" width={430} height={242} priority />
+            <span className="landing-preloader__logo-shine" />
+          </div>
         </div>
 
-        {/* Tagline */}
-        <div ref={taglineRef} className="landing-preloader__tagline">
-          Rental operations, <span style={{ color: '#12CBBE' }}>connected.</span>
-        </div>
-
-        {/* Progress bar line */}
-        <div ref={lineRef} className="landing-preloader__line" />
+        <div className="landing-preloader__progress" />
+        <p className="landing-preloader__caption">Rental operations, connected.</p>
       </div>
-    </div>
+    </section>
   )
 }

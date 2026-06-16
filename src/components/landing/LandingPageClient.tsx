@@ -23,6 +23,9 @@ export default function LandingPageClient() {
   const [heroActive, setHeroActive] = useState(false)
 
   const handlePreloaderComplete = () => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
     setPreloaderDone(true)
   }
 
@@ -80,7 +83,7 @@ export default function LandingPageClient() {
     >
       {!preloaderDone && <LandingPreloader onComplete={handlePreloaderComplete} />}
 
-      <StoryIntro />
+      <StoryIntro preloaderDone={preloaderDone} />
       <LandingNavbar visible={heroActive} />
       <HeroSection onHeroEnter={handleHeroEnter} onHeroLeaveBack={handleHeroLeaveBack} />
       <ProblemSection />
