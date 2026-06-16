@@ -105,8 +105,10 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
       const s1Highlights = scene1Ref.current?.querySelectorAll('.story-highlight')
 
       gsap.set(stageRef.current, { opacity: 1 })
-      gsap.set(scene1Ref.current, { opacity: 1, y: 42, scale: 0.985 })
-      gsap.set([s1Label, s1Words, s1Copy], { opacity: 0, y: 32 })
+      gsap.set(scene1Ref.current, { opacity: 1, y: 34, scale: 0.988 })
+      gsap.set(s1Label, { opacity: 0, y: 16 })
+      gsap.set(s1Words, { opacity: 0, y: 28 })
+      gsap.set(s1Copy, { opacity: 0, y: 18 })
       gsap.set(s1Highlights, { textShadow: '0 0 0 rgba(18, 203, 190, 0)' })
 
       const mm = gsap.matchMedia()
@@ -121,21 +123,21 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         const s3Copy = scene3Ref.current?.querySelector('.story-copy')
         const s3Highlights = scene3Ref.current?.querySelectorAll('.story-highlight')
 
-        gsap.set([scene2Ref.current, scene3Ref.current], { opacity: 0, y: 40, scale: 0.98 })
+        gsap.set([scene2Ref.current, scene3Ref.current], { opacity: 0, y: 52, scale: 0.982 })
         gsap.set(bg1Ref.current, { opacity: 1 })
         gsap.set([bg2Ref.current, bg3Ref.current], { opacity: 0 })
-        gsap.set([s2Label, s3Label], { opacity: 0, y: 14 })
-        gsap.set([s2Words, s3Words], { opacity: 0, y: 24 })
-        gsap.set([s2Copy, s3Copy], { opacity: 0, y: 18 })
-        gsap.set([s2Highlights, s3Highlights], { textShadow: '0 0 0 rgba(18, 203, 190, 0)' })
+        gsap.set([s2Label, s3Label], { opacity: 0.68, y: 0 })
+        gsap.set([s2Words, s3Words], { opacity: 1, y: 0 })
+        gsap.set([s2Copy, s3Copy], { opacity: 0.72, y: 0 })
+        gsap.set([s2Highlights, s3Highlights], { textShadow: '0 0 18px rgba(18, 203, 190, 0.22)' })
 
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: containerRef.current,
             start: 'top top',
-            end: '+=240%',
+            end: 'bottom top',
             pin: true,
-            scrub: 0.7,
+            scrub: 1.15,
             anticipatePin: 1,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
@@ -147,40 +149,32 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
           },
         })
 
-        tl.to({}, { duration: 0.2 })
-          .to(scene1Ref.current, { opacity: 0, y: -40, scale: 1.02, duration: 0.55, ease: 'none' })
-          .to(bg1Ref.current, { opacity: 0, duration: 0.55, ease: 'none' }, '<')
+        tl.to({}, { duration: 0.35 })
+          .to(scene1Ref.current, { opacity: 0, y: -54, scale: 1.018, duration: 0.72, ease: 'none' })
+          .to(bg1Ref.current, { opacity: 0, duration: 0.8, ease: 'none' }, '<')
           .fromTo(
             scene2Ref.current,
-            { opacity: 0, y: 40, scale: 0.98 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'none' },
-            '<0.22'
+            { opacity: 0, y: 52, scale: 0.982 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.86, ease: 'none' },
+            '<0.3'
           )
-          .to(bg2Ref.current, { opacity: 1, duration: 0.55, ease: 'none' }, '<')
-          .to(s2Label, { opacity: 0.66, y: 0, duration: 0.24, ease: 'none' }, '<0.08')
-          .to(s2Words, { opacity: 1, y: 0, stagger: 0.045, duration: 0.48, ease: 'none' }, '<0.08')
-          .to(s2Copy, { opacity: 0.72, y: 0, duration: 0.28, ease: 'none' }, '<0.16')
-          .to(s2Highlights, { textShadow: '0 0 24px rgba(18, 203, 190, 0.28)', duration: 0.28, ease: 'none' }, '<0.05')
-          .to({}, { duration: 0.25 })
-          .to(scene2Ref.current, { opacity: 0, y: -40, scale: 1.02, duration: 0.55, ease: 'none' })
-          .to(bg2Ref.current, { opacity: 0, duration: 0.55, ease: 'none' }, '<')
+          .to(bg2Ref.current, { opacity: 1, duration: 0.86, ease: 'none' }, '<')
+          .to({}, { duration: 0.46 })
+          .to(scene2Ref.current, { opacity: 0, y: -54, scale: 1.018, duration: 0.72, ease: 'none' })
+          .to(bg2Ref.current, { opacity: 0, duration: 0.8, ease: 'none' }, '<')
           .fromTo(
             scene3Ref.current,
-            { opacity: 0, y: 40, scale: 0.98 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'none' },
-            '<0.22'
+            { opacity: 0, y: 52, scale: 0.982 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.86, ease: 'none' },
+            '<0.3'
           )
-          .to(bg3Ref.current, { opacity: 1, duration: 0.55, ease: 'none' }, '<')
-          .to(s3Label, { opacity: 0.66, y: 0, duration: 0.24, ease: 'none' }, '<0.08')
-          .to(s3Words, { opacity: 1, y: 0, stagger: 0.045, duration: 0.48, ease: 'none' }, '<0.08')
-          .to(s3Copy, { opacity: 0.72, y: 0, duration: 0.28, ease: 'none' }, '<0.16')
-          .to(s3Highlights, { textShadow: '0 0 24px rgba(18, 203, 190, 0.28)', duration: 0.28, ease: 'none' }, '<0.05')
-          .to({}, { duration: 0.25 })
+          .to(bg3Ref.current, { opacity: 1, duration: 0.86, ease: 'none' }, '<')
+          .to({}, { duration: 0.46 })
           .to(scene3Ref.current, {
-            opacity: 0,
-            y: -48,
-            scale: 1.03,
-            duration: 0.5,
+            opacity: 0.08,
+            y: -42,
+            scale: 1.018,
+            duration: 0.62,
             ease: 'none',
           })
 
@@ -205,15 +199,16 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
 
       gsap
         .timeline({
+          delay: 0.12,
           onComplete: () => ScrollTrigger.refresh(),
         })
-        .to(scene1Ref.current, { y: 0, scale: 1, duration: 0.78, ease: 'power4.out' })
-        .to(s1Label, { opacity: 0.66, y: 0, duration: 0.52, ease: 'power3.out' }, '<0.04')
-        .to(s1Words, { opacity: 1, y: 0, stagger: 0.058, duration: 0.72, ease: 'power4.out' }, '<0.08')
-        .to(s1Copy, { opacity: 0.72, y: 0, duration: 0.52, ease: 'power3.out' }, '<0.18')
+        .to(scene1Ref.current, { y: 0, scale: 1, duration: 0.9, ease: 'power4.out' })
+        .to(s1Label, { opacity: 0.72, y: 0, duration: 0.58, ease: 'power3.out' }, '<0.02')
+        .to(s1Words, { opacity: 1, y: 0, stagger: 0.052, duration: 0.82, ease: 'power4.out' }, '<0.08')
+        .to(s1Copy, { opacity: 0.74, y: 0, duration: 0.58, ease: 'power3.out' }, '<0.2')
         .to(
           s1Highlights,
-          { textShadow: '0 0 26px rgba(18, 203, 190, 0.34)', duration: 0.42, stagger: 0.05, ease: 'power2.out' },
+          { textShadow: '0 0 24px rgba(18, 203, 190, 0.30)', duration: 0.5, stagger: 0.05, ease: 'power2.out' },
           '<0.08'
         )
     },

@@ -2230,6 +2230,218 @@ Active implementation files are TypeScript landing components under `src/compone
 
 ---
 
+## Loading Preloader Timing Revision
+
+The active loading reveal must behave like a premium Rentivo brand reveal, not a generic simultaneous logo fade.
+
+### Sequence
+
+```txt
+Icon reveal -> Icon settle -> Full logo slide/fade in -> Short premium hold -> Smooth exit to StoryIntro
+```
+
+### Timing Contract
+
+* Cinematic background opens first with deep navy, cyan/blue glow, subtle beam, and vignette.
+* Icon-only mark starts around `0.18s`, then reveals with opacity, scale, y, tiny rotation correction, rim light, trace, and one shine pass.
+* Icon settle uses a short pulse around `0.25s` to `0.35s`; do not skip this hold.
+* Full logo starts after the mark settles, around `1.32s`, with opacity `0 -> 1`, x `56 -> 0`, scale `0.97 -> 1`, and `power3.out`.
+* Progress line and caption reveal after the full logo has started, never before the icon phase.
+* Exit begins after a short brand hold and fades/scales the stage before fading the fixed overlay.
+* Ideal total duration is about `3.2s` to `3.5s`; do not compress it back into a rushed 1s to 2s loader.
+
+### Do Not Break
+
+* Do not show the icon and full logo at the same time during the first phase.
+* Do not let the hidden full logo push the icon off-center before it appears.
+* Do not make loading jump directly to HeroSection.
+* Do not hide StoryIntro behind an opaque blank section after the overlay exits.
+* Do not call `onComplete` more than once.
+* Do not add ScrollTrigger, canvas, WebGL, particles, or heavy infinite animation to the preloader.
+* Reduced motion should show icon and logo briefly, then fade out to StoryIntro.
+
+---
+
+## Loading Preloader Dark Luxury FlowTech Revision
+
+The preloader must feel like a high-end operational SaaS brand reveal. The visual language is Dark Luxury FlowTech: deep navy, controlled cyan/blue light, premium depth, and precise sequencing.
+
+### Required Sequence
+
+```txt
+Dark Luxury Stage Open
+-> Icon Mark Reveal
+-> Icon Settle
+-> Icon Crossfade Out
+-> Full Logo Slide/Fade In
+-> Premium Hold
+-> Cinematic Exit to StoryIntro
+```
+
+### Visual Treatment
+
+* Background uses deep navy base with cyan/blue aurora, soft mesh glow, subtle diagonal beam, thin grid, micro noise, and vignette.
+* Icon-only mark is the only brand asset visible during the icon phase.
+* Full logo must not appear until the icon has revealed and settled.
+* The full logo layer sits above the icon layer.
+* If the full logo PNG contains the icon, the icon-only layer must fade to opacity `0` during the crossfade.
+* Final logo state must show only the full logo, with no icon ghosting behind it.
+
+### Timing
+
+* Stage open: `0.35s` to `0.45s`.
+* Icon reveal: `0.75s` to `0.85s`.
+* Icon settle: `0.25s` to `0.35s`.
+* Icon crossfade out: about `0.3s` to `0.35s`.
+* Full logo slide/fade: `0.75s` to `0.9s`.
+* Premium hold: `0.45s` to `0.65s`.
+* Total target: `2.7s` to `3.3s`, with a hard upper preference near `3.5s`.
+
+### Do Not Break
+
+* Do not leave icon-only visible when the full logo is active.
+* Do not show icon-only and full logo together for longer than `0.25s`.
+* Do not return to a basic flat navy background.
+* Do not make the loader feel rushed.
+* Do not make loading jump to HeroSection.
+* Do not add blank spacer sections or hide StoryIntro behind an empty screen.
+* Do not call `onComplete` more than once.
+* Do not add ScrollTrigger, canvas, WebGL, particles, or heavy looped blur animation to the preloader.
+
+---
+
+## Loading Preloader Luxury Motion Revision
+
+The preloader should feel like one continuous brand sequence, not a rigid swap between two assets.
+
+### Motion Direction
+
+* Use one GSAP timeline for the full preloader.
+* Stage, icon, energy, logo, progress, caption, and exit must be choreographed as one sequence.
+* Icon-only reveal should feel like the brand mark gathering light.
+* Full logo reveal should feel like the mark resolving into the full Rentivo wordmark.
+* CSS initial states must hide the full logo, progress, caption, icon core, icon glow, rim, trace, and shine before GSAP starts. This prevents the first browser paint from showing stacked logos before hydration.
+* Icon glow is a low-opacity aura only; it must not reveal at the same opacity as the crisp icon core.
+* Call the landing completion signal at the start of preloader exit, while the overlay is still visible, so StoryIntro can begin revealing behind it.
+* Unmount the overlay only after the exit fade finishes.
+
+### Visual Polish Rules
+
+* Avoid harsh visible circles, obvious boxes, strong outlines, and hard-edge spotlights.
+* Rim light should be a soft radial atmosphere, not a visible border ring.
+* Grid and noise must stay barely visible, around 4% to 6% perceived opacity.
+* Light sweep must be narrow and soft, never a visible rectangular block.
+* Glow should create depth behind the mark/logo, not cover or blur the logo.
+* Final full-logo state must be clean, readable, and free from icon ghosting.
+* If logo overlap appears only on the first frame, fix CSS default opacity/transform states first before changing the render order.
+
+### Performance Guardrails
+
+* Animate opacity, transform, scale, x, y, rotate, clipPath, and scaleX only.
+* Do not animate layout properties, large blur values, box-shadow, width, height, top, or left.
+* No ScrollTrigger in the preloader.
+* No canvas, WebGL, particle fields, or heavy infinite animation.
+* Reduced motion should skip long shine/settle sequences and fade quickly into StoryIntro.
+
+---
+
+## StoryIntro Entry Motion
+
+StoryIntro Scene 1 should begin while the preloader is fading out, not after the screen has already cleared.
+
+### Entry Rules
+
+* `preloaderDone` should be emitted at the start of preloader exit.
+* Scene 1 reveal may start about `0.1s` to `0.2s` after that signal.
+* Label enters with opacity and y movement.
+* Headline words reveal with short stagger while preserving spaces.
+* Highlight words receive a short, subtle cyan glow.
+* Copy fades up after the headline begins.
+* Do not add blur-heavy text animation, per-character effects, or new ScrollTrigger instances for the first reveal.
+* Do not let Scene 1 appear too early behind the fully opaque loader or too late after the loader has disappeared.
+* The preferred handoff is: preloader exit begins, `preloaderDone` fires shortly after, StoryIntro waits about `0.1s` to `0.2s`, then text reveal begins as the overlay opacity dissolves.
+
+## Preloader Icon Reveal Smoothness Revision
+
+The first Rentivo icon reveal must feel like a soft light-unveil, not a cropped pop-in.
+
+### Rules
+
+* Do not use a hard icon crop/mask as the primary reveal.
+* The icon phase should rely on opacity, y, scale, tiny rotation correction, low-opacity glow, and one soft shine pass.
+* Icon glow must stay lower than the crisp icon core so the mark does not look doubled.
+* Icon settle may be slower and subtler than the logo reveal; avoid bouncy pulses.
+* The logo can slide in after the icon has settled, but the icon-only layer must fade out cleanly before the full logo becomes dominant.
+
+### Timing
+
+```txt
+icon reveal: about 0.9s to 1s
+icon settle: about 0.3s to 0.45s
+crossfade out: about 0.4s
+logo reveal: about 0.9s
+```
+
+## StoryIntro Slow Luxury Scroll Revision
+
+StoryIntro scroll must feel slow, cinematic, and premium without dropping frames.
+
+### Performance Rules
+
+* Do not animate every word span inside the scrubbed ScrollTrigger timeline.
+* Word stagger is allowed for the initial Scene 1 reveal after preloader exit.
+* During scroll, animate scene containers and background opacity only: `opacity`, `y`, and `scale`.
+* Avoid scrubbed `textShadow` tweens. Use static highlight styling once the scene is visible.
+* Do not combine CSS opacity transitions with GSAP scrubbed opacity on the same `.story-bg` layers.
+* Keep lamp ambience mostly static during pinned scroll. One slow sweep is allowed; multiple infinite beam/glow/halo animations are too expensive.
+* Use a slower scrub value, around `1.0` to `1.2`, and a longer story end distance when the user asks for a more luxury/slower feel.
+
+### Do Not Break
+
+* Do not reintroduce dozens of scrubbed word tweens in StoryIntro.
+* Do not add continuous blur/filter animation to the lamp.
+* Do not add multiple lamp instances per scene.
+* Do not make the slower story scroll create a blank gap before HeroSection.
+
+## StoryIntro To HeroSection Transition Rules
+
+The handoff from StoryIntro to HeroSection must feel continuous and must not create an empty page between sections.
+
+### Layout Rules
+
+* StoryIntro desktop height must stay synchronized with its ScrollTrigger end. Prefer `end: "bottom top"` when `.story-intro` owns the scroll distance.
+* Do not make `ScrollTrigger end` longer than the actual `.story-intro` layout height.
+* Do not add manual transition spacers, `story-exit-spacer`, large `padding-bottom`, or `margin-bottom`.
+* `.story-intro` must keep `margin-bottom: 0`.
+* `.landing-hero` must keep `margin-top: 0`.
+* The final StoryIntro scene may fade nearly out, but it should not leave a long fully blank pinned interval before HeroSection releases.
+
+### Motion Rules
+
+```txt
+Scene 3 exit: opacity down, y up, tiny scale up
+Hero entrance: opacity up, y 72 -> 0, scale 0.985 -> 1
+Navbar reveal: opacity up, y -24 -> 0
+```
+
+Use opacity and transform only. Do not animate layout properties or add heavy effects.
+
+## Landing Navbar Reveal System
+
+The navbar is an independent fixed overlay, not a normal layout block between StoryIntro and HeroSection.
+
+### Rules
+
+* Navbar must not occupy document flow space.
+* Navbar stays hidden during LandingPreloader and StoryIntro.
+* Navbar visibility is controlled by a lightweight HeroSection ScrollTrigger that works across desktop, mobile, and reduced-motion modes.
+* Hero entrance animation may be no-preference only, but navbar visibility must still work when motion is reduced.
+* The navbar reveal should be around `0.55s` to `0.7s` with `power3.out`.
+* Hiding the navbar when scrolling back into StoryIntro should also close the mobile menu.
+* Do not tie navbar reveal to a sticky block or spacer that can create a blank gap before HeroSection.
+
+---
+
 ## 20. Final Design Principle
 
 Rentivo should feel like a premium operational SaaS product.

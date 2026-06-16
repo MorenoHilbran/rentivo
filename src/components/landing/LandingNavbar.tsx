@@ -48,15 +48,16 @@ export default function LandingNavbar({ visible }: { visible: boolean }) {
     gsap.killTweensOf(header)
 
     if (!visible) {
+      const closeMenuTimer = window.setTimeout(() => setOpen(false), 0)
       gsap.set(header, { opacity: 0, y: -24, pointerEvents: 'none' })
-      return
+      return () => window.clearTimeout(closeMenuTimer)
     }
 
     gsap.to(header, {
       opacity: 1,
       y: 0,
       pointerEvents: 'auto',
-      duration: prefersReducedMotion ? 0 : 0.55,
+      duration: prefersReducedMotion ? 0 : 0.65,
       ease: 'power3.out',
     })
   }, [visible])

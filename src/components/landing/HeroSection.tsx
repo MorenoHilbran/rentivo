@@ -37,9 +37,20 @@ export default function HeroSection({
 
   useGSAP(
     () => {
+      if (!sectionRef.current) return
+
+      const heroVisibilityTrigger = ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: 'top 88%',
+        onEnter: () => onHeroEnter?.(),
+        onEnterBack: () => onHeroEnter?.(),
+        onLeaveBack: () => onHeroLeaveBack?.(),
+      })
+
       const mm = gsap.matchMedia()
 
       mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', () => {
+        gsap.set(sectionRef.current, { opacity: 0, y: 72, scale: 0.985 })
         // Set initial states for desktop entrance reveal
         gsap.set(
           [
@@ -56,11 +67,8 @@ export default function HeroSection({
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 76%',
+            start: 'top 88%',
             toggleActions: 'play none none none',
-            onEnter: () => onHeroEnter?.(),
-            onEnterBack: () => onHeroEnter?.(),
-            onLeaveBack: () => onHeroLeaveBack?.(),
           },
         })
 
@@ -72,13 +80,19 @@ export default function HeroSection({
         const pillsElements = sectionRef.current?.querySelectorAll('.landing-hero-pill')
 
         // Reveal timeline in order
-        tl.to(badge, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' })
+        tl.to(sectionRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: 'power3.out' })
+          .to(badge, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.1')
           .to(titleWords, { opacity: 1, y: 0, stagger: 0.04, duration: 0.6, ease: 'power3.out' }, '<0.1')
           .to(highlight, { opacity: 0.92, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.15')
           .to(subtitle, { opacity: 0.72, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.1')
           .to(actions, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '<0.1')
           .to(pillsElements, { opacity: 1, y: 0, scale: 1, stagger: 0.05, duration: 0.5, ease: 'power3.out' }, '<0.15')
       })
+
+      return () => {
+        heroVisibilityTrigger.kill()
+        mm.revert()
+      }
     },
     { scope: sectionRef }
   )
