@@ -1,9 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BriefcaseBusiness, Headset, Truck } from 'lucide-react'
+import { BriefcaseBusiness, Headset, Truck, LucideIcon } from 'lucide-react'
 
-const roles = [
+interface RoleItem {
+  icon: LucideIcon
+  title: string
+  text: string
+}
+
+const roles: RoleItem[] = [
   {
     icon: BriefcaseBusiness,
     title: 'Owner',

@@ -1,6 +1,29 @@
 import './globals.css'
 import Script from 'next/script'
+import { Bodoni_Moda, Geist, Instrument_Serif } from 'next/font/google'
 import { ToastProvider } from '@/components/ToastProvider'
+
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist',
+  display: 'swap',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: 'italic',
+  variable: '--font-instrument-serif',
+  display: 'swap',
+})
+
+const bodoniModa = Bodoni_Moda({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  style: 'italic',
+  variable: '--font-bodoni-moda',
+  display: 'swap',
+})
 
 export const metadata = {
   title: {
@@ -29,7 +52,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html
+      lang="id"
+      className={`${geist.variable} ${instrumentSerif.variable} ${bodoniModa.variable}`}
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

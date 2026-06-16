@@ -10,9 +10,17 @@ import {
   ReceiptText,
   RotateCcw,
   UsersRound,
+  LucideIcon
 } from 'lucide-react'
 
-const features = [
+interface FeatureItem {
+  icon: LucideIcon
+  title: string
+  label: string
+  text: string
+}
+
+const features: FeatureItem[] = [
   {
     icon: Inbox,
     title: 'Omnichannel Inbox',
@@ -69,7 +77,7 @@ export default function FeatureGrid() {
       <div className="landing-section-inner">
         <div className="landing-section-heading">
           <span className="landing-eyebrow">Fitur utama</span>
-          <h2>Modul yang dibutuhkan bisnis rental, disusun dalam satu sistem.</h2>
+          <h2>Modul bisnis rental, disusun dalam satu <span className="landing-heading-accent">sistem.</span></h2>
           <p>Setiap fitur mengikuti alur kerja rental Indonesia: chat, jadwal, barang, invoice, payment proof, dan return.</p>
         </div>
 

@@ -1,9 +1,16 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Bot, CheckCircle2, Gauge, Inbox, Repeat2 } from 'lucide-react'
+import { Bot, CheckCircle2, Gauge, Inbox, Repeat2, LucideIcon } from 'lucide-react'
 
-const pillars = [
+interface Pillar {
+  icon: LucideIcon
+  label: string
+  title: string
+  text: string
+}
+
+const pillars: Pillar[] = [
   {
     icon: Inbox,
     label: 'Capture',
@@ -42,7 +49,7 @@ export default function SolutionSection() {
           transition={{ duration: 0.46, ease: [0.23, 1, 0.32, 1] }}
         >
           <span className="landing-eyebrow">FlowTech workspace</span>
-          <h2>Satu workspace untuk seluruh siklus rental.</h2>
+          <h2>Satu workspace untuk seluruh <span className="landing-heading-accent">siklus rental.</span></h2>
           <p>
             Dari chat pertama sampai barang kembali, Rentivo menjaga setiap proses tetap
             tercatat, terhubung, dan mudah dipantau.

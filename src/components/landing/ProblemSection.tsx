@@ -1,9 +1,23 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { AlertTriangle, CalendarX2, ClipboardList, MessageCircleOff, PackageX, RotateCcw } from 'lucide-react'
+import { 
+  AlertTriangle, 
+  CalendarX2, 
+  ClipboardList, 
+  MessageCircleOff, 
+  PackageX, 
+  RotateCcw,
+  LucideIcon
+} from 'lucide-react'
 
-const problems = [
+interface ProblemItem {
+  icon: LucideIcon
+  title: string
+  text: string
+}
+
+const problems: ProblemItem[] = [
   { icon: MessageCircleOff, title: 'Chat customer tercecer', text: 'Pertanyaan masuk dari banyak kanal sulit dilacak saat admin berganti shift.' },
   { icon: ClipboardList, title: 'Booking masih manual', text: 'Catatan tersebar di spreadsheet, chat, dan buku operasional.' },
   { icon: CalendarX2, title: 'Risiko double booking tinggi', text: 'Barang yang sama bisa terjadwal di slot yang bertabrakan.' },
@@ -18,7 +32,7 @@ export default function ProblemSection() {
       <div className="landing-section-inner">
         <div className="landing-section-heading">
           <span className="landing-eyebrow">Operasional tercecer</span>
-          <h2>Operasional rental sering kacau bukan karena bisnisnya kecil, tapi karena sistemnya tercecer.</h2>
+          <h2>Operasional rental sering kacau bukan karena bisnisnya kecil, tapi karena sistemnya <span className="landing-heading-accent">tercecer.</span></h2>
           <p>Setiap channel punya konteks sendiri. Setiap admin punya catatan sendiri. Saat pesanan ramai, celah kecil berubah jadi double booking, invoice telat, atau return tanpa bukti.</p>
         </div>
 

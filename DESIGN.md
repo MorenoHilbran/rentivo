@@ -1689,6 +1689,514 @@ Before merging FE changes:
 
 ---
 
+## Brand Typography System
+
+Rentivo landing uses a premium editorial-tech type system:
+
+```txt
+Primary sans: Geist
+Accent serif soft: Instrument Serif Italic
+Accent serif dramatic: Bodoni Moda Italic
+```
+
+Implementation:
+
+```txt
+src/app/layout.js
+src/styles/landing.css
+```
+
+### Font Roles
+
+* Geist is the primary font for UI, body copy, navbar, buttons, badges, cards, dashboard-like modules, and most headings.
+* Instrument Serif Italic is used for softer editorial emphasis in StoryIntro and selected landing section words.
+* Bodoni Moda Italic is used sparingly for dramatic hero emphasis, usually one phrase only.
+
+### Usage Examples
+
+* Hero headline: Geist bold for the main sentence, Bodoni Moda Italic for `booking rental`.
+* StoryIntro: Geist for the scene headline, Instrument Serif Italic for one accent word per scene.
+* Section headings: Geist for structure, Instrument Serif Italic for one final keyword such as `tercecer`, `status`, or `kendali`.
+* Badges, CTA, labels, product cards: Geist only.
+* Body copy: Geist only, never serif.
+
+### Do
+
+* Use serif italic as a precise accent, not as the whole voice.
+* Keep body and UI text clean, readable, and operational.
+* Use strong weight contrast and tight but readable display spacing.
+
+### Don't
+
+* Do not make every heading serif italic.
+* Do not use serif italic inside buttons, navigation, badges, tables, or dense operational UI.
+* Do not use decorative font treatments if they reduce clarity.
+
+---
+
+## Landing Visual Direction
+
+The new landing direction is dark-luxury FlowTech: premium SaaS, cinematic depth, editorial accents, and operational clarity.
+
+### Visual Principles
+
+* Dark navy is the brand stage for preloader, story, navbar, and hero.
+* Blue and cyan act as controlled light, not decoration everywhere.
+* Backgrounds use layered radial bloom, subtle grid, vignette, and ambient beam.
+* Cards use restrained translucent or white surfaces with precise borders and soft shadows.
+* Spacing should feel composed and deliberate, with wider hero/story breathing room and tighter product modules.
+* The page should feel high-end and product-led, not generic startup marketing.
+
+### Contrast Rules
+
+* Light text on dark backgrounds uses softer white and more line-height.
+* Section body text stays muted but readable.
+* Cyan is for flow, realtime, and AI-adjacent signals.
+* Electric blue is for primary action and strong operational state.
+
+### Background Treatment
+
+Allowed:
+
+* radial bloom
+* faint grid
+* ambient beam
+* soft vignette
+* restrained translucent panels
+
+Avoid:
+
+* noisy particle fields
+* heavy canvas or WebGL
+* large animated blur loops
+* purple/blue generic SaaS gradients
+* plain flat navy with no depth
+
+---
+
+## Loading Preloader
+
+The preloader is a premium brand reveal, not a spinner.
+
+### Visual Direction
+
+* Use the original Rentivo PNG icon and full logo from `public/brand`.
+* Keep the preloader as a fixed overlay above StoryIntro.
+* Use deep navy, blue/cyan glow, light beam, soft grid, and vignette for atmosphere.
+* Use PNG icon reveal, duplicate glow layer, rim light, diagonal shine, and full logo slide-in.
+
+### Motion Sequence
+
+1. Cinematic stage fades in.
+2. Original PNG icon reveals with opacity, scale, y, and lightweight clipPath.
+3. Glow, rim, shine, and trace pass over the icon.
+4. Full logo slides in from the right.
+5. Progress line and microcopy support the brand reveal.
+6. Overlay fades away directly to StoryIntro.
+
+### Guardrails
+
+* Do not use SVG stroke drawings as the main logo form.
+* Do not replace the original PNG icon with handmade shapes.
+* Do not use ScrollTrigger in the preloader.
+* Do not make the preloader a document-flow section.
+* Respect `prefers-reduced-motion` with a short logo fade.
+
+---
+
+## StoryIntro
+
+StoryIntro is full-screen, text-centered, dark, and editorial.
+
+### Typography Direction
+
+* Scene headline uses Geist with strong weight and tight display spacing.
+* One word per scene may use Instrument Serif Italic.
+* Scene number remains small, precise, and cyan-tinted.
+* Copy stays quiet and readable under the headline.
+
+### Motion Rules
+
+* Keep the existing loading -> story visibility behavior.
+* Keep StoryIntro mounted behind the fixed preloader.
+* Desktop pin behavior can remain, but do not add blank spacer sections.
+* Mobile should remain readable and not require heavy pinned scroll.
+
+---
+
+## HeroSection
+
+HeroSection is the main product promise and must feel cinematic, memorable, and product-led.
+
+### New Hierarchy
+
+* Badge introduces the FlowTech CRM context.
+* Hero H1 uses Geist for the main statement and Bodoni Moda Italic for the key phrase.
+* Supporting copy is shorter, calmer, and operational.
+* CTA buttons use pill shapes, precise glow, and restrained shine.
+* Product signal panel previews chat -> inventory -> invoice flow without adding a heavy screenshot.
+
+### Layout Principles
+
+* Centered hero remains acceptable because this is a single-purpose cinematic landing opener.
+* The product signal panel gives the first viewport a concrete operational artifact.
+* Visual depth comes from light, grid, and panel hierarchy rather than decorative clutter.
+
+---
+
+## Landing Motion System Update
+
+The current macro-flow remains:
+
+```txt
+LandingPreloader -> StoryIntro -> LandingNavbar -> HeroSection
+```
+
+This flow must remain stable. The redesign improves visual depth and typography while preserving render order and transition behavior.
+
+### Motion Rules
+
+* Use GSAP only where it already supports the preloader, StoryIntro, and hero reveal.
+* Prefer opacity, transform, scale, x, y, and lightweight clipPath.
+* Do not animate layout properties.
+* Do not add heavy infinite motion.
+* Keep reduced motion paths simple and immediate.
+
+### Do
+
+* Keep loading once.
+* Reveal StoryIntro immediately after loading.
+* Show navbar only once HeroSection enters.
+* Keep hero and section entrance motion subtle.
+
+### Don't
+
+* Do not add ScrollTrigger to the preloader.
+* Do not add blank pages or transition spacers.
+* Do not introduce canvas, WebGL, particle systems, or heavy blur animation.
+
+---
+
+## Brand Asset / Favicon
+
+The active favicon/app icon uses the latest Rentivo icon asset.
+
+Active files:
+
+```txt
+src/app/icon.png
+src/app/apple-icon.png
+public/favicon.png
+public/brand/rentivo-icon.png
+public/brand/rentivo-logo.png
+```
+
+Next.js metadata points to `/icon.png` and `/apple-icon.png`, backed by `src/app/icon.png` and `src/app/apple-icon.png`.
+
+## Do Not Break
+
+* Do not use SVG stroke random art that does not match the Rentivo icon.
+* Do not replace the original PNG icon with a handmade logo-like shape.
+* Do not change the current loading -> story -> hero flow.
+* Do not render the preloader as a normal document-flow section.
+* Do not conditional render the page as `{isLoading ? <LandingPreloader /> : <StoryIntro />}`.
+* StoryIntro must stay mounted behind the fixed preloader overlay.
+* Do not show loading twice.
+* Do not show the navbar during StoryIntro.
+* Do not add blank spacer sections, manual 100vh gaps, or transition spacer divs.
+* Do not use LightPillar or 21st.dev cinematic hero effects for the preloader.
+* Do not move landing preloader CSS into `globals.css`.
+* Do not make the landing basic, flat, or template-like again.
+* Do not overuse serif italic or make all text decorative.
+* Do not add heavy motion that hurts mobile performance.
+
+## Current File Map
+
+```txt
+src/app/page.tsx
+src/app/layout.js
+src/components/landing/LandingPreloader.tsx
+src/components/landing/RentivoLampBackdrop.tsx
+src/components/landing/StoryIntro.tsx
+src/components/landing/LandingNavbar.tsx
+src/components/landing/HeroSection.tsx
+src/components/landing/ProblemSection.tsx
+src/components/landing/SolutionSection.tsx
+src/components/landing/FeatureGrid.tsx
+src/components/landing/WorkflowSection.tsx
+src/components/landing/DashboardPreview.tsx
+src/components/landing/RoleSection.tsx
+src/components/landing/FinalCTA.tsx
+src/components/landing/LandingFooter.tsx
+src/components/ui/lamp.jsx
+src/lib/utils.ts
+src/styles/landing.css
+public/brand/rentivo-icon.png
+public/brand/rentivo-logo.png
+src/app/icon.png
+src/app/apple-icon.png
+public/favicon.png
+DESIGN.md
+```
+
+---
+
+## Design Audit Findings
+
+The active homepage path is confirmed:
+
+```txt
+src/app/page.tsx -> src/components/landing/LandingPageClient.tsx -> TSX landing components
+```
+
+The redesign previously felt too small because the active HeroSection still used the old centered stack composition. CSS had newer premium overrides appended below legacy landing rules, so colors and fonts changed, but the visual silhouette remained similar. The active CSS file is `src/styles/landing.css`, imported through `src/app/globals.css`; landing CSS must continue to live there rather than being moved into globals.
+
+There are legacy deleted JS landing components in git status and active TSX landing components in `src/components/landing`. Edit the TSX files used by `LandingPageClient.tsx`; do not edit old JS artifacts or assume README is the source of truth for landing design.
+
+Typography spacing broke because animated headings split text into individual word spans and relied on JSX trailing spaces. With tight display tracking and nested accent spans, those spaces can visually collapse and make headings read like glued words. Animated word renderers now emit explicit non-breaking spaces between words. Keep `.hero-word` and `.story-word` inline and avoid overly aggressive negative tracking.
+
+For landing page design decisions, `DESIGN.md` overrides README design notes.
+
+---
+
+## Landing Visual Direction v2
+
+The landing page must look materially redesigned, not font-swapped. The hero now uses a split editorial/product-cockpit composition: strong headline copy on one side and a Rentivo command-view motif on the other. This is the preferred first-viewport silhouette.
+
+### Composition Rules
+
+* Hero should not return to a generic centered title/subtitle/button stack.
+* Product context must appear in the first viewport through a cockpit, pipeline, signal panel, or real product artifact.
+* Lower sections should vary rhythm through staggered cards, feature spans, workflow rails, and dashboard preview depth.
+* Background depth should use navy light, cyan bloom, subtle grid, and restrained vignette.
+* Keep the visual language premium SaaS and operational, not gaming, crypto, or generic AI.
+
+### Typography Rules
+
+* Geist is the primary sans for UI, body, buttons, labels, and most headings.
+* Instrument Serif Italic is the softer editorial accent.
+* Bodoni Moda Italic is reserved for the strongest hero-level accent.
+* Serif italic accents should be 1 to 3 words, never full paragraphs or dense UI.
+* Animated word spacing must be preserved with explicit `\u00A0` or a tested spacing rule.
+* Avoid display letter spacing tighter than `-0.06em` unless manually verified on desktop and mobile.
+
+---
+
+## Do Not Break v2
+
+* Do not make landing redesign a font swap only.
+* Do not reintroduce word splitting that makes words stick together.
+* Do not follow README design notes over `DESIGN.md`.
+* Do not change the stable `LandingPreloader -> StoryIntro -> LandingNavbar -> HeroSection` flow.
+* Do not render the preloader as a normal section.
+* Do not conditional-render StoryIntro after loading.
+* Do not show navbar during StoryIntro.
+* Do not add blank spacer sections between loading, story, and hero.
+* Do not move large landing CSS into `globals.css`.
+* Do not remove the product-led hero motif without replacing it with an equally strong first-viewport artifact.
+
+---
+
+## Landing Flow Fix
+
+The active landing flow must always resolve to:
+
+```txt
+LandingPreloader -> StoryIntro -> LandingNavbar -> HeroSection
+```
+
+After `LandingPreloader` completes, the page must reset to the top of the landing document while the preloader overlay is still covering the viewport. This prevents browser scroll restoration, previous session position, or early ScrollTrigger refresh from revealing HeroSection first. `StoryIntro` must already be mounted behind the preloader and Scene 1 must reveal immediately after `preloaderDone`.
+
+### Flow Rules
+
+* Set `history.scrollRestoration = "manual"` while the landing page is active.
+* Reset `window.scrollTo(0, 0)`, `document.documentElement.scrollTop`, and `document.body.scrollTop` before setting `preloaderDone`.
+* Refresh ScrollTrigger after the scroll reset and layout unlock.
+* Do not reset scroll again after the user can interact with the page.
+* Do not use hash/autofocus behavior that lands directly on HeroSection.
+* Hero ScrollTrigger must not use `start: "top bottom"` for navbar reveal because that can fire while Hero is merely touching the viewport bottom below StoryIntro. Use a later threshold such as `top 76%`.
+
+---
+
+## StoryIntro Highlight System
+
+StoryIntro uses restrained luminous highlights to make the cinematic text less flat without becoming decorative noise.
+
+### Highlight Words
+
+```txt
+Scene 1: everywhere, missing context
+Scene 2: messy fast, overlap, harder to track
+Scene 3: flow together, connected system
+```
+
+### Highlight Rules
+
+* Use `#DFFDFC`, `#12CBBE`, and cyan text shadow for emphasis.
+* Use subtle underline light on headline accents.
+* Do not use heavy gradient text, large blur, or animated glow loops.
+* Highlight only the operational turning points in the sentence.
+* Highlight markup must preserve animated word spacing with `\u00A0` or tested margin rules.
+
+---
+
+## StoryIntro Motion System
+
+StoryIntro motion should feel cinematic, but still light.
+
+### Sequence
+
+1. Scene enters with opacity, y, and scale.
+2. Label fades in first.
+3. Headline words reveal with a short stagger.
+4. Highlight words receive a short luminous pass.
+5. Copy fades up after the headline.
+6. Desktop scroll crossfades Scene 1 -> Scene 2 -> Scene 3.
+7. Scene 3 exits upward into HeroSection without blank spacer.
+
+### Performance Rules
+
+* Animate opacity, transform, scale, and small text-shadow only on a few highlighted words.
+* Do not animate layout properties.
+* Do not add particles, canvas, WebGL, or heavy blur.
+* Respect reduced motion by removing glow intensity and keeping text readable.
+
+---
+
+## Hero Motion System
+
+HeroSection entrance is tied to the hero entering the viewport, not to preloader completion.
+
+### Sequence
+
+1. Background grid and light beam reveal.
+2. Badge fades up.
+3. Headline words stagger in.
+4. Highlight line, paragraph, CTA, and pills fade up.
+5. Product cockpit panel enters with y, scale, and a subtle rotateX correction.
+6. Ticket, signal cards, flow steps, and flowline stagger in.
+7. Navbar fades down only when HeroSection crosses the hero threshold.
+
+### Rules
+
+* Use GSAP ScrollTrigger for Hero entrance with `start: "top 76%"`.
+* Keep the entrance once-only for hero content, but navbar visibility can respond to enter/leave back.
+* Do not show navbar during StoryIntro.
+* Do not use Hero motion to scroll the page.
+* Keep durations around `0.38s` to `0.9s`, with `power3.out` or `power4.out`.
+
+---
+
+## Do Not Break v3
+
+* Do not let loading finish directly on HeroSection.
+* Do not make the user scroll upward to see StoryIntro.
+* Do not reveal navbar during StoryIntro.
+* Do not use Hero ScrollTrigger `top bottom` for navbar reveal.
+* Do not lose spaces in animated word spans.
+* Do not add blank spacers or manual 100vh transition gaps.
+* Do not reset scroll after the user can start interacting.
+* Do not move large landing styles into `globals.css`.
+
+---
+
+## StoryIntro Lamp Backdrop
+
+StoryIntro may use the Aceternity / 21st.dev Lamp as visual inspiration, but the installed demo must not be used as the final Rentivo experience.
+
+### Implementation
+
+```txt
+src/components/ui/lamp.jsx
+src/components/landing/RentivoLampBackdrop.tsx
+src/components/landing/StoryIntro.tsx
+src/styles/landing.css
+```
+
+The installed `src/components/ui/lamp.jsx` is treated as a reference artifact only. Do not import `LampDemo` into the landing page. Do not use its full `LampContainer` layout directly because it carries `min-h-screen`, demo children, default slate/cyan treatment, and multiple large blur layers that can fight StoryIntro pinning.
+
+Rentivo uses one lightweight custom backdrop: `RentivoLampBackdrop`. It renders a single ambient lamp instance behind all StoryIntro scenes and never renders children or creates layout height.
+
+### Visual Rules
+
+* Use Rentivo deep navy, electric blue, cyan, and sky tones.
+* Lamp should feel like a visible cinematic stage light: aperture, horizon glow, soft cone beams, and one restrained sweep.
+* Lamp must not overpower headline readability.
+* Scene variants may change opacity, scale, and color variables only.
+* Keep StoryIntro text-only in content. The lamp is ambient background, not an illustration.
+* If the lamp only appears as a thin cyan line, the implementation is too subtle. Increase beam/glow visibility before adding new effects.
+
+### Performance Guardrails
+
+* One lamp instance per StoryIntro.
+* 1 to 2 conic beam layers.
+* One aperture layer, one halo layer, one soft glow layer, one horizon line, and one sweep line are the maximum decorative lamp details.
+* Do not animate filter blur.
+* Animate only opacity and transform for lamp ambient motion.
+* Do not add particles, canvas, WebGL, or repeated `whileInView` lamp animations inside pinned StoryIntro.
+* Mobile and reduced-motion must lower intensity.
+
+### Visibility Audit Fix
+
+The previous lamp was present in the DOM but barely visible because the horizon sat behind oversized StoryIntro type, the beam opacity was too low, `.story-bg-vignette` darkened the center too aggressively, and `.story-scene` shared the same z-index level as the vignette. The fixed contract is:
+
+```txt
+lamp aperture / beams / glow: visible behind copy
+vignette: soft edge control only
+story text: z-index 3
+```
+
+The lamp should read clearly in Scene 1 without scrolling or inspecting the DOM.
+
+---
+
+## StoryIntro Visual System
+
+StoryIntro remains full-screen, text-centered, dark, and editorial. The lamp backdrop sits inside `.story-stage` above `.story-bg` and below `.story-scene`.
+
+### Z-Index Contract
+
+```txt
+story-bg: z-index 0
+rentivo-lamp: z-index 1
+story-bg-vignette: z-index 2
+story-scene text: z-index 3
+```
+
+This keeps the lamp visible without covering copy. Do not move the lamp outside StoryIntro into global page background. Do not put it inside each scene.
+
+### Highlight Rules
+
+Use `.story-highlight` for:
+
+```txt
+everywhere
+missing context
+messy fast
+overlap
+harder to track
+flow together
+connected system
+```
+
+Highlights should be cyan/blue luminous accents with readable contrast. Do not use heavy animated gradient text or large blur stacks.
+
+---
+
+## Do Not Break v4
+
+* Do not render multiple `LampContainer` instances, one per scene.
+* Do not import or display `LampDemo` on the landing page.
+* Do not let a lamp component create `min-h-screen` or extra spacer height inside StoryIntro.
+* Do not hide StoryIntro text behind the lamp.
+* Do not regress the lamp into a barely visible single line.
+* Do not make navbar visible during StoryIntro.
+* Do not make loading jump directly to HeroSection.
+* Do not add large landing styles to `globals.css`.
+* Do not animate blur/filter or use particle/canvas/WebGL effects for the lamp.
+
+---
+
 ## 20. Final Design Principle
 
 Rentivo should feel like a premium operational SaaS product.

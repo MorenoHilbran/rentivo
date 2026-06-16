@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 
-const steps = [
+const steps: string[] = [
   'Chat Masuk',
   'AI Draft',
   'Booking',
@@ -19,7 +19,7 @@ export default function WorkflowSection() {
       <div className="landing-section-inner">
         <div className="landing-section-heading landing-section-heading-left">
           <span className="landing-eyebrow">Workflow rental</span>
-          <h2>Dari chat pertama sampai transaksi selesai, semua punya status.</h2>
+          <h2>Dari chat pertama sampai transaksi selesai, semua punya <span className="landing-heading-accent">status.</span></h2>
           <p>Rentivo tidak menggantikan admin. Rentivo membantu admin bekerja lebih cepat dengan draft, reminder, dan status yang jelas.</p>
         </div>
 

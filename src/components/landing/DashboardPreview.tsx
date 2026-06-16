@@ -1,16 +1,25 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { CalendarDays, MessageSquareText, PackageCheck, ReceiptText, RotateCcw, TrendingUp } from 'lucide-react'
+import { CalendarDays, MessageSquareText, PackageCheck, ReceiptText, RotateCcw, TrendingUp, LucideIcon } from 'lucide-react'
 
-const stats = [
+interface StatItem {
+  label: string
+  value: string
+  icon: LucideIcon
+  tone: string
+}
+
+type BookingItem = [string, string, string, string]
+
+const stats: StatItem[] = [
   { label: 'Revenue bulan ini', value: 'Rp 84,7 jt', icon: TrendingUp, tone: 'blue' },
   { label: 'Rental aktif', value: '36', icon: CalendarDays, tone: 'cyan' },
   { label: 'Pending payment', value: '12', icon: ReceiptText, tone: 'sky' },
   { label: 'Return hari ini', value: '8', icon: RotateCcw, tone: 'navy' },
 ]
 
-const bookings = [
+const bookings: BookingItem[] = [
   ['BR-1048', 'Bali Camera Rental', 'Rp 1.850.000', 'Review bayar'],
   ['BR-1049', 'Event Sound System', 'Rp 4.200.000', 'Rental aktif'],
   ['BR-1050', 'Outdoor Gear', 'Rp 950.000', 'Return hari ini'],
@@ -22,8 +31,8 @@ export default function DashboardPreview() {
       <div className="landing-section-inner">
         <div className="landing-section-heading">
           <span className="landing-eyebrow">Dashboard owner</span>
-          <h2>Dashboard owner yang terasa seperti pusat kendali operasional.</h2>
-          <p>Pendapatan, booking aktif, payment review, inventory, dan chat terbaru tersaji tanpa membuat tim tenggelam dalam tabel.</p>
+          <h2>Dashboard owner yang terasa seperti pusat <span className="landing-heading-accent">kendali.</span></h2>
+          <p>Pendapatan, booking aktif, payment review, inventory, and chat terbaru tersaji tanpa membuat tim tenggelam dalam tabel.</p>
         </div>
 
         <motion.div

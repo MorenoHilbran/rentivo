@@ -1,11 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
+import gsap from 'gsap'
 
-const navItems = [
+interface NavItem {
+  href: string
+  label: string
+}
+
+const navItems: NavItem[] = [
   { href: '#fitur', label: 'Fitur' },
   { href: '#workflow', label: 'Workflow' },
   { href: '#solusi', label: 'Solusi' },
@@ -21,7 +27,8 @@ function LandingLogo() {
   )
 }
 
-export default function LandingNavbar() {
+export default function LandingNavbar({ visible }: { visible: boolean }) {
+  const headerRef = useRef<HTMLElement>(null)
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -32,8 +39,35 @@ export default function LandingNavbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    gsap.killTweensOf(header)
+
+    if (!visible) {
+      gsap.set(header, { opacity: 0, y: -24, pointerEvents: 'none' })
+      return
+    }
+
+    gsap.to(header, {
+      opacity: 1,
+      y: 0,
+      pointerEvents: 'auto',
+      duration: prefersReducedMotion ? 0 : 0.55,
+      ease: 'power3.out',
+    })
+  }, [visible])
+
   return (
-    <header className={`landing-navbar${scrolled ? ' landing-navbar-scrolled' : ''}`}>
+    <header
+      ref={headerRef}
+      className={`landing-navbar${scrolled ? ' landing-navbar-scrolled' : ''}${
+        visible ? ' landing-navbar-visible' : ''
+      }`}
+    >
       <div className="landing-navbar-inner">
         <LandingLogo />
 
@@ -66,7 +100,7 @@ export default function LandingNavbar() {
       </div>
 
       <AnimatePresence>
-        {open && (
+        {visible && open && (
           <motion.div
             className="landing-mobile-menu"
             initial={{ opacity: 0, y: -8 }}
