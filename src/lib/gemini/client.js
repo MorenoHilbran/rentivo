@@ -81,7 +81,7 @@ const BOOKING_EXTRACTION_SCHEMA = {
  * Fallback mock extractor berbasis regex.
  * Dipakai saat GEMINI_API_KEY tidak tersedia.
  */
-function mockExtract(text) {
+function mockExtract(text, productNames = []) {
   const nameMatch = text.match(/Nama Penyewa:\s*([^\n\r]+)/i)
   const productMatch = text.match(/Produk:\s*([^\n\r]+)/i)
   const qtyMatch = text.match(/Jumlah Unit:\s*(\d+)/i)
@@ -90,17 +90,13 @@ function mockExtract(text) {
   const notesMatch = text.match(/Catatan:\s*([^\n\r]+)/i)
 
   const tenantName = nameMatch ? nameMatch[1].trim() : 'Penyewa Demo'
-  let productName = productMatch ? productMatch[1].trim() : 'Sony A7 III Body'
+  let productName = productMatch ? productMatch[1].trim() : (productNames[0] || 'Produk Rental')
 
-  // Normalise product names ke seeded products
-  if (productName.toLowerCase().includes('sony') || productName.toLowerCase().includes('a7')) {
-    productName = 'Sony A7 III Body'
-  } else if (productName.toLowerCase().includes('dji') || productName.toLowerCase().includes('mini')) {
-    productName = 'DJI Mini 3 Pro'
-  } else if (productName.toLowerCase().includes('light') || productName.toLowerCase().includes('lighting')) {
-    productName = 'Lighting Kit Pro'
-  } else if (productName.toLowerCase().includes('tripod')) {
-    productName = 'Tripod Carbon'
+  // Try to match extracted product name to available tenant products
+  if (productNames.length > 0) {
+    const lowerInput = productName.toLowerCase()
+    const matched = productNames.find(p => lowerInput.includes(p.toLowerCase()) || p.toLowerCase().includes(lowerInput))
+    if (matched) productName = matched
   }
 
   const quantity = qtyMatch ? Number(qtyMatch[1]) : 1
@@ -149,9 +145,10 @@ function mockExtract(text) {
  * Mengembalikan data terstruktur untuk membuat AI Draft booking.
  *
  * @param {string} text - Isi pesan dari pelanggan
+ * @param {string[]} productNames - Daftar nama produk yang tersedia
  * @returns {{ extractedData: object, confidence: number|null }}
  */
-export async function analyzeText(text) {
+export async function analyzeText(text, productNames = []) {
   if (!text || text.trim().length < 5) {
     return { extractedData: {}, confidence: null }
   }
@@ -161,11 +158,20 @@ export async function analyzeText(text) {
   // Fallback ke mock jika API key tidak ada
   if (!apiKey) {
     console.warn('[Gemini] GEMINI_API_KEY tidak diset — menggunakan mock extractor')
-    const res = mockExtract(text)
+    const res = mockExtract(text, productNames)
     return { extractedData: res, confidence: res.confidence }
   }
 
   const today = new Date().toISOString().split('T')[0]
+
+  // Build product list dynamically from tenant's actual inventory
+  let productListText = ''
+  if (productNames.length > 0) {
+    productListText = productNames.map(name => `- ${name}`).join('\n')
+  } else {
+    productListText = '- (Tidak ada produk terdaftar)'
+  }
+
   const systemPrompt = `Kamu adalah asisten CRM penyewaan alat. Tugasmu menganalisis pesan WhatsApp dari pelanggan bisnis rental Indonesia.
 
 Ekstrak informasi pemesanan dengan akurat dari pesan berikut. Tanggal hari ini adalah: ${today}.
@@ -180,11 +186,8 @@ Aturan penting:
 - confidence harus mencerminkan seberapa yakin kamu terhadap data yang diekstrak (0.0 - 1.0)
 - Untuk aiResponseText, buat tanggapan ramah dalam Bahasa Indonesia yang menyebutkan produk yang mereka sewa secara spesifik (misal jika sewa drone, sebutkan pemeriksaan kalibrasi/terbang drone, jika kamera sebutkan baterai/sensor kamera, dll) dan beri tahu bahwa pelanggan mohon menunggu konfirmasi admin.
 
-Nama produk yang tersedia di sistem:
-- Sony A7 III Body (kamera mirrorless full-frame)
-- DJI Mini 3 Pro (drone)
-- Lighting Kit Pro (paket lampu studio)
-- Tripod Carbon (tripod ringan)
+Nama produk yang tersedia di sistem tenant ini:
+${productListText}
 
 Usahakan mencocokkan nama produk yang disebutkan pelanggan ke nama yang ada di sistem di atas.`
 
@@ -218,7 +221,7 @@ Usahakan mencocokkan nama produk yang disebutkan pelanggan ke nama yang ada di s
       const errText = await resp.text()
       console.error(`[Gemini] API error ${resp.status}:`, errText)
       // Fallback ke mock saat API error
-      const res = mockExtract(text)
+      const res = mockExtract(text, productNames)
       return { extractedData: res, confidence: res.confidence }
     }
 
@@ -228,7 +231,7 @@ Usahakan mencocokkan nama produk yang disebutkan pelanggan ke nama yang ada di s
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (!rawText) {
       console.warn('[Gemini] Respons kosong dari Gemini API, fallback ke mock')
-      const res = mockExtract(text)
+      const res = mockExtract(text, productNames)
       return { extractedData: res, confidence: res.confidence }
     }
 
@@ -237,7 +240,7 @@ Usahakan mencocokkan nama produk yang disebutkan pelanggan ke nama yang ada di s
       parsed = JSON.parse(rawText)
     } catch (parseErr) {
       console.error('[Gemini] Gagal parse JSON response:', parseErr)
-      const res = mockExtract(text)
+      const res = mockExtract(text, productNames)
       return { extractedData: res, confidence: res.confidence }
     }
 
@@ -252,7 +255,7 @@ Usahakan mencocokkan nama produk yang disebutkan pelanggan ke nama yang ada di s
     }
   } catch (err) {
     console.error('[Gemini] Network error:', err)
-    const res = mockExtract(text)
+    const res = mockExtract(text, productNames)
     return { extractedData: res, confidence: res.confidence }
   }
 }

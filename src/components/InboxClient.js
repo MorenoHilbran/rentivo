@@ -255,9 +255,26 @@ export default function InboxClient({
   }
 
   // ─── Navigasi ke conversation lain ──────────────────────────────────────────
-  function selectConversation(convId) {
+  async function selectConversation(convId) {
+    if (convId === activeConvId) return // sudah aktif
     setActiveConvId(convId)
-    router.push(`/inbox?conversationId=${convId}`)
+    setMessages([])          // clear pesan lama langsung
+    setPendingDraft(null)    // clear draft lama
+
+    // Update URL tanpa full page navigation
+    window.history.pushState(null, '', `/inbox?conversationId=${convId}`)
+
+    // Fetch messages via API (instant, no server component re-render needed)
+    try {
+      const resp = await fetch(`/api/inbox/messages?conversationId=${convId}`)
+      const data = await resp.json()
+      if (data.ok) {
+        setMessages(data.messages || [])
+        setPendingDraft(data.pendingDraft || null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch conversation messages:', err)
+    }
   }
 
   // ─── Simulasi chat masuk via webhook ─────────────────────────────────────────
@@ -308,7 +325,7 @@ Catatan: Butuh filter ND jika ada`
           tone: 'success',
         })
         selectConversation(data.conversationId)
-        router.refresh()
+        router.refresh() // refresh sidebar conversations list
       } else {
         addToast({ title: 'Gagal', message: 'Error: ' + data.error, tone: 'error' })
       }
@@ -380,11 +397,21 @@ Catatan: Butuh filter ND jika ada`
       const response = await fetch('/api/inbox/send', {
         method: 'POST',
         body: formData,
+        redirect: 'manual', // prevent auto-redirect
       })
 
-      if (!response.ok) {
-        addToast({ title: 'Gagal mengirim', message: 'Gagal mengirim pesan', tone: 'error' })
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok || !data?.ok) {
+        addToast({ title: 'Gagal mengirim', message: data?.error || 'Gagal mengirim pesan', tone: 'error' })
         setReplyText(textToSend) // Restore text on failure
+      } else if (data.baileysError) {
+        // Pesan tersimpan di DB tapi gagal kirim ke WA
+        addToast({
+          title: 'Pesan tersimpan',
+          message: `Tersimpan di sistem, tapi gagal kirim ke WhatsApp: ${data.baileysError}`,
+          tone: 'warning',
+        })
       }
     } catch (err) {
       console.error('Send error:', err)

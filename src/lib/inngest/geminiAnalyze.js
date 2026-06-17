@@ -1,12 +1,13 @@
 import { db } from '../db/index.js'
-import { aiDrafts, messages } from '../db/schema.js'
-import { eq } from 'drizzle-orm'
+import { aiDrafts, messages, products } from '../db/schema.js'
+import { eq, and } from 'drizzle-orm'
 import { analyzeText } from '../gemini/client.js'
 import { createBookingFromDraft } from '../booking/createFromDraft.js'
 
 /**
  * Analyze a single ai_draft record by id.
  * - Loads the related message content
+ * - Fetches tenant's product names for AI context
  * - Calls `analyzeText` to produce extractedData + confidence
  * - Updates ai_drafts and messages.aiAnalysis
  */
@@ -27,7 +28,18 @@ export async function analyzeDraftById(draftId) {
 
   const textToAnalyze = msg?.content ?? (draft.extractedData?.notes ?? '')
 
-  const { extractedData, confidence } = await analyzeText(textToAnalyze)
+  // Fetch tenant-specific product names for Gemini context
+  let productNames = []
+  try {
+    const tenantProducts = await db.query.products.findMany({
+      where: (p, { eq, and }) => and(eq(p.tenantId, draft.tenantId), eq(p.isActive, true)),
+    })
+    productNames = tenantProducts.map(p => p.name)
+  } catch (err) {
+    console.error('Failed to fetch tenant products for AI context:', err)
+  }
+
+  const { extractedData, confidence } = await analyzeText(textToAnalyze, productNames)
 
   // Update ai_drafts with extracted info
   await db.update(aiDrafts).set({
