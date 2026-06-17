@@ -255,13 +255,26 @@ export default function InboxClient({
   }
 
   // ─── Navigasi ke conversation lain ──────────────────────────────────────────
-  function selectConversation(convId) {
+  async function selectConversation(convId) {
     if (convId === activeConvId) return // sudah aktif
     setActiveConvId(convId)
     setMessages([])          // clear pesan lama langsung
     setPendingDraft(null)    // clear draft lama
-    router.push(`/inbox?conversationId=${convId}`, { scroll: false })
-    router.refresh()         // paksa server fetch data baru
+
+    // Update URL tanpa full page navigation
+    window.history.pushState(null, '', `/inbox?conversationId=${convId}`)
+
+    // Fetch messages via API (instant, no server component re-render needed)
+    try {
+      const resp = await fetch(`/api/inbox/messages?conversationId=${convId}`)
+      const data = await resp.json()
+      if (data.ok) {
+        setMessages(data.messages || [])
+        setPendingDraft(data.pendingDraft || null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch conversation messages:', err)
+    }
   }
 
   // ─── Simulasi chat masuk via webhook ─────────────────────────────────────────
@@ -312,7 +325,7 @@ Catatan: Butuh filter ND jika ada`
           tone: 'success',
         })
         selectConversation(data.conversationId)
-        router.refresh()
+        router.refresh() // refresh sidebar conversations list
       } else {
         addToast({ title: 'Gagal', message: 'Error: ' + data.error, tone: 'error' })
       }
