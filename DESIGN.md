@@ -2682,6 +2682,145 @@ No heavy blur animations, no canvas, no WebGL, no infinite animations.
 
 ---
 
+## Landing Navbar System
+
+### Visual Design
+
+Navbar memakai glassmorphism premium dengan Dark Luxury FlowTech theme.
+
+**Logo Usage:**
+- Desktop: `rentivo-logo.png` (full logo, 140px width)
+- Mobile: `rentivo-icon.png` (compact icon, 36px)
+- Responsive switching via CSS media queries
+
+**Glassmorphism Rules:**
+- Background: `linear-gradient(180deg, rgba(6, 27, 92, 0.82), rgba(3, 17, 61, 0.68))`
+- Border: `1px solid rgba(18, 203, 190, 0.18)` (cyan-tinted)
+- Backdrop blur: `18px`
+- Shadow: `0 18px 52px rgba(2, 11, 44, 0.22)` + subtle cyan glow `0 0 0 1px rgba(18, 203, 190, 0.08)`
+- Border radius: `999px` (pill shape)
+- Height: `52px` min-height
+
+**Nav Link Hover:**
+- Underline animation with cyan-to-blue gradient
+- Width transitions from 0 to 100% over 0.3s
+- Color shifts to white on hover
+
+**CTA Buttons:**
+- Primary: Gradient `#1557FF → #12CBBE`
+- Hover: `translateY(-2px)` + enhanced shadow
+- Shadow: `0 8px 24px rgba(21, 87, 255, 0.28)`
+
+### Mobile Navbar
+
+- Logo switches to compact icon
+- Hamburger menu appears
+- Mobile menu: glass panel with `backdrop-filter: blur(18px)`
+- Background: `rgba(3, 17, 61, 0.94)`
+- Border: `1px solid rgba(255, 255, 255, 0.14)`
+
+### Visibility Rules
+
+- Navbar hidden during LandingPreloader and StoryIntro
+- Navbar appears via GSAP animation when HeroSection enters viewport
+- Uses `top 12%` threshold (desktop overlap layout)
+- Fixed position, never in document flow
+- Do not break StoryIntro → HeroSection transition
+
+---
+
+## Landing Footer System
+
+### Visual Design
+
+Footer memakai dark navy background dengan premium glass sections.
+
+**Background:**
+- Base: `#03113D` (deep navy)
+- Top border: `1px solid rgba(18, 203, 190, 0.15)` with cyan glow
+- Shadow: `0 -8px 32px rgba(18, 203, 190, 0.08)`
+
+**Logo Usage:**
+- `rentivo-logo.png` (160px width)
+- White/light color for dark background
+
+**Layout:**
+- Desktop: 4-column grid (1.6fr 0.8fr 0.8fr 0.8fr)
+  - Brand: Logo + tagline + CTA
+  - Product: Fitur, Workflow, Dashboard, Pricing
+  - Company: Tentang Rentivo, Kontak, Status
+  - Legal: Privacy Policy, Terms of Service
+- Mobile: 2-column grid, brand column spans full width
+
+**CTA Button:**
+- Same gradient as navbar primary button
+- Width: `fit-content`
+- Hover: `translateY(-2px)` + enhanced shadow
+
+**Link Columns:**
+- Column headers: White, 14px, weight 700
+- Links: `rgba(255, 255, 255, 0.64)`, 14px
+- Hover: Cyan color `#12CBBE`
+
+**Bottom Bar:**
+- Border top: `1px solid rgba(255, 255, 255, 0.08)`
+- Copyright: `rgba(255, 255, 255, 0.56)`, 13px
+- Tagline: Cyan-tinted `rgba(18, 203, 190, 0.72)`
+
+**Social Icons:**
+- Grid of icon buttons (GitHub, Twitter, LinkedIn, Email)
+- Background: `rgba(255, 255, 255, 0.06)`
+- Hover: Cyan background `rgba(18, 203, 190, 0.16)` + cyan icon color
+- Size: 36x36px, border-radius 8px
+
+---
+
+## Brand Asset Usage
+
+### Logo Files
+
+**Primary Assets:**
+- `public/brand/rentivo-logo.png` — Full logo (text + icon)
+- `public/brand/rentivo-icon.png` — Icon only (compact mark)
+
+**Secondary Assets:**
+- `src/app/icon.png` — App icon
+- `src/app/apple-icon.png` — Apple touch icon
+- `public/favicon.png` — Favicon
+
+### Usage Guidelines
+
+**When to use full logo (`rentivo-logo.png`):**
+- Navbar (desktop)
+- Footer
+- HeroSection (if needed)
+- Auth pages (login/register)
+- Marketing materials
+
+**When to use icon only (`rentivo-icon.png`):**
+- Navbar (mobile)
+- Favicon
+- App icon
+- Compact spaces
+- Avatar placeholders
+
+### Responsive Behavior
+
+Navbar logo automatically switches based on viewport:
+- Desktop (≥900px): Full logo visible
+- Mobile (<900px): Icon only visible
+
+Footer always uses full logo for brand recognition.
+
+### Color Treatment
+
+- On dark backgrounds: Use original PNG (white/light colors)
+- On light backgrounds: May need inverted version (not currently available)
+- Never distort or stretch logo
+- Maintain clear space around logo
+
+---
+
 ## 20. Final Design Principle
 
 Rentivo should feel like a premium operational SaaS product.
@@ -2693,3 +2832,17 @@ Dashboard should help people work faster.
 Every design decision must support the main product promise:
 
 “Dari chat customer menjadi booking rental yang rapi, terukur, dan mudah dikelola.”
+
+---
+
+## 21. Performance Rollback and Stability Notes
+
+*   **Performance Rollback Note**: To maintain 60 FPS scrolling and eliminate page lag, heavy WebGL and canvas-based shaders (such as `ColorBends`) have been disabled.
+*   **StoryIntro Stable Mode**: The `StoryIntro` component operates in a stabilized mode with optimized performance boundaries.
+*   **Heavy Effects Disabled**:
+    *   `ColorBends` three.js background canvas rendering has been disabled.
+    *   `RentivoLampBackdrop` CSS blur filters and heavy conic-gradient backdrops have been disabled/bypassed.
+    *   These effects can only be reintroduced after a formal performance audit and frame-rate evaluation.
+*   **StoryIntro Initialization**: The `StoryIntro` component must always start from Scene 1 ("Customers come from everywhere..."). To prevent initial scroll-jumping or out-of-order scenes, all ScrollTrigger initializations, matchMedia queries, and timeline setup are deferred until the preloader is fully complete (`preloaderDone === true`).
+*   **No Framer whileInView**: Do not use Framer Motion's `whileInView` directive inside the pinned `StoryIntro` scenes to avoid conflicts with GSAP ScrollTrigger timeline management.
+

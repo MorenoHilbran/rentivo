@@ -1,4 +1,4 @@
-﻿/* Design tokens and Tailwind theme */
+/* Design tokens and Tailwind theme */
 @custom-variant dark (&:is(.dark *));
 
 @theme {

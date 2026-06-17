@@ -99,6 +99,13 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
 
   useGSAP(
     () => {
+      if (!preloaderDone) return
+
+      // Force scroll to top instantly to prevent layout jump or showing later sections
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+
       const s1Label = scene1Ref.current?.querySelector('.story-label')
       const s1Words = scene1Ref.current?.querySelectorAll('.story-word')
       const s1Copy = scene1Ref.current?.querySelector('.story-copy')
@@ -124,10 +131,15 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         const s3Highlights = scene3Ref.current?.querySelectorAll('.story-highlight')
 
         const heroSection = document.querySelector('.landing-hero')
-        const heroLogo = heroSection?.querySelector('.landing-hero-logo')
+        const heroBadge = heroSection?.querySelector('.landing-hero-badge')
         const heroTitle = heroSection?.querySelector('.landing-hero-title')
+        const heroHighlight = heroSection?.querySelector('.landing-hero-highlight')
         const heroSubtitle = heroSection?.querySelector('.landing-hero-subtitle')
         const heroActions = heroSection?.querySelector('.landing-hero-actions')
+        const heroFlowLine = heroSection?.querySelector('.landing-hero-flowline')
+        const heroPanel = heroSection?.querySelector('.landing-hero-panel')
+        const heroPanelItems = heroSection?.querySelectorAll('.landing-hero-panel-item')
+        const heroPills = heroSection?.querySelectorAll('.landing-hero-pill')
         const lamp = containerRef.current?.querySelector('.rentivo-lamp')
 
         gsap.set([scene2Ref.current, scene3Ref.current], { opacity: 0, y: 52, scale: 0.982 })
@@ -138,8 +150,19 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         gsap.set([s2Copy, s3Copy], { opacity: 0.72, y: 0 })
         gsap.set([s2Highlights, s3Highlights], { textShadow: '0 0 18px rgba(18, 203, 190, 0.22)' })
 
-        gsap.set(heroSection, { opacity: 0, y: 44, scale: 0.985 })
-        gsap.set([heroLogo, heroTitle, heroSubtitle, heroActions], { opacity: 0, y: 24 })
+        if (heroSection) {
+          gsap.set(heroSection, { opacity: 0, y: 44, scale: 0.985 })
+        }
+        const heroSubElements = [heroBadge, heroTitle, heroHighlight, heroSubtitle, heroActions, heroFlowLine, heroPanel].filter(Boolean)
+        if (heroSubElements.length > 0) {
+          gsap.set(heroSubElements, { opacity: 0, y: 24 })
+        }
+        if (heroPanelItems && heroPanelItems.length > 0) {
+          gsap.set(heroPanelItems, { opacity: 0, y: 14, scale: 0.98 })
+        }
+        if (heroPills && heroPills.length > 0) {
+          gsap.set(heroPills, { opacity: 0, y: 15, scale: 0.98 })
+        }
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -193,72 +216,119 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
             ease: 'power2.inOut',
           })
           .to(lamp, { opacity: 0, duration: 0.80, ease: 'power2.inOut' }, '<')
-          .to(heroSection, {
+
+        if (heroSection) {
+          tl.to(heroSection, {
             opacity: 1,
             y: 0,
             scale: 1,
             duration: 0.95,
             ease: 'power2.out',
           }, '-=0.70')
-          .to(heroLogo, {
+        }
+        if (heroBadge) {
+          tl.to(heroBadge, {
             opacity: 1,
             y: 0,
-            scale: 1,
-            duration: 0.60,
+            duration: 0.55,
             ease: 'power3.out',
           }, '-=0.60')
-          .to(heroTitle, {
+        }
+        if (heroTitle) {
+          tl.to(heroTitle, {
             opacity: 1,
             y: 0,
             duration: 0.72,
             ease: 'power3.out',
           }, '-=0.50')
-          .to(heroSubtitle, {
+        }
+        if (heroHighlight) {
+          tl.to(heroHighlight, {
+            opacity: 0.92,
+            y: 0,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '-=0.20')
+        }
+        if (heroSubtitle) {
+          tl.to(heroSubtitle, {
             opacity: 0.72,
             y: 0,
             duration: 0.50,
             ease: 'power3.out',
           }, '<0.05')
-          .to(heroActions, {
+        }
+        if (heroActions) {
+          tl.to(heroActions, {
             opacity: 1,
             y: 0,
             duration: 0.50,
             ease: 'power3.out',
           }, '<0.05')
+        }
+        if (heroFlowLine) {
+          tl.to(heroFlowLine, {
+            opacity: 1,
+            y: 0,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+        }
+        if (heroPanel) {
+          tl.to(heroPanel, {
+            opacity: 1,
+            y: 0,
+            duration: 0.55,
+            ease: 'power3.out',
+          }, '<0.05')
+        }
+        if (heroPanelItems && heroPanelItems.length > 0) {
+          tl.to(heroPanelItems, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            stagger: 0.06,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+        }
+        if (heroPills && heroPills.length > 0) {
+          tl.to(heroPills, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            stagger: 0.05,
+            duration: 0.50,
+            ease: 'power3.out',
+          }, '<0.05')
+        }
 
-        return () => tl.kill()
+        return () => {
+          tl.kill()
+        }
       })
 
-      return () => mm.revert()
-    },
-    { scope: containerRef }
-  )
+      if (!hasRevealedFirstSceneRef.current) {
+        hasRevealedFirstSceneRef.current = true
+        gsap
+          .timeline({
+            delay: 0.12,
+            onComplete: () => ScrollTrigger.refresh(),
+          })
+          .to(scene1Ref.current, { y: 0, scale: 1, duration: 0.9, ease: 'power4.out' })
+          .to(s1Label, { opacity: 0.72, y: 0, duration: 0.58, ease: 'power3.out' }, '<0.02')
+          .to(s1Words, { opacity: 1, y: 0, stagger: 0.052, duration: 0.82, ease: 'power4.out' }, '<0.08')
+          .to(s1Copy, { opacity: 0.74, y: 0, duration: 0.58, ease: 'power3.out' }, '<0.2')
+          .to(
+            s1Highlights,
+            { textShadow: '0 0 24px rgba(18, 203, 190, 0.30)', duration: 0.5, stagger: 0.05, ease: 'power2.out' },
+            '<0.08'
+          )
+      }
 
-  useGSAP(
-    () => {
-      if (!preloaderDone || hasRevealedFirstSceneRef.current) return
-
-      hasRevealedFirstSceneRef.current = true
-
-      const s1Label = scene1Ref.current?.querySelector('.story-label')
-      const s1Words = scene1Ref.current?.querySelectorAll('.story-word')
-      const s1Copy = scene1Ref.current?.querySelector('.story-copy')
-      const s1Highlights = scene1Ref.current?.querySelectorAll('.story-highlight')
-
-      gsap
-        .timeline({
-          delay: 0.12,
-          onComplete: () => ScrollTrigger.refresh(),
-        })
-        .to(scene1Ref.current, { y: 0, scale: 1, duration: 0.9, ease: 'power4.out' })
-        .to(s1Label, { opacity: 0.72, y: 0, duration: 0.58, ease: 'power3.out' }, '<0.02')
-        .to(s1Words, { opacity: 1, y: 0, stagger: 0.052, duration: 0.82, ease: 'power4.out' }, '<0.08')
-        .to(s1Copy, { opacity: 0.74, y: 0, duration: 0.58, ease: 'power3.out' }, '<0.2')
-        .to(
-          s1Highlights,
-          { textShadow: '0 0 24px rgba(18, 203, 190, 0.30)', duration: 0.5, stagger: 0.05, ease: 'power2.out' },
-          '<0.08'
-        )
+      return () => {
+        mm.revert()
+      }
     },
     { scope: containerRef, dependencies: [preloaderDone] }
   )

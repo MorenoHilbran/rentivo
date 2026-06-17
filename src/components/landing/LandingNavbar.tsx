@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import gsap from 'gsap'
@@ -21,8 +22,22 @@ const navItems: NavItem[] = [
 function LandingLogo() {
   return (
     <Link href="/" className="landing-logo" aria-label="Rentivo">
-      <span className="landing-logo-mark">R</span>
-      <span className="landing-logo-text">Rentivo</span>
+      <Image 
+        src="/brand/rentivo-logo.png" 
+        alt="Rentivo"
+        width={140}
+        height={32}
+        className="landing-logo-full"
+        priority
+      />
+      <Image 
+        src="/brand/rentivo-icon.png" 
+        alt="Rentivo"
+        width={36}
+        height={36}
+        className="landing-logo-compact"
+        priority
+      />
     </Link>
   )
 }
