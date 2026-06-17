@@ -141,33 +141,11 @@ export async function POST(request) {
       unreadCount: conv.unreadCount + 1,
     }).where(eq(conversations.id, conv.id))
 
-    // Check if the message matches our booking template format
-    if (!hasTemplate) {
-      // ONLY trigger auto-reply template if keyword "sewa" or "rental" is detected (case-insensitive)
-      const lowerContent = content.toLowerCase()
-      const isRentKeyword = lowerContent.includes('sewa') || lowerContent.includes('rental')
-
-      if (!isRentKeyword) {
-        return NextResponse.json({
-          ok: true,
-          repliedWithTemplate: false,
-          customerId: customer.id,
-          conversationId: conv.id,
-          reason: 'No booking keywords detected, skipping template auto-reply'
-        })
-      }
-
-      // Fetch tenant details for shop name and custom template
-      const tenant = await db.query.tenants.findFirst({
-        where: (t, { eq }) => eq(t.id, tenantId),
-      })
-      const shopName = tenant?.name || 'Rentivo'
-
-      // Fetch all products of the tenant with available units count
-      let availabilityInfo = ''
+    // ── Helper: fetch tenant-specific product availability ──
+    async function fetchTenantAvailability() {
       try {
         const allProds = await db.query.products.findMany({
-          where: (p, { eq }) => eq(p.tenantId, tenantId) && eq(p.isActive, true),
+          where: (p, { eq, and }) => and(eq(p.tenantId, tenantId), eq(p.isActive, true)),
         })
         const lines = []
         for (const prod of allProds) {
@@ -181,40 +159,18 @@ export async function POST(request) {
           lines.push(`- ${prod.name} (Tersedia: ${units.length} unit)`)
         }
         if (lines.length > 0) {
-          availabilityInfo = `Berikut adalah daftar produk yang tersedia saat ini:\n${lines.join('\n')}\n\n`
+          return `Berikut adalah daftar produk yang tersedia saat ini:\n${lines.join('\n')}`
         } else {
-          availabilityInfo = `Maaf, saat ini semua produk kami sedang disewa atau tidak tersedia.\n\n`
+          return `Maaf, saat ini semua produk kami sedang disewa atau tidak tersedia.`
         }
       } catch (err) {
-        console.error('Failed to fetch product availability for template:', err)
+        console.error('Failed to fetch product availability:', err)
+        return ''
       }
+    }
 
-      const rawTemplate = tenant?.bookingTemplate || `Nama Penyewa: [Nama Anda]
-No. HP / WhatsApp: [Nomor HP Anda]
-Produk: [Nama Produk, cth: Sony A7 III Body]
-Jumlah Unit: [Jumlah, cth: 1]
-Waktu Sewa: [Hari/Jam, cth: 3 hari]
-Tanggal Mulai: [Format YYYY-MM-DD, cth: 2026-06-10]
-Catatan: [Catatan Anda]`
-
-      const templateText = `Halo! Selamat datang di ${shopName}.\n\n${availabilityInfo}Silakan isi format berikut untuk melakukan pemesanan:\n\n${rawTemplate}`
-
-      // Insert outbound auto-reply message
-      await db.insert(messages).values({
-        tenantId,
-        conversationId: conv.id,
-        direction: 'outbound',
-        content: templateText,
-        sentAt: new Date(sentAt.getTime() + 1000),
-      })
-
-      // Update conversation with auto-reply message
-      await db.update(conversations).set({
-        lastMessageAt: new Date(sentAt.getTime() + 1000),
-        lastMessagePreview: templateText.substring(0, 200),
-      }).where(eq(conversations.id, conv.id))
-
-      // Send auto-reply template to WhatsApp via Baileys Bridge
+    // ── Helper: send auto-reply via Baileys Bridge ──
+    async function sendViaBaileys(replyText) {
       let replied = false
       let replyError = null
       let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
@@ -230,37 +186,99 @@ Catatan: [Catatan Anda]`
               'Content-Type': 'application/json',
               'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
             },
-            body: JSON.stringify({
-              to: from,
-              text: templateText,
-            }),
+            body: JSON.stringify({ to: from, text: replyText }),
             signal: AbortSignal.timeout(5000),
           })
           if (sendResp.ok) {
             replied = true
-            console.log('[Baileys] Auto-reply template sent to', from)
+            console.log('[Baileys] Auto-reply sent to', from)
           } else {
             const errTxt = await sendResp.text().catch(() => '')
             replyError = `Status ${sendResp.status}: ${errTxt}`
-            console.warn('[Baileys] Failed to send auto-reply: ', replyError)
+            console.warn('[Baileys] Failed to send auto-reply:', replyError)
           }
         } catch (err) {
           replyError = err.message
-          console.warn('[Baileys] Failed to send auto-reply: ', err.message)
+          console.warn('[Baileys] Failed to send auto-reply:', err.message)
         }
       } else {
         replyError = `Config error: baileysUrl=${baileysUrl ? 'present' : 'missing'}, from=${from ? 'present' : 'missing'}`
-        console.warn('[Baileys] Cannot send auto-reply: ', replyError)
+        console.warn('[Baileys] Cannot send auto-reply:', replyError)
       }
+      return { replied, replyError }
+    }
 
-      return NextResponse.json({
-        ok: true,
-        repliedWithTemplate: true,
-        customerId: customer.id,
+    // ── Helper: insert outbound auto-reply message to DB ──
+    async function insertOutboundReply(replyText, replyTime) {
+      await db.insert(messages).values({
+        tenantId,
         conversationId: conv.id,
-        baileysSuccess: replied,
-        baileysError: replyError
+        direction: 'outbound',
+        content: replyText,
+        sentAt: replyTime,
       })
+      await db.update(conversations).set({
+        lastMessageAt: replyTime,
+        lastMessagePreview: replyText.substring(0, 200),
+      }).where(eq(conversations.id, conv.id))
+    }
+
+    // Check if the message matches our booking template format
+    if (!hasTemplate) {
+      const lowerContent = content.toLowerCase()
+      const isRentKeyword = lowerContent.includes('sewa') || lowerContent.includes('rental') || lowerContent.includes('rent') || lowerContent.includes('booking') || lowerContent.includes('pesan')
+
+      // Fetch tenant details
+      const tenant = await db.query.tenants.findFirst({
+        where: (t, { eq }) => eq(t.id, tenantId),
+      })
+      const shopName = tenant?.name || 'Rentivo'
+
+      if (isRentKeyword) {
+        // ── CASE 2: Keyword sewa/rental detected → send booking template ──
+        const availabilityInfo = await fetchTenantAvailability()
+
+        const rawTemplate = tenant?.bookingTemplate || `Nama Penyewa: [Nama Anda]
+No. HP / WhatsApp: [Nomor HP Anda]
+Produk: [Nama Produk]
+Jumlah Unit: [Jumlah, cth: 1]
+Waktu Sewa: [Hari/Jam, cth: 3 hari]
+Tanggal Mulai: [Format YYYY-MM-DD, cth: 2026-06-10]
+Catatan: [Catatan Anda]`
+
+        const templateText = `Halo! Terima kasih telah menghubungi ${shopName}. 🎉\n\n${availabilityInfo}\n\nSilakan isi format berikut untuk melakukan pemesanan:\n\n${rawTemplate}\n\nSalin dan isi template di atas, lalu kirim kembali ke sini ya!`
+
+        const replyTime = new Date(sentAt.getTime() + 1000)
+        await insertOutboundReply(templateText, replyTime)
+        const { replied, replyError } = await sendViaBaileys(templateText)
+
+        return NextResponse.json({
+          ok: true,
+          repliedWithTemplate: true,
+          customerId: customer.id,
+          conversationId: conv.id,
+          baileysSuccess: replied,
+          baileysError: replyError
+        })
+      } else {
+        // ── CASE 1: First/general chat → welcome message with stock availability ──
+        const availabilityInfo = await fetchTenantAvailability()
+
+        const welcomeText = `Halo! Selamat datang di *${shopName}*. 👋\n\nKami menyediakan layanan penyewaan peralatan.\n\n📦 *Stok Tersedia Saat Ini:*\n${availabilityInfo}\n\nJika Anda tertarik untuk menyewa, silakan ketik *"sewa"* atau *"rental"* untuk mendapatkan formulir pemesanan. 😊`
+
+        const replyTime = new Date(sentAt.getTime() + 1000)
+        await insertOutboundReply(welcomeText, replyTime)
+        const { replied, replyError } = await sendViaBaileys(welcomeText)
+
+        return NextResponse.json({
+          ok: true,
+          repliedWithWelcome: true,
+          customerId: customer.id,
+          conversationId: conv.id,
+          baileysSuccess: replied,
+          baileysError: replyError
+        })
+      }
     }
 
     // 5) Create an AI draft placeholder since the customer replied with template data
