@@ -2599,38 +2599,75 @@ The lamp backdrop in the `StoryIntro` component functions as an ambient cinemati
 
 ---
 
-## HeroSection Dark Luxury Redesign
+## HeroSection Simplified Design
 
-HeroSection is the first product promise after the editorial story. It should feel premium and operational, not like a generic SaaS template.
+HeroSection is the first product promise after the editorial story. It should feel premium, clean, and focused.
 
 ### Visual Direction
 
-* Deep navy base with subtle cyan/blue aurora layers.
-* Low-opacity FlowTech grid, not a loud tech pattern.
-* Refined glass badge, command-center copy, strong headline, and clear CTA.
-* Supporting operations panel shows the product flow: Chat, Booking, Payment, Return.
-* Trust pills remain lightweight and secondary.
+* CSS-only dark luxury background (no WebGL, canvas, or heavy animations)
+* Rentivo logo centered above headline as primary brand highlight
+* Strong headline with serif italic accent on "Rental Flow"
+* Cyan accent on word "rapi"
+* Clear CTA buttons
+* Subtle grid pattern and light beam for depth
+
+### Background
+
+```css
+background:
+  radial-gradient(circle at 58% 28%, rgba(18, 203, 190, 0.16), transparent 30%),
+  radial-gradient(circle at 38% 42%, rgba(21, 87, 255, 0.20), transparent 38%),
+  linear-gradient(135deg, #061B5C 0%, #03113D 48%, #021027 100%);
+```
+
+ColorBends (WebGL shader) is disabled for performance. Use CSS gradients only.
+
+### Logo
+
+* Positioned above headline
+* Desktop: `clamp(280px, 40vw, 380px)` width
+* Mobile: `clamp(180px, 60vw, 240px)` width
+* Subtle cyan glow behind logo using `::before` pseudo-element
+* Sharp and clear, not blurred
+
+### Content Structure
+
+```txt
+Logo (with glow)
+↓
+Headline: "Ubah Chat Customer Jadi Rental Flow yang rapi"
+  - "Rental Flow" in serif italic with gradient
+  - "rapi" in cyan
+↓
+Subtitle
+↓
+CTA buttons (primary + secondary)
+```
 
 ### Typography
 
-* Primary sans carries the headline structure.
-* Serif italic accent is limited to one emotional word such as `rapi`.
-* Animated word spans must preserve spaces and never compress words together.
+* Headline: `clamp(3rem, 6vw, 5.8rem)`, weight 800, line-height 0.95
+* "Rental Flow": serif italic with white-to-cyan gradient
+* "rapi": cyan color (#12CBBE)
+* Subtitle: 16px, rgba(255, 255, 255, 0.72)
 
-### Entrance Sequence
+### Layout
 
-```txt
-hero shell fade/raise
-auras reveal
-badge fade-up
-headline word reveal
-highlight and subtitle fade-up
-CTA fade-up
-flowline and operations panel reveal
-panel items and trust pills stagger
-```
+* Min-height: 100svh (fits in one viewport on desktop)
+* Flexbox centered layout
+* Padding: 100px top, 60px bottom (desktop)
+* Compact spacing to ensure CTA visibility without scroll
 
-Use GSAP with `power3.out`, opacity, y, and scale. Keep the sequence once-only and lightweight.
+### Motion
+
+Lightweight entrance animations only:
+* Logo: fade + scale in
+* Title: fade-up
+* Subtitle: fade-up
+* CTA: fade-up
+
+No heavy blur animations, no canvas, no WebGL, no infinite animations.
 
 ### Do Not Break
 
@@ -2639,7 +2676,9 @@ Use GSAP with `power3.out`, opacity, y, and scale. Keep the sequence once-only a
 * Do not leave StoryIntro text visible behind HeroSection.
 * Do not add a transition section to fake the handoff.
 * Do not make HeroSection so tall that CTA is pushed too far below the fold on mobile.
-* Do not make the hero look like a dashboard mockup-heavy section unless explicitly requested later.
+* Do not add ColorBends, WebGL, canvas, or heavy animated backgrounds.
+* Do not add panel, pills, or flowline elements (removed for simplicity).
+* Do not animate StoryIntro scene transitions from HeroSection.
 
 ---
 

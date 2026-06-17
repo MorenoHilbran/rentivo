@@ -124,15 +124,10 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         const s3Highlights = scene3Ref.current?.querySelectorAll('.story-highlight')
 
         const heroSection = document.querySelector('.landing-hero')
-        const heroBadge = heroSection?.querySelector('.landing-hero-badge')
+        const heroLogo = heroSection?.querySelector('.landing-hero-logo')
         const heroTitle = heroSection?.querySelector('.landing-hero-title')
-        const heroHighlight = heroSection?.querySelector('.landing-hero-highlight')
         const heroSubtitle = heroSection?.querySelector('.landing-hero-subtitle')
         const heroActions = heroSection?.querySelector('.landing-hero-actions')
-        const heroFlowLine = heroSection?.querySelector('.landing-hero-flowline')
-        const heroPanel = heroSection?.querySelector('.landing-hero-panel')
-        const heroPanelItems = heroSection?.querySelectorAll('.landing-hero-panel-item')
-        const heroPills = heroSection?.querySelectorAll('.landing-hero-pill')
         const lamp = containerRef.current?.querySelector('.rentivo-lamp')
 
         gsap.set([scene2Ref.current, scene3Ref.current], { opacity: 0, y: 52, scale: 0.982 })
@@ -144,9 +139,7 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
         gsap.set([s2Highlights, s3Highlights], { textShadow: '0 0 18px rgba(18, 203, 190, 0.22)' })
 
         gsap.set(heroSection, { opacity: 0, y: 44, scale: 0.985 })
-        gsap.set([heroBadge, heroTitle, heroHighlight, heroSubtitle, heroActions, heroFlowLine, heroPanel], { opacity: 0, y: 24 })
-        gsap.set(heroPanelItems, { opacity: 0, y: 14, scale: 0.98 })
-        gsap.set(heroPills, { opacity: 0, y: 15, scale: 0.98 })
+        gsap.set([heroLogo, heroTitle, heroSubtitle, heroActions], { opacity: 0, y: 24 })
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -207,10 +200,11 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
             duration: 0.95,
             ease: 'power2.out',
           }, '-=0.70')
-          .to(heroBadge, {
+          .to(heroLogo, {
             opacity: 1,
             y: 0,
-            duration: 0.55,
+            scale: 1,
+            duration: 0.60,
             ease: 'power3.out',
           }, '-=0.60')
           .to(heroTitle, {
@@ -219,12 +213,6 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
             duration: 0.72,
             ease: 'power3.out',
           }, '-=0.50')
-          .to(heroHighlight, {
-            opacity: 0.92,
-            y: 0,
-            duration: 0.50,
-            ease: 'power3.out',
-          }, '-=0.20')
           .to(heroSubtitle, {
             opacity: 0.72,
             y: 0,
@@ -234,34 +222,6 @@ export default function StoryIntro({ preloaderDone }: { preloaderDone: boolean }
           .to(heroActions, {
             opacity: 1,
             y: 0,
-            duration: 0.50,
-            ease: 'power3.out',
-          }, '<0.05')
-          .to(heroFlowLine, {
-            opacity: 1,
-            y: 0,
-            duration: 0.50,
-            ease: 'power3.out',
-          }, '<0.05')
-          .to(heroPanel, {
-            opacity: 1,
-            y: 0,
-            duration: 0.55,
-            ease: 'power3.out',
-          }, '<0.05')
-          .to(heroPanelItems, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            stagger: 0.06,
-            duration: 0.50,
-            ease: 'power3.out',
-          }, '<0.05')
-          .to(heroPills, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            stagger: 0.05,
             duration: 0.50,
             ease: 'power3.out',
           }, '<0.05')

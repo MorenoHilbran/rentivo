@@ -1,21 +1,14 @@
 'use client'
 
 import { useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const pills = ['Omnichannel Inbox', 'Anti Double Booking', 'Payment Verification', 'AI Copilot']
-const heroSignals = [
-  { label: 'Chat', value: 'Captured' },
-  { label: 'Booking', value: 'Synced' },
-  { label: 'Payment', value: 'Verified' },
-  { label: 'Return', value: 'Closed' },
-]
 
 function HeroWords({ text }: { text: string }) {
   const words = text.split(' ')
@@ -69,10 +62,15 @@ export default function HeroSection({
       <div className="landing-hero-aura landing-hero-aura-right" aria-hidden="true" />
 
       <div className="landing-hero-content">
-        <span className="landing-hero-badge">
-          <Sparkles size={13} className="hero-badge-sparkle" />
-          Dark Luxury FlowTech CRM
-        </span>
+        <div className="landing-hero-logo" aria-label="Rentivo">
+          <Image
+            src="/brand/rentivo-logo.png"
+            alt="Rentivo"
+            width={380}
+            height={95}
+            priority
+          />
+        </div>
 
         <h1 className="landing-hero-title">
           <span className="landing-hero-title-line">
@@ -88,10 +86,6 @@ export default function HeroSection({
           </span>
         </h1>
 
-        <p className="landing-hero-highlight">
-          Satu command center untuk chat, booking, inventory, invoice, pembayaran, dan return.
-        </p>
-
         <p className="landing-hero-subtitle">
           Rentivo membantu bisnis rental mengubah percakapan customer menjadi alur operasional yang
           tersambung, terukur, dan siap dieksekusi oleh owner, admin, dan tim lapangan.
@@ -105,27 +99,6 @@ export default function HeroSection({
           <Link href="/login" className="landing-secondary-button hero-btn-secondary">
             Masuk ke Dashboard
           </Link>
-        </div>
-
-        <div className="landing-hero-flowline" aria-hidden="true">
-          <span />
-        </div>
-
-        <div className="landing-hero-panel" aria-label="Rentivo rental operations flow">
-          {heroSignals.map((signal) => (
-            <div className="landing-hero-panel-item" key={signal.label}>
-              <span>{signal.label}</span>
-              <strong>{signal.value}</strong>
-            </div>
-          ))}
-        </div>
-
-        <div className="landing-hero-pills" aria-label="Fitur ringkas">
-          {pills.map((pill) => (
-            <span className="landing-hero-pill" key={pill}>
-              {pill}
-            </span>
-          ))}
         </div>
       </div>
     </section>
