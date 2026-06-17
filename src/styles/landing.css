@@ -3719,3 +3719,665 @@
     animation: none !important;
   }
 }
+
+/* =================================================================
+   PREMIUM DARK SURFACE + HERO AURA POLISH
+   Scope: hero background and post-hero dark sections only.
+   ================================================================= */
+
+.landing-hero::before,
+.landing-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.landing-hero::before {
+  z-index: 0;
+  opacity: 0.42;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(142, 232, 255, 0.20) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 76% 38%, rgba(18, 203, 190, 0.18) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 46% 78%, rgba(21, 87, 255, 0.20) 0 1px, transparent 2px);
+  background-size: 180px 180px, 240px 240px, 320px 320px;
+  mask-image: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0.72), transparent 74%);
+  animation: rentivo-star-drift 24s linear infinite;
+}
+
+.landing-hero::after {
+  z-index: 1;
+  opacity: 0.64;
+  background:
+    linear-gradient(110deg, transparent 0 42%, rgba(142, 232, 255, 0.10) 47%, transparent 55%),
+    radial-gradient(ellipse at 50% 18%, rgba(18, 203, 190, 0.16), transparent 58%);
+  mix-blend-mode: screen;
+  animation: rentivo-hero-sheen 14s ease-in-out infinite alternate;
+}
+
+.landing-hero-grid-pattern {
+  animation: rentivo-grid-breathe 18s ease-in-out infinite alternate;
+}
+
+.landing-hero-light-beam {
+  animation: rentivo-beam-drift 12s ease-in-out infinite alternate;
+}
+
+.landing-hero-aura {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  width: min(560px, 46vw);
+  height: min(560px, 46vw);
+  border-radius: 999px;
+  filter: blur(54px);
+  opacity: 0.42;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
+.landing-hero-aura-left {
+  left: -8%;
+  top: 20%;
+  background: rgba(21, 87, 255, 0.24);
+  animation: rentivo-aura-left 13s ease-in-out infinite alternate;
+}
+
+.landing-hero-aura-right {
+  right: -10%;
+  bottom: 10%;
+  background: rgba(18, 203, 190, 0.20);
+  animation: rentivo-aura-right 15s ease-in-out infinite alternate;
+}
+
+.landing-problem-section::before,
+.landing-dashboard-section::before {
+  opacity: 0.58 !important;
+  background-image:
+    radial-gradient(circle at 18% 24%, rgba(142, 232, 255, 0.28) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 78% 34%, rgba(18, 203, 190, 0.22) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 76%, rgba(21, 87, 255, 0.22) 0 1px, transparent 2px),
+    linear-gradient(rgba(142, 232, 255, 0.038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 232, 255, 0.038) 1px, transparent 1px) !important;
+  background-size: 170px 170px, 230px 230px, 310px 310px, 82px 82px, 82px 82px !important;
+  animation: rentivo-dark-spark-drift 28s linear infinite;
+}
+
+.landing-problem-section::after,
+.landing-dashboard-section::after {
+  background:
+    radial-gradient(circle at 22% 24%, rgba(21, 87, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 78% 18%, rgba(18, 203, 190, 0.14), transparent 30%),
+    linear-gradient(115deg, transparent 0 43%, rgba(142, 232, 255, 0.055) 48%, transparent 54%),
+    radial-gradient(circle at 50% 42%, transparent 0%, rgba(2, 11, 44, 0.30) 74%),
+    linear-gradient(180deg, rgba(2, 11, 44, 0.10), rgba(2, 11, 44, 0.36)) !important;
+}
+
+.landing-final-section {
+  position: relative;
+  isolation: isolate;
+  padding-top: 104px !important;
+  padding-bottom: 118px !important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(21, 87, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 82% 16%, rgba(18, 203, 190, 0.16), transparent 30%),
+    linear-gradient(180deg, #EEF7FF 0%, #DDEFFF 36%, #061B5C 100%) !important;
+}
+
+.landing-final-section::before,
+.landing-final-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-final-section::before {
+  opacity: 0.50;
+  background-image:
+    radial-gradient(circle at 24% 30%, rgba(21, 87, 255, 0.26) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 72% 58%, rgba(18, 203, 190, 0.24) 0 1px, transparent 2px),
+    linear-gradient(rgba(6, 27, 92, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 27, 92, 0.040) 1px, transparent 1px);
+  background-size: 190px 190px, 260px 260px, 78px 78px, 78px 78px;
+  mask-image: radial-gradient(ellipse at 50% 48%, rgba(0, 0, 0, 0.76), transparent 78%);
+  animation: rentivo-final-spark 22s linear infinite;
+}
+
+.landing-final-section::after {
+  background:
+    linear-gradient(180deg, transparent 0 64%, rgba(3, 17, 61, 0.44) 100%),
+    radial-gradient(ellipse at 50% 70%, rgba(18, 203, 190, 0.18), transparent 54%);
+}
+
+.landing-final-card {
+  max-width: 1040px !important;
+  border-color: rgba(142, 232, 255, 0.20) !important;
+  background:
+    radial-gradient(circle at 78% 20%, rgba(18, 203, 190, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(6, 27, 92, 0.94), rgba(3, 17, 61, 0.95)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 34px 90px rgba(3, 17, 61, 0.34),
+    0 0 80px rgba(18, 203, 190, 0.12) !important;
+}
+
+.landing-final-glow {
+  background:
+    radial-gradient(circle at 74% 28%, rgba(18, 203, 190, 0.16), transparent 34%),
+    radial-gradient(circle at 24% 70%, rgba(21, 87, 255, 0.16), transparent 36%),
+    linear-gradient(120deg, transparent 0 38%, rgba(142, 232, 255, 0.09) 45%, transparent 53%) !important;
+  animation: rentivo-final-glow 13s ease-in-out infinite alternate;
+}
+
+.landing-footer {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(21, 87, 255, 0.13), transparent 32%),
+    radial-gradient(circle at 78% 0%, rgba(18, 203, 190, 0.12), transparent 30%),
+    linear-gradient(180deg, #020B2C 0%, #03113D 58%, #02091F 100%) !important;
+  border-top: 1px solid rgba(142, 232, 255, 0.28) !important;
+  box-shadow:
+    0 -1px 0 rgba(255, 255, 255, 0.10),
+    0 -22px 70px rgba(18, 203, 190, 0.16) !important;
+}
+
+.landing-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(1040px, calc(100% - 32px));
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(142, 232, 255, 0.78), rgba(18, 203, 190, 0.64), transparent);
+  box-shadow: 0 0 26px rgba(18, 203, 190, 0.36);
+}
+
+.landing-footer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background-image:
+    radial-gradient(circle at 28% 36%, rgba(142, 232, 255, 0.18) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 72% 62%, rgba(18, 203, 190, 0.16) 0 1px, transparent 1.8px);
+  background-size: 230px 230px, 310px 310px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 80%);
+}
+
+.landing-footer > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes rentivo-star-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 180px 120px, -160px 190px, 120px -180px;
+  }
+}
+
+@keyframes rentivo-hero-sheen {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+    opacity: 0.42;
+  }
+
+  to {
+    transform: translate3d(2%, 1%, 0) scale(1.03);
+    opacity: 0.70;
+  }
+}
+
+@keyframes rentivo-grid-breathe {
+  from {
+    opacity: 0.44;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.66;
+    transform: scale(1.018);
+  }
+}
+
+@keyframes rentivo-beam-drift {
+  from {
+    transform: translateX(-51%) translateY(-1%) scale(1);
+    opacity: 0.84;
+  }
+
+  to {
+    transform: translateX(-49%) translateY(1.4%) scale(1.025);
+    opacity: 1;
+  }
+}
+
+@keyframes rentivo-aura-left {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.96);
+    opacity: 0.34;
+  }
+
+  to {
+    transform: translate3d(6%, -4%, 0) scale(1.06);
+    opacity: 0.50;
+  }
+}
+
+@keyframes rentivo-aura-right {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.30;
+  }
+
+  to {
+    transform: translate3d(-6%, 4%, 0) scale(1.08);
+    opacity: 0.48;
+  }
+}
+
+@keyframes rentivo-dark-spark-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 170px 110px, -120px 180px, 150px -160px, 82px 82px, 82px 82px;
+  }
+}
+
+@keyframes rentivo-final-spark {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 190px 130px, -160px 210px, 78px 78px, 78px 78px;
+  }
+}
+
+@keyframes rentivo-final-glow {
+  from {
+    opacity: 0.78;
+    transform: translate3d(-1%, -1%, 0) scale(1);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(1%, 1%, 0) scale(1.02);
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-hero-aura {
+    width: 320px;
+    height: 320px;
+    filter: blur(46px);
+  }
+
+  .landing-final-section {
+    padding-top: 76px !important;
+    padding-bottom: 86px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero::before,
+  .landing-hero::after,
+  .landing-hero-grid-pattern,
+  .landing-hero-light-beam,
+  .landing-hero-aura,
+  .landing-problem-section::before,
+  .landing-dashboard-section::before,
+  .landing-final-section::before,
+  .landing-final-glow {
+    animation: none !important;
+  }
+}
+
+/* =================================================================
+   DARK SURFACE OVERDRIVE
+   Stronger, still lightweight atmospheric motion for dark landing surfaces.
+   ================================================================= */
+
+.landing-problem-section,
+.landing-dashboard-section {
+  background:
+    radial-gradient(ellipse at 14% 18%, rgba(21, 87, 255, 0.28), transparent 38%),
+    radial-gradient(ellipse at 86% 12%, rgba(18, 203, 190, 0.20), transparent 34%),
+    radial-gradient(ellipse at 50% 104%, rgba(14, 165, 233, 0.18), transparent 42%),
+    linear-gradient(180deg, #03113D 0%, #020A25 56%, #03113D 100%) !important;
+}
+
+.landing-problem-section::before,
+.landing-dashboard-section::before {
+  opacity: 0.86 !important;
+  background-image:
+    radial-gradient(circle at 12% 24%, rgba(223, 253, 252, 0.46) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 72% 36%, rgba(142, 232, 255, 0.36) 0 1px, transparent 1.9px),
+    radial-gradient(circle at 38% 78%, rgba(18, 203, 190, 0.30) 0 1px, transparent 2px),
+    linear-gradient(rgba(142, 232, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 232, 255, 0.045) 1px, transparent 1px) !important;
+  background-size: 132px 132px, 210px 210px, 288px 288px, 84px 84px, 84px 84px !important;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.86) 18%, rgba(0, 0, 0, 0.72) 82%, transparent 100%),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.80), transparent 82%) !important;
+  animation: rentivo-dark-spark-overdrive 24s linear infinite !important;
+}
+
+.landing-problem-section::after,
+.landing-dashboard-section::after {
+  opacity: 1;
+  background:
+    linear-gradient(112deg, transparent 0 18%, rgba(21, 87, 255, 0.10) 26%, transparent 36%),
+    linear-gradient(68deg, transparent 0 54%, rgba(18, 203, 190, 0.12) 62%, transparent 73%),
+    radial-gradient(ellipse at 28% 20%, rgba(21, 87, 255, 0.30), transparent 34%),
+    radial-gradient(ellipse at 78% 28%, rgba(18, 203, 190, 0.22), transparent 38%),
+    radial-gradient(ellipse at 52% 88%, rgba(14, 165, 233, 0.18), transparent 44%),
+    linear-gradient(180deg, rgba(2, 11, 44, 0.02), rgba(2, 11, 44, 0.30)) !important;
+  mix-blend-mode: screen;
+  animation: rentivo-dark-aurora-sweep 18s ease-in-out infinite alternate;
+}
+
+.landing-dashboard-section .landing-preview-shell,
+.landing-problem-section .landing-problem-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 28px 78px rgba(2, 11, 44, 0.34),
+    0 0 52px rgba(18, 203, 190, 0.075) !important;
+}
+
+.landing-final-card {
+  position: relative;
+}
+
+.landing-final-card::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.76;
+  background:
+    linear-gradient(115deg, transparent 0 34%, rgba(142, 232, 255, 0.10) 43%, transparent 54%),
+    radial-gradient(circle at 18% 26%, rgba(21, 87, 255, 0.22), transparent 32%),
+    radial-gradient(circle at 82% 72%, rgba(18, 203, 190, 0.18), transparent 34%);
+  animation: rentivo-final-card-sheen 12s ease-in-out infinite alternate;
+}
+
+.landing-footer::after {
+  opacity: 0.58 !important;
+  background-image:
+    radial-gradient(circle at 22% 26%, rgba(223, 253, 252, 0.26) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 70% 40%, rgba(18, 203, 190, 0.22) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 48% 78%, rgba(21, 87, 255, 0.22) 0 1px, transparent 1.9px),
+    linear-gradient(rgba(142, 232, 255, 0.030) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 232, 255, 0.028) 1px, transparent 1px) !important;
+  background-size: 170px 170px, 250px 250px, 330px 330px, 86px 86px, 86px 86px !important;
+  animation: rentivo-footer-spark-drift 34s linear infinite;
+}
+
+@keyframes rentivo-dark-spark-overdrive {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 132px 96px, -160px 210px, 190px -220px, 84px 84px, 84px 84px;
+  }
+}
+
+@keyframes rentivo-dark-aurora-sweep {
+  from {
+    transform: translate3d(-1.6%, -1%, 0) scale(1);
+    opacity: 0.78;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  to {
+    transform: translate3d(1.8%, 1%, 0) scale(1.035);
+    opacity: 0.88;
+  }
+}
+
+@keyframes rentivo-final-card-sheen {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+    opacity: 0.58;
+  }
+
+  to {
+    transform: translate3d(1.5%, 1%, 0) scale(1.018);
+    opacity: 0.86;
+  }
+}
+
+@keyframes rentivo-footer-spark-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 170px 120px, -180px 240px, 210px -220px, 86px 86px, 86px 86px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-problem-section::before,
+  .landing-problem-section::after,
+  .landing-dashboard-section::before,
+  .landing-dashboard-section::after,
+  .landing-final-card::before,
+  .landing-footer::after {
+    animation: none !important;
+  }
+}
+
+/* =================================================================
+   NAVBAR BREATHING ROOM + ROLE COUNT FIX
+   ================================================================= */
+
+.landing-navbar-inner {
+  padding: 6px 12px 6px 18px !important;
+  gap: clamp(18px, 2.2vw, 28px);
+}
+
+.landing-navbar-inner .landing-nav-actions {
+  gap: 10px;
+}
+
+.landing-navbar-inner .landing-link-button {
+  min-height: 34px;
+  padding-inline: 14px;
+}
+
+.landing-navbar-inner .landing-primary-button-sm {
+  min-height: 36px;
+  padding-inline: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 12px 30px rgba(21, 87, 255, 0.22);
+}
+
+.landing-role-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing-role-card {
+  min-height: 220px !important;
+}
+
+/* =================================================================
+   NAVBAR CENTERED SECTION SYSTEM
+   ================================================================= */
+
+.landing-navbar {
+  inset: 12px 0 auto !important;
+}
+
+.landing-navbar-inner {
+  min-height: 64px !important;
+  display: grid !important;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr);
+  align-items: center !important;
+  padding: 8px 16px 8px 22px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(21, 87, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(6, 27, 92, 0.96), rgba(3, 17, 61, 0.92)) !important;
+  border-color: rgba(142, 232, 255, 0.26) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 18px 54px rgba(2, 11, 44, 0.34),
+    0 0 0 1px rgba(18, 203, 190, 0.10) !important;
+}
+
+.landing-navbar .landing-logo {
+  justify-self: start;
+}
+
+.landing-navbar .landing-logo-full {
+  width: 142px;
+  height: auto;
+}
+
+.landing-navbar .landing-nav-links {
+  justify-self: center;
+  align-self: center;
+  min-height: 42px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 1.7vw, 28px);
+  padding: 0 18px;
+  border: 1px solid rgba(142, 232, 255, 0.10);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.landing-navbar .landing-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  line-height: 1;
+}
+
+.landing-navbar .landing-nav-actions {
+  justify-self: end;
+  align-self: center;
+  min-height: 46px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 12px;
+}
+
+.landing-navbar-inner .landing-link-button,
+.landing-navbar-inner .landing-primary-button-sm {
+  height: 42px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transform: translateY(0);
+}
+
+.landing-navbar-inner .landing-link-button {
+  padding-inline: 16px;
+}
+
+.landing-navbar-inner .landing-primary-button-sm {
+  padding-inline: 24px;
+}
+
+@media (max-width: 1080px) {
+  .landing-role-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-width: 760px;
+  }
+}
+
+@media (max-width: 899px) {
+  .landing-navbar-inner {
+    min-height: 56px !important;
+    display: flex !important;
+    padding: 8px 10px 8px 14px !important;
+  }
+
+  .landing-role-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 560px;
+  }
+}
+
+/* =================================================================
+   LANDING SCROLL PERFORMANCE STABILIZER
+   Keeps premium background depth but stops continuous repaint-heavy loops.
+   ================================================================= */
+
+.landing-hero::before,
+.landing-hero::after,
+.landing-hero-grid-pattern,
+.landing-hero-light-beam,
+.landing-hero-aura,
+.landing-problem-section::before,
+.landing-problem-section::after,
+.landing-solution-section::after,
+.landing-feature-section::after,
+.landing-workflow-section::after,
+.landing-dashboard-section::before,
+.landing-dashboard-section::after,
+.landing-role-section::after,
+.landing-final-section::before,
+.landing-final-glow,
+.landing-final-card::before,
+.landing-footer::after {
+  animation: none !important;
+}
+
+.landing-hero::before,
+.landing-problem-section::before,
+.landing-dashboard-section::before,
+.landing-final-section::before,
+.landing-footer::after {
+  background-position: 0 0 !important;
+  will-change: auto !important;
+}
+
+.landing-hero::after,
+.landing-problem-section::after,
+.landing-dashboard-section::after {
+  transform: none !important;
+  mix-blend-mode: normal !important;
+  will-change: auto !important;
+}
+
+.landing-hero-aura {
+  filter: blur(36px) !important;
+  opacity: 0.30 !important;
+  will-change: auto !important;
+}
+
+.landing-pricing-glow-left,
+.landing-pricing-glow-right {
+  filter: blur(44px) !important;
+  opacity: 0.76;
+}
+
+.landing-navbar-inner {
+  backdrop-filter: blur(10px) !important;
+}

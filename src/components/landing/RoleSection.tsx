@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BriefcaseBusiness, ShieldCheck, Truck, Headset, LucideIcon } from 'lucide-react'
+import { BriefcaseBusiness, Headset, ShieldCheck, Truck, LucideIcon } from 'lucide-react'
 
 interface RoleItem {
   icon: LucideIcon
@@ -11,24 +11,24 @@ interface RoleItem {
 
 const roles: RoleItem[] = [
   {
+    icon: Headset,
+    title: 'Superadmin',
+    text: 'Manage tenant, pantau status workspace, dan tangani supporting ticket platform.',
+  },
+  {
     icon: BriefcaseBusiness,
     title: 'Owner',
-    text: 'Pantau omset, performa operasional, ketersediaan unit, dan performa tim secara realtime.',
+    text: 'Manage semua dashboard, monitor operasional, revenue, booking, inventory, dan performa tim.',
   },
   {
     icon: ShieldCheck,
     title: 'Admin',
-    text: 'Verifikasi booking, kelola invoice, status pembayaran, dan rekap denda return.',
+    text: 'Manage dashboard seperti owner untuk membantu booking, invoice, payment, dan workflow harian.',
   },
   {
     icon: Truck,
-    title: 'Tim Lapangan',
-    text: 'Atur pengiriman, pickup, serta inspeksi detail kondisi fisik unit pasca-sewa.',
-  },
-  {
-    icon: Headset,
-    title: 'Customer Service',
-    text: 'Balas chat customer, cek ketersediaan stok, dan siapkan draft booking instan.',
+    title: 'Staff',
+    text: 'Mengelola pengembalian barang, inspeksi kondisi unit, dan update status return.',
   },
 ]
 

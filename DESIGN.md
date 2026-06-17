@@ -2726,6 +2726,9 @@ Navbar memakai glassmorphism premium dengan Dark Luxury FlowTech theme.
 - Uses `top 12%` threshold (desktop overlap layout)
 - Fixed position, never in document flow
 - Do not break StoryIntro → HeroSection transition
+- The pill navbar must keep clear breathing room around the CTA. Do not let `Daftarkan Bisnis` sit too close to the outer border; keep right padding visibly larger than the border radius edge.
+- Desktop navbar uses a three-zone grid: logo left, section links centered in their own subtle pill, actions right. Do not use `space-between` if it makes the section links visually off-center.
+- Navbar buttons must be vertically centered with equal height and line-height, especially `Masuk` and `Daftarkan Bisnis`.
 
 ---
 
@@ -2928,11 +2931,31 @@ LandingFooter
 * Avoid consecutive plain white backgrounds and avoid making every section dark.
 * Cards on luminous sections use tinted white surfaces, navy text, thin blue/cyan borders, and restrained blue shadows.
 * Cards on dark sections use dark glass panels with thin cyan/white borders, subtle inner highlight, and restrained shadows.
+* Dark sections must not be flat navy blocks. Problem, Dashboard, Final CTA, and Footer may use subtle spark fields, cyan/blue glows, rim lights, and soft beams.
 * FlowTech pillar cards must not overlap: keep index badges out of the content flow, reserve right padding for labels, and stack cards to one column on mobile.
 * Pricing must stay compact: two plans only, contained width, short feature spacing, and Pro as the stronger recommended card.
 * Background depth should come from CSS gradients, subtle grids, static glows, and small transform-only ambient drift.
 * Do not add new canvas, WebGL, particle systems, or heavy animated blur.
 * Watch for overlap on mobile: section grids must collapse to one column, dashboard rows must stack, and pricing CTAs must be full-width.
+
+### Dark Surface Spark / Glow Rules
+
+* Dark surfaces may use CSS-only spark fields built from `radial-gradient` background layers.
+* Spark fields should be static by default. Do not animate `background-position` across full-section pseudo-elements because it causes scroll repaint lag.
+* If motion is needed, use one short entrance reveal or transform-only hover on small elements, not infinite full-section loops.
+* Use sparks as atmospheric depth, not visible particle systems. They should read premium, not gaming.
+* Dark command sections should include at least two readable depth layers: an aurora/rim glow layer and a tiny spark/grid layer.
+* ProblemSection and DashboardPreview should never read as flat navy. Use visible but restrained cyan/blue beams, star-like micro dots, and card rim glows.
+* Hero background may use CSS aura layers, grid breathing, and soft beam drift. Do not reintroduce ColorBends, WebGL, canvas, or heavy shader effects.
+* Final CTA must visually separate from the footer. Use a luminous-to-dark bridge, a floating CTA card, and a footer top rim/glow so `Mulai Sekarang` does not merge into the footer.
+* Footer may use a subdued spark field and top rim line, but keep link readability stronger than decoration.
+
+### Scroll Performance Stabilizer
+
+* Continuous decorative loops on landing backgrounds are disabled for scroll stability.
+* Avoid animating large pseudo-elements, `filter`, `mix-blend-mode`, `box-shadow`, `background-position`, `width`, `height`, `top`, or `left`.
+* Keep premium background depth through static gradients, static spark fields, and lightweight reveal motion on content cards.
+* Navbar blur should stay moderate; excessive fixed `backdrop-filter` makes hero scrolling feel sticky.
 
 ### Motion Rules
 
@@ -2956,9 +2979,9 @@ SolutionSection      -> luminous FlowTech workspace surface
 FeatureGrid          -> luminous module surface
 WorkflowSection      -> luminous operations pipeline surface
 DashboardPreview     -> dark dashboard command surface
-RoleSection          -> luminous team workspace surface
+RoleSection          -> luminous team workspace surface, exactly four roles: Superadmin, Owner, Admin, Staff
 PricingSection       -> luminous comparison surface with dark Pro card
-FinalCTA             -> dark closing surface
+FinalCTA             -> luminous-to-dark bridge with floating dark CTA card
 LandingFooter        -> fixed footer system, do not redesign during post-hero passes
 ```
 
@@ -3010,7 +3033,7 @@ The landing page follows a clean, highly structured operational pipeline:
 3. **Feature Grid**: Showcases the 6 core modules (Omnichannel Inbox, Smart Booking Flow, Inventory Availability, Invoice & Payment Verification, Return Management, AI Copilot) as premium luminous cards with micro-accent details.
 4. **Workflow Section**: Outlines the 8-step pipeline (Inquiry, Availability Check, Booking, Invoice, Payment Verification, Delivery / Pickup, Return, Report) with soft status tags and visual connectors on a brighter operations surface.
 5. **Dashboard Preview**: A premium command-center widget demonstrating revenue summaries, live tracking, and draft setups.
-6. **Role Section**: Highlights workspace layout configurations for Owner, Admin, Tim Lapangan, and Customer Service.
+6. **Role Section**: Highlights workspace layout configurations for Superadmin, Owner, Admin, and Staff only.
 7. **Final CTA**: Rounded buttons leading to action links.
 
 ### Performance Guardrails
