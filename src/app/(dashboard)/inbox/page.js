@@ -7,8 +7,11 @@ import InboxClient from '@/components/InboxClient'
 
 export const metadata = { title: 'Kotak Masuk' }
 
-export default async function InboxPage({ searchParams }) {
+export default async function InboxPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])
+
+  // Await searchParams (Next.js 15+ returns a Promise)
+  const searchParams = await searchParamsPromise
 
   // Fetch tenant details for the phone connection
   let tenant = null
