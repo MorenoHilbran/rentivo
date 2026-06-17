@@ -4,13 +4,64 @@ import { customers, conversations, messages, aiDrafts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import crypto from 'crypto'
 
-function normalizePhone(number) {
+/**
+ * Normalize raw WhatsApp JID for messaging purposes.
+ * Preserves @lid format or strips to digits.
+ * This value is stored in `whatsappJid` and used to SEND messages back.
+ */
+function normalizeJid(number) {
   if (!number) return number
   if (number.includes('@lid')) {
     const cleanNum = number.split('@')[0].replace(/[^0-9]/g, '')
     return `${cleanNum}@lid`
   }
   return number.replace(/[^0-9+]/g, '')
+}
+
+/**
+ * Extract a real, human-readable phone number for display & CRM.
+ * - LID-based JIDs → returns null (not a real phone number)
+ * - Regular numbers → normalized to Indonesian 62xxx format
+ * This value is stored in `phoneNumber`.
+ */
+function toDisplayPhone(rawFrom) {
+  if (!rawFrom) return null
+  // LID JIDs are internal WhatsApp IDs, not real phone numbers
+  if (rawFrom.includes('@lid')) return null
+
+  let phone = rawFrom.replace(/@.*$/, '').replace(/[^0-9+]/g, '')
+  if (!phone) return null
+
+  // Remove leading + if present
+  phone = phone.replace(/^\+/, '')
+
+  // Indonesian normalization: 08xxx → 628xxx
+  if (phone.startsWith('0')) {
+    phone = '62' + phone.substring(1)
+  }
+
+  // Short numbers without country code (e.g. 81234567890) → prefix with 62
+  if (phone.length >= 9 && phone.length <= 12 && !phone.startsWith('62')) {
+    phone = '62' + phone
+  }
+
+  return phone
+}
+
+/**
+ * Normalize any phone number input to consistent 62xxx format.
+ * Used for phone numbers extracted from template messages.
+ */
+function normalizePhoneInput(phone) {
+  if (!phone) return phone
+  let clean = phone.replace(/[^0-9+]/g, '').replace(/^\+/, '')
+  if (clean.startsWith('0')) {
+    clean = '62' + clean.substring(1)
+  }
+  if (clean.length >= 9 && clean.length <= 12 && !clean.startsWith('62')) {
+    clean = '62' + clean
+  }
+  return clean
 }
 
 function verifySignature(rawBody, signature) {
@@ -47,37 +98,58 @@ export async function POST(request) {
     }
 
     const tenantId = payload.tenantId
-    const from = normalizePhone(payload.from)
+    const jid = normalizeJid(payload.from)           // JID for WhatsApp messaging (preserved @lid or raw digits)
+    const displayPhone = toDisplayPhone(payload.from) // Real phone number for CRM display (62xxx format, null for LID)
     const content = payload.content ?? ''
     const waMessageId = payload.waMessageId ?? null
     const mediaUrl = payload.mediaUrl ?? null
     const mediaType = payload.mediaType ?? null
     const sentAt = payload.sentAt ? new Date(payload.sentAt) : new Date()
 
-    if (!tenantId || !from) {
+    if (!tenantId || !jid) {
       return NextResponse.json({ ok: false, error: 'tenantId and from required' }, { status: 400 })
     }
 
-    // 1) Find or create customer by phone or JID (checks whatsappJid first, falls back to phoneNumber)
+    // 1) Find or create customer by JID or phone number
+    //    Search by: whatsappJid (exact JID match), phoneNumber (JID fallback), or displayPhone (normalized)
     let customer = await db.query.customers.findFirst({
       where: (c, { eq, or }) => and(
         eq(c.tenantId, tenantId),
-        or(eq(c.whatsappJid, from), eq(c.phoneNumber, from))
+        or(
+          eq(c.whatsappJid, jid),
+          eq(c.phoneNumber, jid),
+          ...(displayPhone ? [eq(c.phoneNumber, displayPhone)] : [])
+        )
       ),
     })
 
     if (!customer) {
+      // phoneNumber: use real phone number if available, otherwise fall back to JID
       const [newCustomer] = await db.insert(customers).values({
         tenantId,
-        name: payload.name ?? from,
-        phoneNumber: from,
-        whatsappJid: from,
+        name: payload.name ?? (displayPhone || jid),
+        phoneNumber: displayPhone || jid,
+        whatsappJid: jid,
       }).returning()
       customer = newCustomer
-    } else if (!customer.whatsappJid) {
-      // Migrate existing customer by setting their whatsappJid JID
-      await db.update(customers).set({ whatsappJid: from }).where(eq(customers.id, customer.id))
-      customer.whatsappJid = from
+    } else {
+      // Update whatsappJid if missing, and upgrade phoneNumber if we now have a real one
+      const updateData = {}
+      if (!customer.whatsappJid) {
+        updateData.whatsappJid = jid
+      }
+      // If phoneNumber is a LID value or missing, and we now have a real display phone, upgrade it
+      if (displayPhone && (
+        !customer.phoneNumber ||
+        customer.phoneNumber.includes('@lid') ||
+        customer.phoneNumber === jid
+      )) {
+        updateData.phoneNumber = displayPhone
+      }
+      if (Object.keys(updateData).length > 0) {
+        await db.update(customers).set(updateData).where(eq(customers.id, customer.id))
+        customer = { ...customer, ...updateData }
+      }
     }
 
     // 2) Find or create conversation for this customer
@@ -122,8 +194,8 @@ export async function POST(request) {
         updateData.name = extractedName
       }
       if (extractedPhone && !extractedPhone.includes('[') && !extractedPhone.includes(']')) {
-        const cleanPhone = extractedPhone.replace(/[^0-9+]/g, '')
-        if (cleanPhone.length >= 8) {
+        const cleanPhone = normalizePhoneInput(extractedPhone)
+        if (cleanPhone && cleanPhone.length >= 10) {
           updateData.phoneNumber = cleanPhone
         }
       }
@@ -174,7 +246,7 @@ export async function POST(request) {
       let replied = false
       let replyError = null
       let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
-      if (baileysUrl && from) {
+      if (baileysUrl && jid) {
         baileysUrl = baileysUrl.trim().replace(/\/$/, '')
         if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
           baileysUrl = `https://${baileysUrl}`
@@ -186,12 +258,12 @@ export async function POST(request) {
               'Content-Type': 'application/json',
               'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
             },
-            body: JSON.stringify({ to: from, text: replyText }),
+            body: JSON.stringify({ to: jid, text: replyText }),
             signal: AbortSignal.timeout(5000),
           })
           if (sendResp.ok) {
             replied = true
-            console.log('[Baileys] Auto-reply sent to', from)
+            console.log('[Baileys] Auto-reply sent to', jid)
           } else {
             const errTxt = await sendResp.text().catch(() => '')
             replyError = `Status ${sendResp.status}: ${errTxt}`
@@ -202,7 +274,7 @@ export async function POST(request) {
           console.warn('[Baileys] Failed to send auto-reply:', err.message)
         }
       } else {
-        replyError = `Config error: baileysUrl=${baileysUrl ? 'present' : 'missing'}, from=${from ? 'present' : 'missing'}`
+        replyError = `Config error: baileysUrl=${baileysUrl ? 'present' : 'missing'}, jid=${jid ? 'present' : 'missing'}`
         console.warn('[Baileys] Cannot send auto-reply:', replyError)
       }
       return { replied, replyError }
@@ -322,7 +394,7 @@ Catatan: [Catatan Anda]`
     let replied = false
     let replyError = null
     let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
-    if (baileysUrl && from) {
+    if (baileysUrl && jid) {
       baileysUrl = baileysUrl.trim().replace(/\/$/, '')
       if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
         baileysUrl = `https://${baileysUrl}`
@@ -335,7 +407,7 @@ Catatan: [Catatan Anda]`
             'x-webhook-secret': process.env.BAILEYS_WEBHOOK_SECRET ?? '',
           },
           body: JSON.stringify({
-            to: from,
+            to: jid,
             text: confirmationText,
           }),
           signal: AbortSignal.timeout(5000),
