@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { customers, conversations, messages, aiDrafts } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { customers, conversations, messages, aiDrafts, tenants, products, inventoryUnits } from '@/lib/db/schema'
+import { eq, and, or } from 'drizzle-orm'
 import crypto from 'crypto'
 
 /**
@@ -112,14 +112,18 @@ export async function POST(request) {
 
     // 1) Find or create customer by JID or phone number
     //    Search by: whatsappJid (exact JID match), phoneNumber (JID fallback), or displayPhone (normalized)
+    const customerConditions = [
+      eq(customers.whatsappJid, jid),
+      eq(customers.phoneNumber, jid),
+    ]
+    if (displayPhone) {
+      customerConditions.push(eq(customers.phoneNumber, displayPhone))
+    }
+
     let customer = await db.query.customers.findFirst({
-      where: (c, { eq, or }) => and(
-        eq(c.tenantId, tenantId),
-        or(
-          eq(c.whatsappJid, jid),
-          eq(c.phoneNumber, jid),
-          ...(displayPhone ? [eq(c.phoneNumber, displayPhone)] : [])
-        )
+      where: and(
+        eq(customers.tenantId, tenantId),
+        or(...customerConditions)
       ),
     })
 
@@ -154,7 +158,7 @@ export async function POST(request) {
 
     // 2) Find or create conversation for this customer
     let conv = await db.query.conversations.findFirst({
-      where: (c, { eq }) => and(eq(c.tenantId, tenantId), eq(c.customerId, customer.id)),
+      where: and(eq(conversations.tenantId, tenantId), eq(conversations.customerId, customer.id)),
     })
 
     if (!conv) {
@@ -217,15 +221,15 @@ export async function POST(request) {
     async function fetchTenantAvailability() {
       try {
         const allProds = await db.query.products.findMany({
-          where: (p, { eq, and }) => and(eq(p.tenantId, tenantId), eq(p.isActive, true)),
+          where: and(eq(products.tenantId, tenantId), eq(products.isActive, true)),
         })
         const lines = []
         for (const prod of allProds) {
           const units = await db.query.inventoryUnits.findMany({
-            where: (u, { eq, and }) => and(
-              eq(u.tenantId, tenantId),
-              eq(u.productId, prod.id),
-              eq(u.status, 'available')
+            where: and(
+              eq(inventoryUnits.tenantId, tenantId),
+              eq(inventoryUnits.productId, prod.id),
+              eq(inventoryUnits.status, 'available')
             )
           })
           lines.push(`- ${prod.name} (Tersedia: ${units.length} unit)`)
@@ -302,7 +306,7 @@ export async function POST(request) {
 
       // Fetch tenant details
       const tenant = await db.query.tenants.findFirst({
-        where: (t, { eq }) => eq(t.id, tenantId),
+        where: eq(tenants.id, tenantId),
       })
       const shopName = tenant?.name || 'Rentivo'
 
@@ -370,7 +374,7 @@ Catatan: [Catatan Anda]`
 
     // Load the updated draft to get the AI-generated response text
     const updatedDraft = await db.query.aiDrafts.findFirst({
-      where: (d, { eq }) => eq(d.id, draft.id)
+      where: eq(aiDrafts.id, draft.id)
     })
 
     const confirmationText = updatedDraft?.extractedData?.aiResponseText || 'Silakan tunggu untuk konfirmasi ketersediaannya.'
