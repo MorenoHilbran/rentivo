@@ -6,6 +6,7 @@ import { desc, eq, and } from 'drizzle-orm'
 import InboxClient from '@/components/InboxClient'
 
 export const metadata = { title: 'Kotak Masuk' }
+export const dynamic = 'force-dynamic'
 
 export default async function InboxPage({ searchParams: searchParamsPromise }) {
   const { tenantId } = await requireTenantAuth(['owner', 'admin'])

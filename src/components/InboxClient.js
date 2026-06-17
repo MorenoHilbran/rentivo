@@ -256,8 +256,12 @@ export default function InboxClient({
 
   // ─── Navigasi ke conversation lain ──────────────────────────────────────────
   function selectConversation(convId) {
+    if (convId === activeConvId) return // sudah aktif
     setActiveConvId(convId)
-    router.push(`/inbox?conversationId=${convId}`)
+    setMessages([])          // clear pesan lama langsung
+    setPendingDraft(null)    // clear draft lama
+    router.push(`/inbox?conversationId=${convId}`, { scroll: false })
+    router.refresh()         // paksa server fetch data baru
   }
 
   // ─── Simulasi chat masuk via webhook ─────────────────────────────────────────
