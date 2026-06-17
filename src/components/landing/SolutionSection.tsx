@@ -43,12 +43,12 @@ export default function SolutionSection() {
       <div className="landing-section-inner landing-solution-grid">
         <motion.div
           className="landing-solution-copy"
-          initial={{ opacity: 0, y: 18 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.46, ease: [0.23, 1, 0.32, 1] }}
+          viewport={{ once: false, margin: '-80px', amount: 0.25 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="landing-eyebrow">FlowTech workspace</span>
+          <span className="landing-eyebrow">FlowTech Workspace</span>
           <h2>Satu workspace untuk seluruh <span className="landing-heading-accent">siklus rental.</span></h2>
           <p>
             Dari chat pertama sampai barang kembali, Rentivo menjaga setiap proses tetap
@@ -60,16 +60,17 @@ export default function SolutionSection() {
           </div>
         </motion.div>
 
-        <motion.div
-          className="landing-solution-panel"
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.08 }}
-        >
+        <div className="landing-solution-panel">
           <div className="landing-solution-flow">
             {pillars.map(({ icon: Icon, label, title, text }, index) => (
-              <div className="landing-solution-pillar" key={label}>
+              <motion.div
+                className="landing-solution-pillar"
+                key={label}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+                transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <span className="landing-pillar-index">0{index + 1}</span>
                 <div className="landing-pillar-icon">
                   <Icon size={20} />
@@ -77,10 +78,10 @@ export default function SolutionSection() {
                 <b>{label}</b>
                 <strong>{title}</strong>
                 <p>{text}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

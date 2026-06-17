@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, MessageSquareText, PackageCheck, ReceiptText, RotateCcw, TrendingUp, LucideIcon } from 'lucide-react'
 
@@ -25,37 +26,94 @@ const bookings: BookingItem[] = [
   ['BR-1050', 'Outdoor Gear', 'Rp 950.000', 'Return hari ini'],
 ]
 
+const previewTabs = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    kicker: 'Owner dashboard summary',
+    title: 'Rental Kamera Nusantara',
+    inventory: '76% unit siap disewa. 14 unit sedang berjalan, 5 unit perlu pengecekan.',
+    chat: 'Draft AI: cek stok, buat booking, kirim invoice DP.',
+  },
+  {
+    id: 'inbox',
+    label: 'Inbox',
+    kicker: 'Live customer queue',
+    title: '12 chat butuh follow-up',
+    inventory: 'Customer request otomatis ditautkan ke stok, jadwal, dan histori booking.',
+    chat: 'Draft AI: balas stok tersedia, tawarkan paket, minta tanggal sewa.',
+  },
+  {
+    id: 'booking',
+    label: 'Booking',
+    kicker: 'Booking control panel',
+    title: '36 rental aktif terpantau',
+    inventory: 'Setiap booking punya status, jadwal pickup, invoice, dan return checkpoint.',
+    chat: 'Draft AI: ubah percakapan menjadi draft booking siap review admin.',
+  },
+  {
+    id: 'inventory',
+    label: 'Inventory',
+    kicker: 'Inventory availability',
+    title: 'Stok aman sebelum deal',
+    inventory: 'Unit tersedia, disewa, maintenance, dan rusak dibaca dalam satu tampilan.',
+    chat: 'Draft AI: rekomendasikan unit pengganti saat stok utama tidak tersedia.',
+  },
+  {
+    id: 'invoice',
+    label: 'Invoice',
+    kicker: 'Payment verification',
+    title: '12 pembayaran menunggu review',
+    inventory: 'Invoice, bukti transfer, DP, pelunasan, dan refund manual tetap satu konteks.',
+    chat: 'Draft AI: ingatkan customer untuk upload bukti transfer sebelum deadline.',
+  },
+]
+
 export default function DashboardPreview() {
+  const [activeTab, setActiveTab] = useState(previewTabs[0])
+
   return (
     <section id="dashboard" className="landing-section landing-dashboard-section">
       <div className="landing-section-inner">
-        <div className="landing-section-heading">
-          <span className="landing-eyebrow">Dashboard owner</span>
+        <motion.div
+          className="landing-section-heading"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="landing-eyebrow">Dashboard Owner</span>
           <h2>Dashboard owner yang terasa seperti pusat <span className="landing-heading-accent">kendali.</span></h2>
           <p>Pendapatan, booking aktif, payment review, inventory, and chat terbaru tersaji tanpa membuat tim tenggelam dalam tabel.</p>
-        </div>
+        </motion.div>
 
         <motion.div
           className="landing-preview-shell"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.52, ease: [0.23, 1, 0.32, 1] }}
+          initial={{ opacity: 0, y: 32, scale: 0.98 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         >
           <aside className="landing-preview-sidebar">
             <b>Rentivo</b>
-            <span>Dashboard</span>
-            <span>Inbox</span>
-            <span>Booking</span>
-            <span>Inventory</span>
-            <span>Invoice</span>
+            {previewTabs.map((tab) => (
+              <button
+                className={`landing-preview-sidebar-button${activeTab.id === tab.id ? ' is-active' : ''}`}
+                key={tab.id}
+                type="button"
+                aria-pressed={activeTab.id === tab.id}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.label}
+              </button>
+            ))}
           </aside>
 
           <main className="landing-preview-main">
             <div className="landing-preview-header">
               <div>
-                <span>Owner dashboard summary</span>
-                <h3>Rental Kamera Nusantara</h3>
+                <span>{activeTab.kicker}</span>
+                <h3>{activeTab.title}</h3>
               </div>
               <button type="button">Unduh laporan</button>
             </div>
@@ -76,14 +134,19 @@ export default function DashboardPreview() {
                   <strong>Booking terbaru</strong>
                   <span>Hari ini</span>
                 </div>
-                {bookings.map(([code, name, amount, status]) => (
-                  <div className="landing-preview-row" key={code}>
-                    <span>{code}</span>
-                    <b>{name}</b>
-                    <strong>{amount}</strong>
-                    <em>{status}</em>
-                  </div>
-                ))}
+                {bookings.map(([code, name, amount, status]) => {
+                  let statusClass = 'status-info'
+                  if (status === 'Review bayar') statusClass = 'status-warning'
+                  if (status === 'Rental aktif') statusClass = 'status-success'
+                  return (
+                    <div className="landing-preview-row" key={code}>
+                      <span className="code-font">{code}</span>
+                      <b>{name}</b>
+                      <strong>{amount}</strong>
+                      <span className={`status-badge ${statusClass}`}>{status}</span>
+                    </div>
+                  )
+                })}
               </section>
 
               <section className="landing-preview-inventory">
@@ -94,7 +157,7 @@ export default function DashboardPreview() {
                 <div className="landing-progress-line">
                   <span style={{ width: '76%' }} />
                 </div>
-                <p>76% unit siap disewa. 14 unit sedang berjalan, 5 unit perlu pengecekan.</p>
+                <p>{activeTab.inventory}</p>
               </section>
 
               <section className="landing-preview-chat">
@@ -103,7 +166,7 @@ export default function DashboardPreview() {
                   <MessageSquareText size={18} />
                 </div>
                 <p>Kak, Sony A7 III tersedia tanggal 12 Juli?</p>
-                <span>Draft AI: cek stok, buat booking, kirim invoice DP.</span>
+                <span>{activeTab.chat}</span>
               </section>
             </div>
           </main>

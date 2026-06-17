@@ -13,6 +13,7 @@ import FeatureGrid from '@/components/landing/FeatureGrid'
 import WorkflowSection from '@/components/landing/WorkflowSection'
 import DashboardPreview from '@/components/landing/DashboardPreview'
 import RoleSection from '@/components/landing/RoleSection'
+import PricingSection from '@/components/landing/PricingSection'
 import FinalCTA from '@/components/landing/FinalCTA'
 import LandingFooter from '@/components/landing/LandingFooter'
 
@@ -92,6 +93,7 @@ export default function LandingPageClient() {
       <WorkflowSection />
       <DashboardPreview />
       <RoleSection />
+      <PricingSection />
       <FinalCTA />
       <LandingFooter />
     </main>

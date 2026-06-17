@@ -4,12 +4,10 @@ import { motion } from 'framer-motion'
 import {
   Bot,
   CalendarClock,
-  ClipboardX,
   Inbox,
   PackageSearch,
   ReceiptText,
   RotateCcw,
-  UsersRound,
   LucideIcon
 } from 'lucide-react'
 
@@ -25,49 +23,37 @@ const features: FeatureItem[] = [
     icon: Inbox,
     title: 'Omnichannel Inbox',
     label: 'Capture',
-    text: 'Kelola chat customer dalam satu antrean kerja yang mudah dipantau tim.',
-  },
-  {
-    icon: Bot,
-    title: 'AI Draft Booking',
-    label: 'Copilot',
-    text: 'AI menyusun draft booking dari chat untuk direview admin.',
+    text: 'Kelola chat customer dari WhatsApp dan channel lain dalam satu inbox terpadu.',
   },
   {
     icon: CalendarClock,
-    title: 'Booking Calendar',
-    label: 'Schedule',
-    text: 'Lihat jadwal sewa per tanggal agar tim lebih cepat membaca slot kosong.',
+    title: 'Smart Booking Flow',
+    label: 'Booking',
+    text: 'Ubah chat customer menjadi draf pesanan, atur tanggal sewa, dan siapkan unit secara instan.',
   },
   {
     icon: PackageSearch,
     title: 'Inventory Availability',
     label: 'Stock',
-    text: 'Cek ketersediaan barang sebelum membuat booking dan invoice.',
+    text: 'Pantau status stok unit secara realtime untuk mencegah risiko double booking.',
   },
   {
     icon: ReceiptText,
     title: 'Invoice & Payment Verification',
     label: 'Finance',
-    text: 'Pantau invoice, bukti transfer, dan verifikasi manual.',
+    text: 'Kirim tagihan otomatis dan verifikasi bukti transfer pembayaran dari satu layar.',
   },
   {
     icon: RotateCcw,
     title: 'Return Management',
     label: 'Return',
-    text: 'Catat barang kembali, denda, dan kondisi akhir rental.',
+    text: 'Catat pengembalian barang, cek kelengkapan unit, dan kalkulasi denda keterlambatan.',
   },
   {
-    icon: UsersRound,
-    title: 'Customer CRM',
-    label: 'CRM',
-    text: 'Simpan profil pelanggan, riwayat booking, dan konteks chat secara rapi.',
-  },
-  {
-    icon: ClipboardX,
-    title: 'Cancellation & Manual Refund Tracking',
-    label: 'Control',
-    text: 'Dokumentasikan cancel, refund manual, dan tindak lanjut.',
+    icon: Bot,
+    title: 'AI Copilot',
+    label: 'AI Assistant',
+    text: 'Biarkan AI menyusun draf booking otomatis berdasarkan riwayat chat dengan customer.',
   },
 ]
 
@@ -75,21 +61,27 @@ export default function FeatureGrid() {
   return (
     <section id="fitur" className="landing-section landing-feature-section">
       <div className="landing-section-inner">
-        <div className="landing-section-heading">
-          <span className="landing-eyebrow">Fitur utama</span>
+        <motion.div
+          className="landing-section-heading"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="landing-eyebrow">Fitur Utama</span>
           <h2>Modul bisnis rental, disusun dalam satu <span className="landing-heading-accent">sistem.</span></h2>
           <p>Setiap fitur mengikuti alur kerja rental Indonesia: chat, jadwal, barang, invoice, payment proof, dan return.</p>
-        </div>
+        </motion.div>
 
         <div className="landing-feature-grid">
           {features.map(({ icon: Icon, title, label, text }, index) => (
             <motion.article
               className="landing-feature-card"
               key={title}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.4, delay: index * 0.035, ease: [0.23, 1, 0.32, 1] }}
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+              transition={{ duration: 0.55, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="landing-feature-topline">
                 <span className="landing-feature-icon">

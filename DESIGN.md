@@ -2645,7 +2645,7 @@ Subtitle
 CTA buttons (primary + secondary)
 ```
 
-### Typography
+### Typography                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 
 * Headline: `clamp(3rem, 6vw, 5.8rem)`, weight 800, line-height 0.95
 * "Rental Flow": serif italic with white-to-cyan gradient
@@ -2821,6 +2821,149 @@ Footer always uses full logo for brand recognition.
 
 ---
 
+## Landing Pricing Section
+
+Rentivo landing includes one pricing section before the final CTA.
+
+### Plan Rules
+
+The pricing section must contain exactly two plans unless product strategy changes:
+
+```txt
+Free
+Pro
+```
+
+* Do not add Enterprise, Team, Agency, or extra tiers without explicit product need.
+* `Pro` is the recommended plan and should carry the `Recommended` badge.
+* If final pricing is not confirmed, use `Custom` for Pro rather than inventing a monthly number.
+
+### Placement
+
+```txt
+DashboardPreview
+RoleSection
+PricingSection
+FinalCTA
+LandingFooter
+```
+
+Do not move or alter the fixed landing flow:
+
+```txt
+LandingPreloader -> StoryIntro -> LandingNavbar -> HeroSection
+```
+
+### Visual Direction
+
+* Pricing uses the Dark Luxury FlowTech treatment: deep navy base, cyan/blue glow, glass cards, and thin white/cyan borders.
+* Free should feel calm and approachable.
+* Pro should be visually stronger with a subtle cyan/blue glow, brighter border, `Recommended` badge, and gradient CTA.
+* The section should be easy to compare. Keep copy concise and feature lists scannable.
+* Cards should be compact, not oversized. Keep feature spacing tight, button height around `44px`, and desktop card width contained around the middle of the landing container.
+* Cards should have balanced heights on desktop and stack cleanly on mobile.
+* Use small check icons for features; avoid decorative icon overload.
+
+### Motion And Performance
+
+* Heading fades up when entering the viewport.
+* Cards stagger fade-up when entering the viewport.
+* Below-hero sections may replay lightweight reveal motion when the user scrolls back up or down.
+* Hover lift is subtle and transform-only.
+* Do not use canvas, WebGL, particles, infinite heavy animation, or heavy blur/filter animation.
+* Animate only `opacity`, `y`, `scale`, and `transform`.
+* Respect reduced motion by disabling CSS transitions.
+
+### Current Files
+
+```txt
+src/components/landing/PricingSection.tsx
+src/components/landing/LandingPageClient.tsx
+src/styles/landing.css
+DESIGN.md
+```
+
+### Do Not Break
+
+* Do not modify LandingPreloader, StoryIntro, HeroSection, LandingNavbar, or LandingFooter when only adjusting pricing.
+* Do not change auth, dashboard, Supabase, database, server actions, worker, Inngest, Gemini, or API routes.
+* Do not use README as the source of truth for landing design decisions.
+
+---
+
+## Post-Hero Landing Visual Pass
+
+The sections after HeroSection must not collapse into either an all-white SaaS page or an all-dark tunnel. They should feel like a premium operational narrative with alternating contrast: dark command surfaces, luminous ice-blue surfaces, compact comparison cards, and lightweight motion.
+
+### Scope
+
+This pass applies only after the fixed flow:
+
+```txt
+ProblemSection
+SolutionSection
+FeatureGrid
+WorkflowSection
+DashboardPreview
+RoleSection
+PricingSection
+FinalCTA
+```
+
+Do not change:
+
+```txt
+LandingPreloader
+StoryIntro
+LandingNavbar
+HeroSection
+LandingFooter
+```
+
+### Visual Rules
+
+* Alternate dark and luminous surfaces after HeroSection.
+* Keep Problem, Dashboard Preview, and Final CTA in dark command-center mode.
+* Use luminous ice-blue / white-navy surfaces for Solution, Feature, Workflow, Role, and Pricing so the page has breathing room.
+* Avoid consecutive plain white backgrounds and avoid making every section dark.
+* Cards on luminous sections use tinted white surfaces, navy text, thin blue/cyan borders, and restrained blue shadows.
+* Cards on dark sections use dark glass panels with thin cyan/white borders, subtle inner highlight, and restrained shadows.
+* FlowTech pillar cards must not overlap: keep index badges out of the content flow, reserve right padding for labels, and stack cards to one column on mobile.
+* Pricing must stay compact: two plans only, contained width, short feature spacing, and Pro as the stronger recommended card.
+* Background depth should come from CSS gradients, subtle grids, static glows, and small transform-only ambient drift.
+* Do not add new canvas, WebGL, particle systems, or heavy animated blur.
+* Watch for overlap on mobile: section grids must collapse to one column, dashboard rows must stack, and pricing CTAs must be full-width.
+
+### Motion Rules
+
+* Framer `whileInView` motion below Hero may use `once: false` so reveals can replay when scrolling back up/down.
+* Keep replay motion light: opacity, y, and small scale only.
+* Do not add repeated animation to the fixed preloader/story/hero handoff.
+* Use short stagger delays and avoid scroll-scrub timelines in post-hero content.
+
+### Dashboard Preview Interactivity
+
+* The dashboard preview sidebar must use real `<button>` controls, not static spans that look clickable.
+* Sidebar buttons may change the marketing preview state only. They must not call backend routes or dashboard logic.
+* Active sidebar state should be visible with cyan/blue treatment.
+* Keep this as client-side demo interactivity only.
+
+### Current Post-Hero Contrast Map
+
+```txt
+ProblemSection       -> dark warning command surface
+SolutionSection      -> luminous FlowTech workspace surface
+FeatureGrid          -> luminous module surface
+WorkflowSection      -> luminous operations pipeline surface
+DashboardPreview     -> dark dashboard command surface
+RoleSection          -> luminous team workspace surface
+PricingSection       -> luminous comparison surface with dark Pro card
+FinalCTA             -> dark closing surface
+LandingFooter        -> fixed footer system, do not redesign during post-hero passes
+```
+
+---
+
 ## 20. Final Design Principle
 
 Rentivo should feel like a premium operational SaaS product.
@@ -2845,4 +2988,33 @@ Every design decision must support the main product promise:
     *   These effects can only be reintroduced after a formal performance audit and frame-rate evaluation.
 *   **StoryIntro Initialization**: The `StoryIntro` component must always start from Scene 1 ("Customers come from everywhere..."). To prevent initial scroll-jumping or out-of-order scenes, all ScrollTrigger initializations, matchMedia queries, and timeline setup are deferred until the preloader is fully complete (`preloaderDone === true`).
 *   **No Framer whileInView**: Do not use Framer Motion's `whileInView` directive inside the pinned `StoryIntro` scenes to avoid conflicts with GSAP ScrollTrigger timeline management.
+
+---
+
+## 22. Landing Page FlowTech Redesign Guidelines
+
+### Fixed Areas (Do Not Modify)
+To maintain structural and functional safety, the following components are strictly fixed and must not be altered:
+- `LandingPreloader`
+- `StoryIntro`
+- `HeroSection`
+- `LandingNavbar`
+- `LandingFooter`
+- Loading -> Story transition animations
+- Story -> Hero transition animations
+
+### Section System
+The landing page follows a clean, highly structured operational pipeline:
+1. **Problem / Pain Points Section**: Highlights critical business issues (scattered inbox, double bookings) using warnings with red-amber subtle outline glows.
+2. **Solution Section**: Introduces the four pillars of the "FlowTech Workspace" (Capture, Convert, Control, Complete) on a luminous ice-blue workspace surface. Pillar cards must reserve space for icon, label, title, and index so content never overlaps.
+3. **Feature Grid**: Showcases the 6 core modules (Omnichannel Inbox, Smart Booking Flow, Inventory Availability, Invoice & Payment Verification, Return Management, AI Copilot) as premium luminous cards with micro-accent details.
+4. **Workflow Section**: Outlines the 8-step pipeline (Inquiry, Availability Check, Booking, Invoice, Payment Verification, Delivery / Pickup, Return, Report) with soft status tags and visual connectors on a brighter operations surface.
+5. **Dashboard Preview**: A premium command-center widget demonstrating revenue summaries, live tracking, and draft setups.
+6. **Role Section**: Highlights workspace layout configurations for Owner, Admin, Tim Lapangan, and Customer Service.
+7. **Final CTA**: Rounded buttons leading to action links.
+
+### Performance Guardrails
+- **No Transition: All**: Transitions are restricted to specific animated properties (e.g., opacity, scale, border-color, translate) to maximize performance and prevent layout shifts.
+- **Lightweight Motions**: Visual entries use subtle scale-in (0.97 to 1) and slide-up (24px to 0) using custom spring-like cubic curves (`[0.16, 1, 0.3, 1]`) instead of heavy physics engines.
+- **Alternating Contrast**: Backgrounds alternate between deep navy command sections and luminous ice-blue operational sections. Do not make all post-hero sections dark, and do not return to flat white.
 

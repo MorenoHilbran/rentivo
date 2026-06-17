@@ -30,17 +30,55 @@ export default function ProblemSection() {
   return (
     <section className="landing-section landing-problem-section">
       <div className="landing-section-inner">
-        <div className="landing-section-heading">
-          <span className="landing-eyebrow">Operasional tercecer</span>
+        <motion.div
+          className="landing-section-heading"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="landing-eyebrow">Operasional Tercecer</span>
           <h2>Operasional rental sering kacau bukan karena bisnisnya kecil, tapi karena sistemnya <span className="landing-heading-accent">tercecer.</span></h2>
           <p>Setiap channel punya konteks sendiri. Setiap admin punya catatan sendiri. Saat pesanan ramai, celah kecil berubah jadi double booking, invoice telat, atau return tanpa bukti.</p>
-        </div>
+        </motion.div>
 
         <div className="landing-scattered-board" aria-hidden="true">
-          <span className="landing-scatter-card landing-scatter-chat">Chat WA: tanya stok</span>
-          <span className="landing-scatter-card landing-scatter-sheet">Sheet booking manual</span>
-          <span className="landing-scatter-card landing-scatter-proof">Bukti transfer di galeri</span>
-          <span className="landing-scatter-card landing-scatter-return">Return belum dicek</span>
+          <motion.span
+            className="landing-scatter-card landing-scatter-chat"
+            initial={{ opacity: 0, scale: 0.9, x: -10, y: 10 }}
+            whileInView={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Chat WA: tanya stok
+          </motion.span>
+          <motion.span
+            className="landing-scatter-card landing-scatter-sheet"
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Sheet booking manual
+          </motion.span>
+          <motion.span
+            className="landing-scatter-card landing-scatter-proof"
+            initial={{ opacity: 0, scale: 0.9, x: 10, y: 10 }}
+            whileInView={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Bukti transfer di galeri
+          </motion.span>
+          <motion.span
+            className="landing-scatter-card landing-scatter-return"
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Return belum dicek
+          </motion.span>
         </div>
 
         <div className="landing-problem-grid">
@@ -48,10 +86,10 @@ export default function ProblemSection() {
             <motion.article
               className={`landing-problem-card landing-problem-card-${index % 3}`}
               key={title}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.42, delay: index * 0.04, ease: [0.23, 1, 0.32, 1] }}
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+              transition={{ duration: 0.55, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
             >
               <Icon size={20} />
               <h3>{title}</h3>
