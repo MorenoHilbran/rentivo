@@ -64,7 +64,7 @@ export default function PricingSection() {
           className="landing-section-heading landing-pricing-heading"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          viewport={{ once: true, margin: '-100px', amount: 0.25 }}
           transition={{ duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="landing-eyebrow landing-pricing-eyebrow">Plan Rentivo</span>
@@ -82,7 +82,7 @@ export default function PricingSection() {
               key={plan.name}
               initial={{ opacity: 0, y: 30, scale: 0.985 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, margin: '-90px', amount: 0.22 }}
+              viewport={{ once: true, margin: '-90px', amount: 0.22 }}
               transition={{ duration: 0.58, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="landing-pricing-card-light" aria-hidden="true" />

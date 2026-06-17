@@ -79,7 +79,7 @@ export default function DashboardPreview() {
           className="landing-section-heading"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          viewport={{ once: true, margin: '-100px', amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="landing-eyebrow">Dashboard Owner</span>
@@ -91,7 +91,7 @@ export default function DashboardPreview() {
           className="landing-preview-shell"
           initial={{ opacity: 0, y: 32, scale: 0.98 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+          viewport={{ once: true, margin: '-80px', amount: 0.22 }}
           transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         >
           <aside className="landing-preview-sidebar">

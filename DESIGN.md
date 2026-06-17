@@ -2959,10 +2959,11 @@ LandingFooter
 
 ### Motion Rules
 
-* Framer `whileInView` motion below Hero may use `once: false` so reveals can replay when scrolling back up/down.
-* Keep replay motion light: opacity, y, and small scale only.
+* Framer `whileInView` motion below Hero should use `once: true` for scroll stability.
+* Avoid replaying many card reveal animations when scrolling back up/down; this creates extra observer work and visible jank on mid-range devices.
 * Do not add repeated animation to the fixed preloader/story/hero handoff.
 * Use short stagger delays and avoid scroll-scrub timelines in post-hero content.
+* Post-hero sections may use `content-visibility: auto` with a reasonable intrinsic size to reduce offscreen paint work.
 
 ### Dashboard Preview Interactivity
 

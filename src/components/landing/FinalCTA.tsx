@@ -11,7 +11,7 @@ export default function FinalCTA() {
         className="landing-final-card"
         initial={{ opacity: 0, y: 32, scale: 0.98 }}
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: false, margin: '-80px', amount: 0.24 }}
+        viewport={{ once: true, margin: '-80px', amount: 0.24 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="landing-final-glow" aria-hidden="true" />

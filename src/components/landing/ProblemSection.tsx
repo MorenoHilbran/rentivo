@@ -34,7 +34,7 @@ export default function ProblemSection() {
           className="landing-section-heading"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          viewport={{ once: true, margin: '-100px', amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="landing-eyebrow">Operasional Tercecer</span>
@@ -47,7 +47,7 @@ export default function ProblemSection() {
             className="landing-scatter-card landing-scatter-chat"
             initial={{ opacity: 0, scale: 0.9, x: -10, y: 10 }}
             whileInView={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             Chat WA: tanya stok
@@ -56,7 +56,7 @@ export default function ProblemSection() {
             className="landing-scatter-card landing-scatter-sheet"
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
             Sheet booking manual
@@ -65,7 +65,7 @@ export default function ProblemSection() {
             className="landing-scatter-card landing-scatter-proof"
             initial={{ opacity: 0, scale: 0.9, x: 10, y: 10 }}
             whileInView={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             Bukti transfer di galeri
@@ -74,7 +74,7 @@ export default function ProblemSection() {
             className="landing-scatter-card landing-scatter-return"
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
           >
             Return belum dicek
@@ -88,7 +88,7 @@ export default function ProblemSection() {
               key={title}
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+              viewport={{ once: true, margin: '-80px', amount: 0.22 }}
               transition={{ duration: 0.55, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
             >
               <Icon size={20} />

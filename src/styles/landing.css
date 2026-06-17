@@ -4381,3 +4381,15 @@
 .landing-navbar-inner {
   backdrop-filter: blur(10px) !important;
 }
+
+.landing-problem-section,
+.landing-solution-section,
+.landing-feature-section,
+.landing-workflow-section,
+.landing-dashboard-section,
+.landing-role-section,
+.landing-pricing-section,
+.landing-final-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 760px;
+}

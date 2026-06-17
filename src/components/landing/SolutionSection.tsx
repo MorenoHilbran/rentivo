@@ -45,7 +45,7 @@ export default function SolutionSection() {
           className="landing-solution-copy"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: '-80px', amount: 0.25 }}
+          viewport={{ once: true, margin: '-80px', amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="landing-eyebrow">FlowTech Workspace</span>
@@ -68,7 +68,7 @@ export default function SolutionSection() {
                 key={label}
                 initial={{ opacity: 0, y: 20, scale: 0.98 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+                viewport={{ once: true, margin: '-80px', amount: 0.22 }}
                 transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
               >
                 <span className="landing-pillar-index">0{index + 1}</span>

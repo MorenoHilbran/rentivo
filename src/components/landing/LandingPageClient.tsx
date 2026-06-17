@@ -54,6 +54,44 @@ export default function LandingPageClient() {
       document.body.style.overflow = ''
       window.scrollTo(0, 0)
 
+      let active = true
+      let lenisInstance: any = null
+      let updatePhysics: any = null
+
+      // Initialize Lenis dynamically to avoid SSR issues
+      import('lenis').then(({ default: Lenis }) => {
+        if (!active) return
+
+        // Force scroll behavior auto to prevent CSS smooth scroll collision
+        document.documentElement.style.scrollBehavior = 'auto'
+        document.documentElement.setAttribute('data-scroll-behavior', 'auto')
+
+        lenisInstance = new Lenis({
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          orientation: 'vertical',
+          gestureOrientation: 'vertical',
+          smoothWheel: true,
+          wheelMultiplier: 1.0,
+          touchMultiplier: 1.5,
+        })
+
+        // Sync scroll events with ScrollTrigger
+        lenisInstance.on('scroll', ScrollTrigger.update)
+
+        // Sync with GSAP ticker loop
+        updatePhysics = (time: number) => {
+          if (lenisInstance) {
+            lenisInstance.raf(time * 1000)
+          }
+        }
+        gsap.ticker.add(updatePhysics)
+        gsap.ticker.lagSmoothing(0)
+
+        // Make sure ScrollTrigger settles correctly
+        ScrollTrigger.refresh()
+      })
+
       // Refresh ScrollTrigger after scrollbar is restored and layout settles
       const t1 = setTimeout(() => {
         ScrollTrigger.refresh()
@@ -63,9 +101,18 @@ export default function LandingPageClient() {
       }, 1000) // Call again after preloader completes exit animation
 
       return () => {
+        active = false
         window.history.scrollRestoration = previousScrollRestoration
         clearTimeout(t1)
         clearTimeout(t2)
+        if (lenisInstance) {
+          lenisInstance.destroy()
+        }
+        if (updatePhysics) {
+          gsap.ticker.remove(updatePhysics)
+        }
+        document.documentElement.style.scrollBehavior = ''
+        document.documentElement.removeAttribute('data-scroll-behavior')
       }
     }
 

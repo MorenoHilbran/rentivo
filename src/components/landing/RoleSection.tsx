@@ -40,7 +40,7 @@ export default function RoleSection() {
           className="landing-section-heading landing-section-heading-left"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          viewport={{ once: true, margin: '-100px', amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="landing-eyebrow">Untuk Tim Rental</span>
@@ -54,7 +54,7 @@ export default function RoleSection() {
               key={title}
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+              viewport={{ once: true, margin: '-80px', amount: 0.22 }}
               transition={{ duration: 0.55, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="landing-role-badge">{title}</span>

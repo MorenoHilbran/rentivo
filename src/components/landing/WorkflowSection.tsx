@@ -27,7 +27,7 @@ export default function WorkflowSection() {
           className="landing-section-heading landing-section-heading-left"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: '-100px', amount: 0.25 }}
+          viewport={{ once: true, margin: '-100px', amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="landing-eyebrow">Workflow Rental</span>
@@ -42,7 +42,7 @@ export default function WorkflowSection() {
               key={step.title}
               initial={{ opacity: 0, y: 20, scale: 0.98 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, margin: '-80px', amount: 0.22 }}
+              viewport={{ once: true, margin: '-80px', amount: 0.22 }}
               transition={{ duration: 0.5, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="landing-workflow-top">
