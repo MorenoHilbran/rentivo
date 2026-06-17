@@ -2,9 +2,9 @@ import SectionPage from '@/components/SectionPage'
 import { FormCard, Field, TextareaField, GridForm, TableCard, SelectField, Notice } from '@/components/ManagementUI'
 import { createManualBookingAction } from '../actions'
 import { db } from '@/lib/db'
-import { bookings, customers, invoices, products } from '@/lib/db/schema'
+import { bookings, customers, invoices, products, bookingItems, inventoryUnits } from '@/lib/db/schema'
 import { requireTenantAuth } from '@/lib/session'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import BookingKanbanClient from '@/components/BookingKanbanClient'
 
 export const metadata = { title: 'Pemesanan' }
@@ -15,7 +15,7 @@ export default async function BookingsPage({ searchParams: searchParamsPromise }
   const customerRows = await db.select().from(customers).where(eq(customers.tenantId, tenantId)).orderBy(desc(customers.createdAt)).limit(20)
   const productRows = await db.select().from(products).where(eq(products.tenantId, tenantId)).orderBy(desc(products.createdAt)).limit(20)
   
-  const recentBookings = await db
+  const recentBookingsRaw = await db
     .select({ 
       id: bookings.id, 
       bookingNumber: bookings.bookingNumber, 
@@ -32,6 +32,35 @@ export default async function BookingsPage({ searchParams: searchParamsPromise }
     .where(eq(bookings.tenantId, tenantId))
     .orderBy(desc(bookings.createdAt))
     .limit(50) // increased list limit to 50 for fuller Kanban board display
+
+  const bookingIds = recentBookingsRaw.map((b) => b.id)
+  const itemsByBookingId = {}
+
+  if (bookingIds.length > 0) {
+    const items = await db
+      .select({
+        bookingId: bookingItems.bookingId,
+        productName: products.name,
+        unitCode: inventoryUnits.unitCode,
+        serialNumber: inventoryUnits.serialNumber,
+      })
+      .from(bookingItems)
+      .leftJoin(products, eq(bookingItems.productId, products.id))
+      .leftJoin(inventoryUnits, eq(bookingItems.inventoryUnitId, inventoryUnits.id))
+      .where(inArray(bookingItems.bookingId, bookingIds))
+
+    for (const item of items) {
+      if (!itemsByBookingId[item.bookingId]) {
+        itemsByBookingId[item.bookingId] = []
+      }
+      itemsByBookingId[item.bookingId].push(item)
+    }
+  }
+
+  const recentBookings = recentBookingsRaw.map((b) => ({
+    ...b,
+    items: itemsByBookingId[b.id] || [],
+  }))
 
   const searchParams = await searchParamsPromise
   const feedbackKey = searchParams?.error ? 'error' : searchParams?.success ? 'success' : null

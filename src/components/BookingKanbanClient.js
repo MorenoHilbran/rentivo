@@ -19,6 +19,7 @@ import {
   Truck,
   RotateCcw,
   Trash2,
+  Layers,
 } from 'lucide-react'
 
 const STATUS_LABELS = {
@@ -470,6 +471,41 @@ export default function BookingKanbanClient({ bookings }) {
                 </div>
               ))}
             </div>
+
+            {/* Rented Units Info */}
+            {selectedBooking.items && selectedBooking.items.length > 0 && (
+              <div style={{
+                display: 'flex', gap: 12, borderRadius: 11,
+                border: '1px solid var(--color-outline-variant)',
+                background: 'var(--color-surface-container-low)', padding: '14px 16px',
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(99, 102, 241, 0.08)', color: '#6366f1'
+                }}>
+                  <Layers size={16} strokeWidth={1.8} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Unit yang Disewa</div>
+                  <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {selectedBooking.items.map((item, idx) => (
+                      <div key={idx} style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                        <span>{item.productName}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--color-surface-container)', padding: '2px 6px', borderRadius: 4, color: 'var(--color-on-surface-variant)', fontWeight: 700 }}>
+                          {item.unitCode}
+                        </span>
+                        {item.serialNumber && (
+                          <span style={{ fontSize: 11, color: 'var(--color-on-surface-variant)', opacity: 0.8 }}>
+                            (S/N: {item.serialNumber})
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Notes */}
             <div style={{

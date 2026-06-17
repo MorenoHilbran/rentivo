@@ -24,35 +24,42 @@ export async function POST(request) {
     const content = formData.get('content')
 
     if (!conversationId || !content?.trim()) {
-      return NextResponse.redirect(new URL('/inbox?error=Pesan+tidak+boleh+kosong', request.url), 303)
+      return NextResponse.json({ ok: false, error: 'Pesan tidak boleh kosong' }, { status: 400 })
     }
 
     // Ambil conversation beserta nomor HP customer untuk pengiriman WA
     const conv = await db.query.conversations.findFirst({
-      where: (c, { eq, and }) => and(eq(c.tenantId, tenantId), eq(c.id, conversationId)),
+      where: and(eq(conversations.tenantId, tenantId), eq(conversations.id, conversationId)),
     })
 
     if (!conv) {
-      return NextResponse.redirect(new URL('/inbox?error=Percakapan+tidak+ditemukan', request.url), 303)
+      return NextResponse.json({ ok: false, error: 'Percakapan tidak ditemukan' }, { status: 404 })
     }
 
-    // Ambil nomor HP customer
+    // Ambil nomor HP customer — prioritaskan whatsappJid untuk pengiriman WA
     let customerPhone = null
     if (conv.customerId) {
       const customer = await db.query.customers.findFirst({
-        where: (c, { eq }) => eq(c.id, conv.customerId),
+        where: eq(customers.id, conv.customerId),
       })
       customerPhone = customer?.whatsappJid || customer?.phoneNumber || null
+      console.log('[Send] Customer found:', { 
+        id: customer?.id, 
+        name: customer?.name,
+        whatsappJid: customer?.whatsappJid, 
+        phoneNumber: customer?.phoneNumber,
+        using: customerPhone 
+      })
     }
 
     // Insert outbound message ke database
-    await db.insert(messages).values({
+    const [newMsg] = await db.insert(messages).values({
       tenantId,
       conversationId,
       direction: 'outbound',
       content: content.trim(),
       sentAt: new Date(),
-    })
+    }).returning()
 
     // Update conversation meta preview
     await db.update(conversations).set({
@@ -61,15 +68,22 @@ export async function POST(request) {
     }).where(eq(conversations.id, conversationId))
 
     // Kirim pesan ke WhatsApp nyata via Baileys microservice
-    // Ini dilakukan secara fire-and-forget: jika Baileys tidak running,
-    // pesan tetap tersimpan di database — tidak ada error fatal.
+    let baileysSuccess = false
+    let baileysError = null
     let baileysUrl = process.env.NEXT_PUBLIC_BAILEYS_SERVICE_URL || process.env.BAILEYS_SERVICE_URL
+
+    console.log('[Send] Baileys config:', {
+      url: baileysUrl ? 'present' : 'missing',
+      customerPhone: customerPhone ? 'present' : 'missing',
+    })
+
     if (baileysUrl && customerPhone) {
       baileysUrl = baileysUrl.trim().replace(/\/$/, '')
       if (!baileysUrl.startsWith('http://') && !baileysUrl.startsWith('https://')) {
         baileysUrl = `https://${baileysUrl}`
       }
       try {
+        console.log('[Send] Sending to Baileys:', { url: `${baileysUrl}/api/send-message`, to: customerPhone })
         const sendResp = await fetch(`${baileysUrl}/api/send-message`, {
           method: 'POST',
           headers: {
@@ -80,26 +94,35 @@ export async function POST(request) {
             to: customerPhone,
             text: content.trim(),
           }),
-          // Timeout singkat agar tidak memblokir redirect user
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(8000),
         })
 
-        if (!sendResp.ok) {
-          const errBody = await sendResp.text().catch(() => '')
-          console.warn(`[Baileys] Kirim pesan gagal (${sendResp.status}):`, errBody)
+        if (sendResp.ok) {
+          baileysSuccess = true
+          console.log('[Send] Pesan WA berhasil terkirim ke', customerPhone)
         } else {
-          console.log('[Baileys] Pesan WA terkirim ke', customerPhone)
+          const errBody = await sendResp.text().catch(() => '')
+          baileysError = `Status ${sendResp.status}: ${errBody}`
+          console.warn('[Send] Baileys gagal:', baileysError)
         }
       } catch (baileysErr) {
-        // Baileys tidak running / timeout — tidak fatal, pesan tetap di DB
-        console.warn('[Baileys] Microservice tidak tersedia atau timeout:', baileysErr?.message ?? baileysErr)
+        baileysError = baileysErr?.message ?? String(baileysErr)
+        console.warn('[Send] Baileys error:', baileysError)
       }
+    } else {
+      baileysError = `Config: baileysUrl=${baileysUrl ? 'present' : 'MISSING'}, customerPhone=${customerPhone || 'MISSING'}`
+      console.warn('[Send] Cannot send WA:', baileysError)
     }
 
-    // Redirect kembali ke thread percakapan (303 See Other = standard POST redirect)
-    return NextResponse.redirect(new URL(`/inbox?conversationId=${conversationId}`, request.url), 303)
+    return NextResponse.json({
+      ok: true,
+      messageId: newMsg.id,
+      conversationId,
+      baileysSuccess,
+      baileysError,
+    })
   } catch (err) {
     console.error('[Send Chat] Error:', err)
-    return NextResponse.redirect(new URL('/inbox?error=Gagal+mengirim+pesan', request.url), 303)
+    return NextResponse.json({ ok: false, error: 'Gagal mengirim pesan' }, { status: 500 })
   }
 }

@@ -397,11 +397,21 @@ Catatan: Butuh filter ND jika ada`
       const response = await fetch('/api/inbox/send', {
         method: 'POST',
         body: formData,
+        redirect: 'manual', // prevent auto-redirect
       })
 
-      if (!response.ok) {
-        addToast({ title: 'Gagal mengirim', message: 'Gagal mengirim pesan', tone: 'error' })
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok || !data?.ok) {
+        addToast({ title: 'Gagal mengirim', message: data?.error || 'Gagal mengirim pesan', tone: 'error' })
         setReplyText(textToSend) // Restore text on failure
+      } else if (data.baileysError) {
+        // Pesan tersimpan di DB tapi gagal kirim ke WA
+        addToast({
+          title: 'Pesan tersimpan',
+          message: `Tersimpan di sistem, tapi gagal kirim ke WhatsApp: ${data.baileysError}`,
+          tone: 'warning',
+        })
       }
     } catch (err) {
       console.error('Send error:', err)
